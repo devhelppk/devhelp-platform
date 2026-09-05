@@ -1,14 +1,33 @@
-/* Shared design tokens for every devhelp app. Import after "tailwindcss". */
+/* Shared design tokens for every devhelp app. Import after "tailwindcss".
+   Palette: ajrak indigo (brand) and madder (accent). See packages/ui/DESIGN.md. */
 @theme {
-  --color-brand-50: oklch(0.97 0.03 155);
-  --color-brand-100: oklch(0.93 0.06 155);
-  --color-brand-200: oklch(0.87 0.1 155);
-  --color-brand-300: oklch(0.79 0.14 155);
-  --color-brand-400: oklch(0.7 0.17 155);
-  --color-brand-500: oklch(0.6 0.17 155);
-  --color-brand-600: oklch(0.52 0.15 155);
-  --color-brand-700: oklch(0.44 0.12 155);
-  --color-brand-800: oklch(0.37 0.09 155);
-  --color-brand-900: oklch(0.3 0.07 155);
-  --color-brand-950: oklch(0.22 0.05 155);
+  /* Indigo, hue 272. brand-600 is the light-mode primary. */
+  --color-brand-50: oklch(0.97 0.015 272);
+  --color-brand-100: oklch(0.94 0.03 272);
+  --color-brand-200: oklch(0.88 0.06 272);
+  --color-brand-300: oklch(0.8 0.09 272);
+  --color-brand-400: oklch(0.66 0.13 272);
+  --color-brand-500: oklch(0.52 0.15 272);
+  --color-brand-600: oklch(0.44 0.14 272);
+  --color-brand-700: oklch(0.38 0.12 272);
+  --color-brand-800: oklch(0.31 0.09 272);
+  --color-brand-900: oklch(0.26 0.07 272);
+  --color-brand-950: oklch(0.2 0.05 272);
+
+  /* Madder red, hue 25. madder-600 is the light-mode accent. */
+  --color-madder-50: oklch(0.97 0.015 25);
+  --color-madder-100: oklch(0.94 0.035 25);
+  --color-madder-200: oklch(0.88 0.07 25);
+  --color-madder-300: oklch(0.8 0.11 25);
+  --color-madder-400: oklch(0.68 0.16 25);
+  --color-madder-500: oklch(0.56 0.18 25);
+  --color-madder-600: oklch(0.5 0.17 25);
+  --color-madder-700: oklch(0.43 0.15 25);
+  --color-madder-800: oklch(0.36 0.12 25);
+  --color-madder-900: oklch(0.3 0.09 25);
+  --color-madder-950: oklch(0.22 0.06 25);
+
+  /* Ink and paper: the two ends of the neutral ramp. */
+  --color-ink: oklch(0.22 0.05 275);
+  --color-paper: oklch(0.995 0.002 90);
 }
