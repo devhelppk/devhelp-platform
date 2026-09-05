@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 176 40" width="176" height="40" role="img" aria-label="devhelp.pk">
+  <g transform="translate(4 4)">
+    <path fill="#313E8C" d="M10 3h12a7 7 0 0 1 7 7v12a7 7 0 0 1-7 7H3V10a7 7 0 0 1 7-7Z"/>
+    <path fill="none" stroke="#FEFDFC" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" d="M12.5 12L8.5 16L12.5 20M19.5 12L23.5 16L19.5 20M17.75 10.25L14.25 21.75"/>
+  </g>
+  <text x="46" y="27" font-family="Geist, 'Geist Sans', Inter, system-ui, sans-serif" font-size="22" font-weight="600" letter-spacing="-0.02em" fill="#141831">devhelp<tspan font-weight="400" fill="#5C6178">.pk</tspan></text>
+</svg>

@@ -8,6 +8,8 @@ import {
 } from "@repo/ui/components/accordion";
 import { Avatar, AvatarFallback } from "@repo/ui/components/avatar";
 import { Badge } from "@repo/ui/components/badge";
+import { BrandLogo } from "@repo/ui/components/brand-logo";
+import { BrandMark } from "@repo/ui/components/brand-mark";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -61,6 +63,7 @@ import { ShellDemo } from "./shell-demo";
 export const metadata: Metadata = { title: "Design system" };
 
 const SECTIONS = [
+  ["brand", "Brand"],
   ["colour", "Colour"],
   ["type", "Type"],
   ["buttons", "Buttons"],
@@ -301,6 +304,40 @@ export default function DesignPage() {
             ))}
           </ul>
         </nav>
+
+        <Section
+          id="brand"
+          title="Brand"
+          description="The mark is the legacy devhelppk speech bubble with a </> glyph, redrawn as SVG. It takes the current text colour, so it sits on any surface. Static files live in packages/ui/src/assets/brand."
+        >
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="flex flex-col gap-4 rounded-lg border bg-background p-6">
+              <BrandLogo className="text-2xl" />
+              <BrandLogo product="Learn" />
+              <div className="flex items-center gap-4">
+                <BrandMark size={48} />
+                <BrandMark size={32} className="text-foreground" />
+                <BrandMark
+                  size={24}
+                  className="text-madder-600 dark:text-madder-300"
+                />
+                <BrandMark size={16} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-4 rounded-lg border bg-ink p-6 text-paper [--brand-mark-glyph:var(--color-ink)] dark:bg-paper dark:text-ink dark:[--brand-mark-glyph:var(--color-paper)]">
+              <BrandLogo className="text-2xl text-current" />
+              <div className="flex items-center gap-4 text-current">
+                <BrandMark size={48} className="text-current" />
+                <BrandMark
+                  size={32}
+                  className="text-brand-300 dark:text-brand-600"
+                />
+                <BrandMark size={24} className="text-current" />
+                <BrandMark size={16} className="text-current" />
+              </div>
+            </div>
+          </div>
+        </Section>
 
         <Section
           id="colour"

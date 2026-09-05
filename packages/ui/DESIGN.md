@@ -230,3 +230,11 @@ What we deliberately changed:
 The Compass patterns that are product-specific (video player, lesson
 completion, interview index) are not part of the base system and will be
 designed with the LMS research.
+
+## Brand mark
+
+The mark is the legacy `devhelppk` GitHub avatar redrawn as SVG: a speech-bubble tile (square bottom-left corner) carrying a `</>` glyph. In React use `BrandMark` (tile = `currentColor`, glyph = `--brand-mark-glyph`, default page background) and `BrandLogo` (mark + "devhelp.pk"). On inverted surfaces set `[--brand-mark-glyph:var(--color-ink)]` or similar. Static files for favicons, READMEs, and social cards live in `packages/ui/src/assets/brand/` and are exported as `@repo/ui/assets/brand/*`. Each app's favicon is `app/icon.svg` (the indigo mark); Next.js serves it automatically.
+
+## Scrollbars
+
+Every scrollable surface uses a thin, theme-matched scrollbar: `scrollbar-width: thin` with a `--border` thumb on a transparent track, darkening to a muted-foreground tint on hover, plus equivalent `::-webkit-scrollbar` rules (8px, rounded, inset 2px) for engines without the standard properties. Defined once in `globals.css` under `@layer base`; do not restyle scrollbars per component. Use `[scrollbar-width:none]` only for horizontal chip rows where the bar would be noise.
