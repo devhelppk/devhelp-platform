@@ -26,7 +26,7 @@ Turborepo scopes tasks to the package of the current working directory. Always r
 | `packages/tailwind-config`                   | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper).                                                                   |
 | `packages/{eslint,typescript,vitest}-config` | `@repo/*-config`        | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this.                                            |
 
-Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, `@repo/database`, and `@repo/auth`. These packages are transpiled by Next (`transpilePackages`), no build step. Data model notes: `docs/data-model.md`.
+Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, `@repo/database`, and `@repo/auth`. These packages are transpiled by Next (`transpilePackages`), no build step. Product docs: `docs/requirements.md` (what/why), `docs/data-model.md` (schema), `docs/spec.md` (the ordered spec tracker: one spec at a time, plan → implement → review → test → complete; update its status and commit hash when a spec finishes).
 
 ## Conventions and gotchas
 
