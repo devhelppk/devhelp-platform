@@ -4,6 +4,8 @@ One spec at a time: **plan → implement → review → test → complete**. A s
 
 Source documents: `requirements.md` (what and why), `data-model.md` (schema decisions). Requirement ids (F1.11, X2, …) refer to `requirements.md`.
 
+Each spec gets its own directory under `docs/specs/<id>-<slug>/` holding `plan.md` (written in the plan step, approved before implementation) and, as the work proceeds, `review.md` (code-review findings and what was done about them) and `test.md` (what was tested, how, and the results). The spec's entry here links to that directory and carries the status.
+
 ## Status legend
 
 | Status        | Meaning                                                 |
@@ -15,10 +17,10 @@ Source documents: `requirements.md` (what and why), `data-model.md` (schema deci
 
 ## Lifecycle for each spec
 
-1. **Plan.** Write the plan into the spec's section: files to touch, schema changes, decisions, test list. Founder approves.
+1. **Plan.** Write `docs/specs/<id>-<slug>/plan.md`: decisions, schema, API, files to touch, tests, out of scope. Founder approves; status becomes `planned`.
 2. **Implement.** Build exactly the plan. Schema changes go through `pnpm db:generate` with a named migration.
-3. **Review.** `/code-review` on the diff; fix findings; note anything deliberately left.
-4. **Test.** Unit tests for logic, integration tests against Postgres where data is involved, a browser check for UI. All existing tests still pass.
+3. **Review.** `/code-review` on the diff; fix findings; record them and any deliberate leftovers in `review.md`.
+4. **Test.** Unit tests for logic, integration tests against Postgres where data is involved, a browser check for UI. All existing tests still pass. Summarise in `test.md`.
 5. **Complete.** Update status, record commit, tick acceptance criteria, add follow-ups to the backlog at the bottom.
 
 ---
@@ -33,7 +35,9 @@ Monorepo, design system, Better Auth with organizations and cohorts, docs. Commi
 
 ## Sequence
 
-### S1. Data model v1: learning core — `todo`
+### S1. Data model v1: learning core — `planned`
+
+Plan: [`specs/S1-learning-core/plan.md`](./specs/S1-learning-core/plan.md)
 
 Scope: replace the placeholder learning schema with the real one for courses, paths, lessons, quizzes, exercises, enrolment, and progress, following F1.1, F1.2, F1.8, F1.11, F1.11a, F1.13 and `data-model.md`. No UI.
 
