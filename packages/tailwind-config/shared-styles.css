@@ -1,7 +1,14 @@
-@import "tailwindcss";
-
+/* Shared design tokens for every devhelp app. Import after "tailwindcss". */
 @theme {
-  --color-blue-1000: #2a8af6;
-  --color-purple-1000: #a853ba;
-  --color-red-1000: #e92a67;
+  --color-brand-50: oklch(0.97 0.03 155);
+  --color-brand-100: oklch(0.93 0.06 155);
+  --color-brand-200: oklch(0.87 0.1 155);
+  --color-brand-300: oklch(0.79 0.14 155);
+  --color-brand-400: oklch(0.7 0.17 155);
+  --color-brand-500: oklch(0.6 0.17 155);
+  --color-brand-600: oklch(0.52 0.15 155);
+  --color-brand-700: oklch(0.44 0.12 155);
+  --color-brand-800: oklch(0.37 0.09 155);
+  --color-brand-900: oklch(0.3 0.07 155);
+  --color-brand-950: oklch(0.22 0.05 155);
 }

@@ -1,12 +1,24 @@
 {
-  "name": "with-tailwind",
+  "name": "devhelp-platform",
   "private": true,
+  "description": "devhelp.pk — a free, open-source learning platform for Pakistan's software engineers and students.",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=web...",
+    "dev:lms": "turbo run dev --filter=lms...",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "test": "turbo run test",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:push": "turbo run db:push",
+    "db:seed": "turbo run db:seed",
+    "db:studio": "pnpm --filter @repo/database db:studio",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\""
   },
   "devDependencies": {
     "prettier": "3.9.6",

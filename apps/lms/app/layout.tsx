@@ -4,13 +4,9 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 
 export const metadata: Metadata = {
-  title: {
-    default:
-      "devhelp — free, open-source learning for Pakistan's software engineers",
-    template: "%s · devhelp",
-  },
+  title: { default: "devhelp Learn", template: "%s · devhelp" },
   description:
-    "Free, open-source courses and guidance for students and engineers in Pakistan: technical skills, career skills, and AI-era engineering.",
+    "The devhelp learning platform: courses, lessons, and progress tracking.",
 };
 
 export default function RootLayout({
