@@ -1,8 +1,8 @@
 # devhelp features and requirements (working draft)
 
-Status: draft v1, 2026-09-06. Written before finishing the data model so the schema serves the product, not the other way round. Each area lists user stories, requirements, an MVP cut, and the data-model hooks to resolve in `data-model.md`.
+Status: draft v2, 2026-09-06 (founder review applied: everything below is MVP scope; no area is deferred). Written before finishing the data model so the schema serves the product, not the other way round. Each area lists user stories, requirements, an MVP cut, and the data-model hooks to resolve in `data-model.md`.
 
-Priority labels: **P0** = must exist for launch, **P1** = first quarter after launch, **P2** = later. "Later" items are still specified so P0 choices do not paint us into a corner.
+Scope note: the founder has confirmed all four areas are required for MVP. "Phase" labels below only order the build inside the MVP; nothing is deferred past launch.
 
 ## Actors
 
@@ -14,7 +14,7 @@ Priority labels: **P0** = must exist for launch, **P1** = first quarter after la
 | Org staff | Owner/admin of an organization (society, bootcamp, company). Runs cohorts.   | `student` or `mentor` + `members.role` |
 | Admin     | devhelp team. Moderation, publishing, badges, certificates.                  | `admin`                                |
 
-Cross-cutting principles (from the research and curriculum review): completion needs a mechanism (cohorts, deadlines, visible progress, an employer-facing signal); content is open (CC BY-SA 4.0) and lives in git; the audience is on mid-range Android phones and unreliable data, so every page must be fast and readable on a 360px screen; Roman-Urdu and Urdu summaries are a first-class content field, not an afterthought.
+Cross-cutting principles (from the research and curriculum review): completion needs a mechanism (cohorts, deadlines, visible progress, an employer-facing signal); content is open (CC BY-SA 4.0) and lives in git; the audience is on mid-range Android phones and unreliable data, so every page must be fast and readable on a 360px screen; the UI is English; Urdu is not in scope.
 
 ---
 
@@ -45,7 +45,6 @@ The core product: structured courses made of modules and lessons, with tracked p
 - F1.4 Video lessons embed YouTube (unlisted) by default with completion tracked via the player API; provider is a field so Mux/Cloudflare can be added later.
 - F1.5 Exercises run in the browser: Sandpack for web (HTML/CSS/JS/TS/React), Pyodide for Python, CodeMirror 6 as editor. Tests ship with the exercise; pass/fail is computed client-side and recorded server-side with the submitted code.
 - F1.6 Quizzes support single-choice, multiple-choice, and short-answer; correct answers and explanations are stored server-side and graded in a server action; each question has per-option feedback.
-- F1.7 Every lesson has optional `summary_ur` (Urdu) and `summary_roman_ur` fields shown as a collapsible "Khulasa" block.
 - F1.8 Paths group courses in order (e.g. "AI Engineering Foundations") and show as a roadmap with the learner's position.
 - F1.9 Each lesson and course has a "Foundation mode" / "Industry mode" flag from the curriculum: whether AI assistance is expected, and the lesson states it.
 
@@ -53,6 +52,7 @@ The core product: structured courses made of modules and lessons, with tracked p
 
 - F1.10 Enrolling is one click; unenrolling keeps history.
 - F1.11 Lesson progress is a state (`not_started`, `in_progress`, `completed`) with `progress_percent`, `last_position_seconds` for video, and timestamps. Course progress and `enrollments.status` are derived from lesson completion plus the course's completion criteria (default: all required lessons; optional: minimum quiz score, project accepted).
+- F1.11a Implementation follows the pattern used by Open edX and Canvas at scale: an append-only `progress_events` stream is the source of truth; `lesson_progress` and `enrollments.progress_percent` are materialised read models updated transactionally on each event, with a rebuild job that can recompute any learner from the stream. Writes are idempotent (event key = user + subject + kind + client id) so retries and offline replays never double count.
 - F1.12 "Continue" resolves to the first incomplete required lesson.
 - F1.13 A `progress_events` append-only log records every completion, submission, and attempt. Streaks, activity graphs, and badges are computed from it, and it allows regrading.
 - F1.14 Offline tolerance: lesson pages are cacheable; completion writes retry when the connection returns.
@@ -69,7 +69,8 @@ The core product: structured courses made of modules and lessons, with tracked p
 **Certificates**
 
 - F1.18 A certificate is issued when a course's completion criteria are met. It stores `verify_uuid`, issue date, the criteria snapshot (which lessons, quiz scores, accepted projects), and the learner's name at issue time.
-- F1.19 `/verify/[uuid]` is public, indexable, and shows the criteria snapshot and links to accepted project repos. The PDF/PNG is generated from the same data with the brand mark.
+- F1.19 `/verify/[uuid]` is public, indexable, and shows the criteria snapshot and links to accepted project repos.
+- F1.19a A downloadable PDF is generated from the same record (server-rendered with the brand mark, the verify URL and a QR code printed on it) and cached in object storage; the learner can re-download it any time and share the verify link independently.
 - F1.20 Certificates can be revoked by an admin with a reason; the verify page then says so.
 
 **Cohorts (organizations)**
@@ -82,18 +83,14 @@ The core product: structured courses made of modules and lessons, with tracked p
 - N1.1 First lesson paint under 2 s on a mid-range Android over 3G; lesson pages under 150 KB of JS before exercise runners load on demand.
 - N1.2 Every progress write is idempotent (unique on user + lesson) so retries never double-count.
 - N1.3 Content changes deploy without a DB migration: MDX in git, a sync step upserts course/module/lesson rows by slug.
-- N1.4 All learner-facing text has an Urdu translation path (next-intl or equivalent) even if v1 ships English only.
 
-### MVP cut (P0)
+### Build phases (all MVP)
 
-Catalogue, article and video lessons, quizzes, enrolment, lesson/course progress, Continue, progress events, one path, certificates with verify page, Urdu summaries. Exercises with Sandpack (web only). Cohorts with syllabus and aggregate progress.
-
-P1: Pyodide exercises, project submissions with mentor review, badges, streaks, public profiles, peer review.
-P2: offline tolerance, Mux/Cloudflare video, Urdu UI.
+Phase 1: catalogue, article and video lessons, quizzes, enrolment, progress (event stream + read models), Continue, paths, certificates (verify page + PDF). Phase 2: Sandpack and Pyodide exercises, project submissions with mentor review, badges, streaks, public profiles, cohorts with syllabus and aggregate progress. Offline tolerance and alternative video providers are the only items that may land after launch.
 
 ### Data-model hooks
 
-`courses` (+ `estimated_hours`, `prerequisites`, `content_path`, `completion_criteria` jsonb), `lessons` (+ `completion_rule`, `video_provider`, `video_id`, `summary_ur`, `summary_roman_ur`, `mode`), `enrollments` (+ `status`, `progress_percent`, `last_lesson_id`, `team_id`), `lesson_progress` (state model), `quizzes`/`questions`/`quiz_attempts`, `exercise_submissions`, `project_submissions` + `project_reviews`, `badges` + `user_badges`, `certificates`, `paths` + `path_courses`, `cohort_courses`, `progress_events`.
+`courses` (+ `estimated_hours`, `prerequisites`, `content_path`, `completion_criteria` jsonb), `lessons` (+ `completion_rule`, `video_provider`, `video_id`, `mode`), `enrollments` (+ `status`, `progress_percent`, `last_lesson_id`, `team_id`), `lesson_progress` (state model), `quizzes`/`questions`/`quiz_attempts`, `exercise_submissions`, `project_submissions` + `project_reviews`, `badges` + `user_badges`, `certificates`, `paths` + `path_courses`, `cohort_courses`, `progress_events`.
 
 ---
 
@@ -122,6 +119,7 @@ A community-contributed, Pakistan-focused reference on employers: what it is lik
 **Reviews**
 
 - F2.3 Review fields: overall rating (1 to 5), sub-ratings (learning, management, work-life balance, compensation, growth), role, employment status (current / former / intern), tenure band, city, pros, cons, advice, would-recommend. Author is anonymous publicly; stored internally for moderation and one-review-per-company-per-user.
+- F2.3a Every review, interview experience, and salary point is anonymised in all public and API output (no user id, name, or exact dates; dates rounded to month) and carries a `verified` / `unverified` badge. At launch everything is `unverified`; verification (work-email or document check, Glassdoor-style) is a later feature but the field, the badge, and the audit trail exist from day one so nothing needs re-modelling.
 - F2.4 Reviews go through a moderation queue before publishing (see moderation below). Published reviews can be flagged by readers.
 
 **Interviews**
@@ -130,7 +128,7 @@ A community-contributed, Pakistan-focused reference on employers: what it is lik
 
 **Salaries**
 
-- F2.6 Salary point: role, level, years of experience, city, employment type, base per month in PKR, bonus/equity flags, year, remote/on-site. Displayed only as aggregates with n ≥ 5 per cell (role + level or role + city); below that, show a wider band or "not enough data". Never show individual points.
+- F2.6 Salary point: role, level, years of experience, city, employment type, base per month in PKR, bonus/equity flags, year, remote/on-site. Displayed **only as aggregates per role** (median, p25 to p75, n) with optional level and city breakdowns when each cell has n ≥ 5; below that, show the role-level aggregate or "not enough data". Individual points are never shown or exportable.
 - F2.7 Foreign-employer salaries in USD are supported (remote work is common); display converts with a stored rate and shows both.
 
 **Trust and moderation**
@@ -153,12 +151,9 @@ A community-contributed, Pakistan-focused reference on employers: what it is lik
 - N2.2 Anonymity: public payloads never include user ids; internal linkage lives in a separate column set readable only by admins; exports strip it.
 - N2.3 Aggregates are computed in the database (materialised view refreshed on write) so company pages stay cheap.
 
-### MVP cut (P0)
+### Build phases (all MVP)
 
-Company profiles (proposed and approved), reviews with moderation, interview experiences, salary aggregates with the n ≥ 5 rule, search, and the content policy page.
-
-P1: verified affiliation marks, company claims and responses, cross-links to courses.
-P2: openings, employer accounts.
+Phase 1: company profiles (proposed and approved), reviews, interview experiences, salary aggregates per role with the n ≥ 5 rule, anonymisation, `verified`/`unverified` badge (all unverified at launch), moderation queue, search, content policy page. Phase 2: company claims and public responses, cross-links to courses. Verification mechanics and job openings come after launch.
 
 ### Data-model hooks
 
@@ -170,42 +165,49 @@ P2: openings, employer accounts.
 
 ### Scope
 
-How lessons, courses, quizzes, and company facts get written, reviewed, and published, mostly through git, with the platform providing the human workflow around it. Content is code; the platform is the editor's assistant, not the editor.
+How lessons, courses, quizzes, exercises, and company facts get written, reviewed, and published, and how learner-facing signals route back to mentors. The founder asked for a researched proposal on where content lives: MDX in the platform repo, MDX in a separate repo, or content in Postgres behind a mentor platform.
 
-### User stories
+### Options considered (verified 2026-09-06)
 
-- As a prospective mentor I can apply with my background and a sample; a devhelp admin approves me and I get the `mentor` role and a place in the contributors list.
-- As a mentor I can pick up an open content task (an issue), write a lesson in MDX using a template, preview it locally and in a PR preview, and get it reviewed by another mentor and an editor before it ships.
-- As a mentor I can see which lessons have low ratings, high drop-off, or open comments, and claim them for revision.
-- As a mentor I review learner project submissions from a queue (area 1) and verify company facts (area 2).
-- As an admin I can see contributor activity and credit mentors on lessons and on the site.
+| Option                                      | How it works                                                                                                                                                                                                                                                                              | Fits                                                                                                                                                            | Costs                                                                                                                                                                                                          |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. MDX in the platform repo                 | Lessons in `content/` next to app code; mentors open PRs; build compiles MDX (`fumadocs-mdx` 15.x, supports Next 16).                                                                                                                                                                     | Zero infra, full history, PR review, previews for free. This is how freeCodeCamp and The Odin Project run at 450k / 13k stars.                                  | Mentors must use git; app and content PRs share one queue and one CI; content churn triggers app builds.                                                                                                       |
+| B. MDX in a separate `devhelp-content` repo | Same as A, but the content repo is the source of truth and the platform consumes it (build-time submodule/package, or runtime fetch with on-demand revalidation).                                                                                                                         | Keeps mentor PRs away from app code; content can have its own reviewers, CI, and release cadence; the repo itself is a public, forkable curriculum.             | One sync hop; two repos to keep in step; still git-only unless paired with an editor (see C).                                                                                                                  |
+| C. B + a git-backed editor UI               | Keystatic (MIT, Thinkmill, `@keystatic/next` 5.x, Next ≥14) mounted in the LMS at `/studio`, in GitHub mode: mentors edit MDX and structured fields in a browser; Keystatic writes to a branch and opens a PR. Decap (MIT, 19k stars) and TinaCMS (Apache-2.0, 13k) are the alternatives. | Non-git mentors get a form-based editor; git-fluent mentors keep PRs; content stays plain MDX + YAML so the editor is replaceable; one migration system (ours). | Keystatic is small (2.3k stars, 0.6.x) but actively maintained and backed by a consultancy; its schema must mirror our Zod content schema.                                                                     |
+| D. Content in Postgres via a CMS            | Payload CMS 3.88 (MIT, 44k stars, runs inside Next 16, stores in Postgres through its own Drizzle layer) with drafts, versions, access control, live preview. Mentors edit in-browser; publish is instant. This is the Coursera/Udemy model.                                              | No git at all; structured fields for quizzes and exercises; instant publish and rollback.                                                                       | Second migration system in the same database; content is no longer a public git curriculum (contribution by PR disappears); exercises with test code and previews fit less naturally; heavy dependency to own. |
 
-### Functional requirements
+### Proposal: option C
 
-- F3.1 Content lives in `content/` in the platform repo (or a sibling `devhelp-content` repo if it outgrows it) as MDX with frontmatter validated by a Zod schema at build time: slug, title, type, duration, mode, completion rule, quiz/exercise spec, `summary_ur`, authors, reviewers, `updated`.
-- F3.2 A `pnpm content:check` command lints frontmatter, links, images, quiz answers, exercise tests, and the style guide (adapted from The Odin Project's template and freeCodeCamp's challenge format).
-- F3.3 PR previews (Vercel or equivalent) render changed lessons with the real design system.
-- F3.4 A `CODEOWNERS`-style map assigns tracks to editor mentors; a PR needs one editor approval plus one mentor review.
-- F3.5 A sync step upserts published content into Postgres by slug on deploy; deleting a lesson archives rather than deletes rows so progress history survives.
-- F3.6 Mentor application form on the site; approval flips the platform role and adds the mentor to the public contributors page with bio and links.
-- F3.7 Mentor dashboard: open content issues (pulled from GitHub), lessons needing revision (rating below threshold, drop-off above threshold, unresolved comments), project review queue, company moderation queue.
-- F3.8 Attribution: lesson pages show authors and reviewers with links; contributor stats feed a "top contributors" section.
-- F3.9 Non-git path (P1): an in-browser MDX editor that opens a PR on the contributor's behalf via the GitHub API, for mentors who are not comfortable with git.
+Content is a public git repository, edited through PRs or a browser editor that produces PRs. Runtime data stays in Postgres. Concretely:
+
+- F3.1 `devhelp-content` repo: `courses/<course>/course.yaml`, `courses/<course>/<module>/<lesson>.mdx` with YAML frontmatter, `quizzes/*.yaml`, `exercises/<slug>/{README.mdx, starter/, tests/}`, `paths/*.yaml`, `badges/*.yaml`, `companies/*.yaml` (verified facts only; reviews and salaries are user data and live in Postgres). A Zod schema package (`@repo/content-schema`) is shared by the content repo's CI and the platform.
+- F3.2 `pnpm content:check` in the content repo lints frontmatter, links, images, quiz answers, exercise tests (runs them), and the style guide. Required on every PR.
+- F3.3 Keystatic mounted at `learn.devhelp.pk/studio` in GitHub mode, restricted to `mentor` and `admin` roles, with collections mirroring the Zod schema. Saving creates a branch and a PR on `devhelp-content`; the mentor never touches git. Git-fluent mentors bypass it.
+- F3.4 Review: `CODEOWNERS` maps tracks to editor mentors; a PR needs one editor approval and one mentor review; PR preview deploy renders changed lessons with the real design system.
+- F3.5 Publish: on merge, a GitHub Action builds the content package and calls a platform webhook; the platform upserts course/module/lesson/quiz/exercise/badge metadata into Postgres by slug (archiving removed items so progress history survives) and revalidates the affected pages. Lesson bodies are compiled MDX served from the platform build (`fumadocs-mdx` or `@content-collections/next`), so a content merge triggers a platform rebuild; with on-demand revalidation this is minutes, not a full redeploy.
+- F3.6 `content_revisions` records which content commit published which lesson version; certificates reference the revision so "what did this course require at issue time" is answerable.
+- F3.7 Mentor onboarding: application form, admin approval flips the role, adds the mentor to the public contributors page, and grants Studio access.
+- F3.8 Mentor dashboard in the LMS: open content issues (GitHub API), lessons needing revision (rating below threshold, unclear-tag rate, drop-off, unresolved questions), project review queue, company moderation queue.
+- F3.9 Attribution on every lesson (authors, reviewers) from frontmatter, plus contributor stats.
+- F3.10 Exit path: if in-browser editing ever needs to be instant and structured beyond what git can do, the content package boundary (`@repo/content-schema` + sync webhook) is where Payload would slot in; nothing else changes.
+
+### Why not D now
+
+Everything in area 1 (quizzes with server-side answers, exercises with tests, certificates tied to a content version) benefits from content being versioned text with CI. The mission benefits from the curriculum being a forkable public repo. Option C gives non-git mentors a form editor without giving up either. Option D is the right call only if mentors need to publish without any review step, which contradicts F3.4.
 
 ### Non-functional
 
-- N3.1 Everything a mentor needs to write and preview runs locally with `pnpm dev`; no paid services required.
-- N3.2 Content license CC BY-SA 4.0 is asserted in the repo and on every lesson; contributors agree on their first PR (CLA-lite via a checkbox in the PR template).
+- N3.1 Everything a mentor needs runs locally with `pnpm dev`; Keystatic also works in local mode against a checkout.
+- N3.2 Content license CC BY-SA 4.0 asserted in the content repo and on every lesson; contributors accept it in the PR template.
+- N3.3 Content sync is idempotent and safe to replay; a full resync from the content repo must rebuild all metadata rows without touching learner data.
 
-### MVP cut (P0)
+### Build phases (all MVP)
 
-MDX content directory with schema and `content:check`, PR-based review with previews, sync-to-DB on deploy, mentor application and role flip, attribution on lessons.
-
-P1: mentor dashboard with revision signals, in-browser editor that opens PRs.
+Phase 1: content repo with schema and `content:check`, PR review with previews, sync webhook, attribution, mentor application. Phase 2: Keystatic studio, mentor dashboard with revision signals.
 
 ### Data-model hooks
 
-`mentor_applications`, `content_revisions` (which git commit published which lesson version; needed for "what did this certificate's course look like at issue time"), `lesson_authors` (user + role: author / reviewer / translator). Most of the workflow state stays in GitHub; the DB only mirrors what the product needs to display.
+`mentor_applications`, `content_revisions`, `lesson_authors`; content metadata tables (`courses`, `modules`, `lessons`, `quizzes`, `questions`, `exercises`, `paths`, `badges`, `companies` facts) are owned by the sync and carry `content_path` + `content_hash`.
 
 ---
 
@@ -239,9 +241,9 @@ Lightweight signals that improve content and help learners help each other, with
 - N4.2 Ratings are idempotent per user + subject; aggregates are recomputed on write.
 - N4.3 Comments are indexed for search within a course but are `noindex` for external search until moderated.
 
-### MVP cut (P0)
+### Build phases (all MVP)
 
-Lesson ratings with tags, course reviews, per-lesson aggregates. Comments (questions and replies, upvotes, accepted answers) are **P1** because they need moderation staffing; ship ratings first and gather the signal.
+Phase 1: lesson ratings with tags, course reviews, per-lesson and per-course aggregates. Phase 2: comments (questions and replies, upvotes, accepted answers), notifications, moderation hooks. Both ship for launch; ratings first so the revision signal exists while comments are being built.
 
 ### Data-model hooks
 
@@ -251,26 +253,34 @@ Lesson ratings with tags, course reviews, per-lesson aggregates. Comments (quest
 
 ## Cross-cutting requirements
 
-- X1 **Identity and organizations** as built: Better Auth, platform roles, organizations with cohorts. Email verification is required before contributing to areas 2 and 4; an email provider (Resend or Postmark) is therefore P0 for those areas.
+- X1 **Identity and organizations** as built: Better Auth, platform roles, organizations with cohorts. Email verification is required before contributing to areas 2 and 4; an email provider (Resend or Postmark) is therefore required for launch.
 - X2 **Moderation** is one system used by areas 2, 3, and 4: a queue, a flag model, a policy page, an audit log, and role-based access (mentor can approve content in their track; admin can do everything).
 - X3 **Search** across courses, lessons, companies, and (later) comments. Start with Postgres full-text search; move to Typesense/Meilisearch if needed.
 - X4 **Notifications** in-app with an email digest; a single `notifications` table with type, subject, read state.
 - X5 **Public profiles** (opt-in): name, city, badges, certificates, accepted projects, contributions. The employer-facing signal from the curriculum review lives here.
 - X6 **Analytics** privacy-preserving (Plausible or Umami self-hosted): lesson drop-off, completion funnels, search terms. No third-party ad trackers.
-- X7 **Accessibility and localisation**: WCAG AA, keyboard and screen-reader paths, RTL-ready layout for Urdu, all dates and numbers localised.
+- X7 **Accessibility**: WCAG AA, keyboard and screen-reader paths. English-only UI; dates and currency formatted for Pakistan (PKR, DD Mon YYYY).
 - X8 **Performance budget** as in N1.1; the company bank and catalogue are static-rendered with ISR; progress and comments are dynamic islands.
 - X9 **Open source**: MIT code, CC BY-SA content, public roadmap, contribution guide, and the platform must run end to end on a laptop with Docker and no paid keys.
 
-## Suggested build order
+## Build order (everything ships for launch)
 
-1. LMS P0 (area 1) with ratings (area 4 P0) and the content pipeline (area 3 P0). This is the product.
+1. Content repo, schema, sync (area 3 phase 1) and LMS phase 1 (area 1) with lesson ratings (area 4 phase 1). This is the product.
 2. Email provider, moderation system, public profiles (X1, X2, X5).
-3. Company bank P0 (area 2). It is the SEO and acquisition engine and benefits from the moderation system existing.
-4. Comments, badges, mentor dashboard, peer review (P1 across areas).
+3. Company bank phase 1 (area 2). It is the SEO and acquisition engine and needs the moderation system.
+4. Exercises, projects and review, badges, cohorts (area 1 phase 2); comments (area 4 phase 2); Keystatic studio and mentor dashboard (area 3 phase 2); company claims (area 2 phase 2).
+
+## Decisions recorded (founder, 2026-09-06)
+
+- Certificates are verifiable pages **and** downloadable PDFs.
+- Progress follows the event-stream + materialised read model pattern (F1.11a).
+- Salaries are aggregates per role only; all company-bank submissions are anonymised and carry a `verified` / `unverified` badge; verification mechanics come later, the model exists now.
+- Mentor contributions: option C above (public content repo, PR review, Keystatic studio for non-git mentors, sync to Postgres).
+- All four areas are MVP; nothing is deferred past launch.
+- No Urdu summaries or Urdu UI.
 
 ## Open questions for the founder
 
-1. Are company reviews and salaries a launch feature or a second act? They bring legal and moderation load early but also traffic.
-2. Should certificates require an accepted project, or is quiz completion enough for a first tier? (Two tiers: "completed" vs "verified with project" is an option.)
-3. Who moderates on day one? If it is one person, the P0 cut for areas 2 and 4 should be smaller.
-4. Is the content repo the platform repo or a separate one? Separate keeps mentor PRs away from app code but adds a sync hop.
+1. Should certificates require an accepted project, or is quiz completion enough for a first tier? Two tiers ("completed" vs "verified with project") is an option.
+2. Who moderates on day one? Reviews, interviews, comments, and content PRs all need humans; the moderation queue is built for it, but staffing decides throughput.
+3. Content repo name and org: `devhelppk/devhelp-content` under the existing GitHub org?
