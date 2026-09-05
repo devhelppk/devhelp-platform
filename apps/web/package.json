@@ -12,8 +12,10 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
     "@repo/ui": "workspace:*",
+    "better-auth": "^1.7.2",
     "geist": "1.7.2",
     "next": "16.3.1",
     "react": "19.2.8",

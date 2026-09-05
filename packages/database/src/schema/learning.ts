@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
 import { courses, lessons } from "./courses";
-import { users } from "./users";
+import { users } from "./auth";
 
 export const enrollments = pgTable(
   "enrollments",

@@ -16,16 +16,17 @@ Turborepo scopes tasks to the package of the current working directory. Always r
 
 ## Layout
 
-| Path | Package | Notes |
-| --- | --- | --- |
-| `apps/web` | `web` | Marketing site. `/design` is the living style guide. |
-| `apps/lms` | `lms` | Learning platform. `/courses` reads Postgres (`force-dynamic`). |
-| `packages/ui` | `@repo/ui` | shadcn/ui, consumed from source. Tokens + rules in `packages/ui/DESIGN.md`. |
-| `packages/database` | `@repo/database` | Drizzle ORM + postgres-js. Schema in `src/schema/*.ts`, migrations in `drizzle/`. |
-| `packages/tailwind-config` | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper). |
-| `packages/{eslint,typescript,vitest}-config` | `@repo/*-config` | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this. |
+| Path                                         | Package                 | Notes                                                                                                                              |
+| -------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`                                   | `web`                   | Marketing site. `/design` is the living style guide.                                                                               |
+| `apps/lms`                                   | `lms`                   | Learning platform. `/courses` reads Postgres (`force-dynamic`).                                                                    |
+| `packages/ui`                                | `@repo/ui`              | shadcn/ui, consumed from source. Tokens + rules in `packages/ui/DESIGN.md`.                                                        |
+| `packages/database`                          | `@repo/database`        | Drizzle ORM + postgres-js. Schema in `src/schema/*.ts`, migrations in `drizzle/`. `schema/auth.ts` is generated, do not hand-edit. |
+| `packages/auth`                              | `@repo/auth`            | Better Auth server (`@repo/auth`) + React client (`@repo/auth/client`). Admin + organization (teams = cohorts) plugins.            |
+| `packages/tailwind-config`                   | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper).                                                                   |
+| `packages/{eslint,typescript,vitest}-config` | `@repo/*-config`        | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this.                                            |
 
-Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, and `@repo/database`. Both packages are transpiled by Next (`transpilePackages`), no build step.
+Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, `@repo/database`, and `@repo/auth`. These packages are transpiled by Next (`transpilePackages`), no build step. Data model notes: `docs/data-model.md`.
 
 ## Conventions and gotchas
 
@@ -35,7 +36,9 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - **Internal links in apps must use `next/link`.** ESLint runs with `--max-warnings 0` and `@next/next/no-html-link-for-pages` fails the build on `<a href="/...">`.
 - **TypeScript 7:** `baseUrl` is removed. Use `paths` alone (`"@/*": ["./*"]`).
 - **Database:** write `camelCase` columns in Drizzle; `casing: "snake_case"` is set in both the client (`src/index.ts`) and `drizzle.config.ts`, so Postgres columns are `snake_case`. Keep both in sync. After a schema change run `pnpm db:generate`, rename the generated file to something descriptive (update `drizzle/meta/_journal.json` `tag` to match), then `pnpm db:migrate`. `db:push` is for throwaway prototyping only. Commit migrations.
-- **Env:** only `DATABASE_URL` for now. `packages/database/src/env.ts` walks up to the repo root `.env` (marked by `pnpm-workspace.yaml`) so apps, drizzle-kit, and the seed all share it. Declare new env vars in `turbo.json` `globalEnv`.
+- **Auth schema:** identity tables come from the Better Auth config. Change `packages/auth/src/server.ts` (e.g. `additionalFields`), then `pnpm --filter @repo/auth auth:generate` (writes `packages/database/src/schema/auth.ts`), then `pnpm db:generate` + `pnpm db:migrate`. Use the `auth` CLI package (matches `better-auth` 1.7); `@better-auth/cli` is stale at 1.4 and emits an incompatible schema. Route handlers live at `app/api/auth/[...all]/route.ts` in each app.
+- **Auth tests** in `packages/auth` hit the real local Postgres and need `BETTER_AUTH_SECRET` in `.env`.
+- **Env:** `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, optional `GITHUB_*` / `GOOGLE_*` OAuth keys. `packages/database/src/env.ts` walks up to the repo root `.env` (marked by `pnpm-workspace.yaml`) so apps, drizzle-kit, and the seed all share it. Declare new env vars in `turbo.json` `globalEnv`.
 - **Tests:** Vitest + Testing Library. UI and app tests use `@repo/vitest-config/ui` (jsdom, `vitest.setup.ts` loads jest-dom). Node packages use `@repo/vitest-config/base`. Co-locate tests as `*.test.ts(x)`.
 - **Formatting:** Prettier with the Tailwind class-sorting plugin; run `pnpm format` before committing. CI runs `format:check`.
 - **Ports:** web 3000, lms 3001. Stop dev servers with `pgrep -f "next dev" | xargs -r kill`; `pkill -f "next dev"` will match and kill the invoking shell.

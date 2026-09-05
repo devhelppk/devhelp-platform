@@ -8,7 +8,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { users } from "./users";
+import { users } from "./auth";
 
 export const courseLevel = pgEnum("course_level", [
   "beginner",
