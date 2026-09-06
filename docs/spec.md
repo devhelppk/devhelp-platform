@@ -83,7 +83,9 @@ Acceptance criteria
 
 Depends on: S1.
 
-### S3. LMS catalogue and lesson experience — `todo` (next)
+### S3. LMS catalogue and lesson experience — `planned`
+
+Plan: [`specs/S3-lms-experience/plan.md`](./specs/S3-lms-experience/plan.md)
 
 Scope: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10. Public catalogue, course page, path roadmap, lesson reader (article, video with completion, link), enrol, Continue, per-course progress UI. Uses the design system's app shell. Introduces `packages/api` (tRPC v11: `learning` router over `@repo/learning`, `catalogue` router over Drizzle reads), `@t3-oss/env-nextjs` in both apps, and `typedRoutes`.
 
