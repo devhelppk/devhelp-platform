@@ -177,7 +177,7 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S8. Badges and streaks — `done` (PENDING)
+### S8. Badges and streaks — `done` (`c83babe`)
 
 Plan: [`specs/S8-badges-streaks/plan.md`](./specs/S8-badges-streaks/plan.md)
 
