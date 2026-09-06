@@ -227,15 +227,19 @@ Acceptance criteria
 
 Depends on: S5, S7 (storage).
 
-### S10b. Company bank: salaries — `todo`
+### S10b. Company bank: salaries — `done`
 
-Scope: F2.6, F2.7, F2.11 (the salary half of the split above). Salary points stored as earned, aggregated per role with the n ≥ 5 rule through the same view, PKR with USD supported at a stored rate, individual points never selectable.
+Plan: [`specs/S10b-salaries/plan.md`](./specs/S10b-salaries/plan.md). Records: [`review.md`](./specs/S10b-salaries/review.md), [`test.md`](./specs/S10b-salaries/test.md)
+
+Scope: F2.6, F2.7, F2.11 (the salary half of the split above). Salary points stored as earned, aggregated per role with the n ≥ 5 rule, shown in the currency they were earned in, individual points never selectable. Founder decisions 2026-09-07: display in the submitted currency with conversion from a daily-refreshed `fx_rates` table; salary points publish at once and carry an unverified mark until an admin checks them; the floor stays at five for every cell.
 
 Acceptance criteria
 
-- [ ] Salary cells with n < 5 fall back to the role aggregate or "not enough data".
-- [ ] One salary point per company per user; individual points never appear in any public payload.
-- [ ] Percentiles are computed in Postgres, not over fetched rows.
+- [x] Salary cells with n < 5 fall back to the role aggregate or "not enough data". The floor is a `HAVING` clause inside the two views, alongside rounding to a per-currency step and withholding the middle half below n = 8 — the floor alone published three of five people's exact salaries, because `percentile_cont` lands on raw values at that size (found in review).
+- [x] One salary point per company per user; individual points never appear in any public payload (tested on serialisation).
+- [x] Percentiles are computed in Postgres by `percentile_cont`, not over fetched rows, and rounded there too. Aggregates cover staff roles reported in the last three years; internships and older figures are excluded rather than averaged in.
+- [x] Salaries display in the currency submitted, with conversion only as an aid.
+- [x] Browser loop passed; five fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S10a.
 
@@ -283,6 +287,7 @@ Founder actions
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
 - Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
+- Schedule `pnpm fx:refresh` daily in production (S10b). Without it the salary tables still work and still show what people were paid; they simply do not offer the converted PKR figure beside a USD one.
 
 Technical
 

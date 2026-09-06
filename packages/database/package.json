@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./fx": "./src/fx.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate",
@@ -14,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/seed.ts",
     "db:reference": "tsx src/reference.ts",
+    "fx:refresh": "tsx src/fx.ts",
     "lint": "eslint src --max-warnings 0",
     "check-types": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./levels": "./src/levels.ts"
   },
   "scripts": {
     "lint": "eslint src --max-warnings 0",

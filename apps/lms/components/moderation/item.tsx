@@ -49,6 +49,7 @@ export function ModerationItem({
     "company_proposal",
     "company_review",
     "interview_experience",
+    "salary_point",
   ];
   const canDecide = !adminOnly.includes(it.subjectType) || isAdmin;
 
@@ -243,6 +244,31 @@ export function ModerationItem({
                 </>
               ) : null}
             </>
+          ) : payload.kind === "salary_point" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.companyName}</dd>
+              <dt className="text-muted-foreground">Role</dt>
+              <dd>
+                {payload.data.role}
+                {payload.data.level ? ` · ${payload.data.level}` : ""}
+                {payload.data.city ? ` · ${payload.data.city}` : ""}
+              </dd>
+              <dt className="text-muted-foreground">Amount</dt>
+              <dd>{payload.data.amount}</dd>
+              <dt className="text-muted-foreground">Year</dt>
+              <dd>
+                {payload.data.year}
+                {payload.data.yearsExperience !== undefined
+                  ? ` · ${payload.data.yearsExperience} years of experience`
+                  : ""}
+              </dd>
+              <dt className="text-muted-foreground">Note</dt>
+              <dd>
+                Already public, and invisible on its own: aggregates need five
+                reports. Approving marks it checked; hiding removes it.
+              </dd>
+            </>
           ) : payload.kind === "company_contribution" ? (
             <>
               <dt className="text-muted-foreground">Company</dt>
@@ -351,11 +377,13 @@ export function ModerationItem({
             Only administrators decide mentor applications.
           </p>
         ) : null}
-        {it.status === "approved" && canDecide ? (
+        {(it.status === "approved" ||
+          (it.status === "pending" && it.subjectType === "salary_point")) &&
+        canDecide ? (
           <form onSubmit={submit("hide")} className="flex items-end gap-2">
             <div className="flex flex-1 flex-col gap-2">
-              <Label htmlFor="reason">Hide with reason</Label>
-              <Textarea id="reason" name="reason" rows={2} required />
+              <Label htmlFor="hide-reason">Hide with reason</Label>
+              <Textarea id="hide-reason" name="reason" rows={2} required />
             </div>
             <Button type="submit" variant="outline" disabled={decide.isPending}>
               Hide

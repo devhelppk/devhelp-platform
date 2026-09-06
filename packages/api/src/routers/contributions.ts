@@ -1,5 +1,9 @@
 import { and, desc, eq, schema, sql } from "@repo/database";
-import { interviewRoundsSchema } from "@repo/database/schema";
+import {
+  interviewRoundsSchema,
+  salarySnapshotSchema,
+} from "@repo/database/schema";
+import { latestUsdToPkr } from "@repo/database/fx";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -9,8 +13,12 @@ import {
   verifiedProcedure,
 } from "../trpc";
 import { companyIdBySlug } from "./companies";
+import { SALARY_LEVELS } from "../levels";
 
-const { companyReviews, interviewExperiences, organizations } = schema;
+const { companyReviews, interviewExperiences, organizations, salaryPoints } =
+  schema;
+
+type SalarySnapshot = z.infer<typeof salarySnapshotSchema>;
 
 /** 1-5 on a sub-score is optional; the overall rating is not. */
 const score = z.number().int().min(1).max(5);
@@ -234,9 +242,148 @@ export const contributionsRouter = router({
       });
     }),
 
+  /**
+   * A salary point (F2.6, F2.7, F2.11). Unlike the other contributions this
+   * publishes at once and is marked unverified until an admin looks at it
+   * (founder decision, S10b): there is no prose to moderate, and the views'
+   * `n >= 5` floor means one point on its own is invisible regardless. The
+   * queue item is opened all the same, so the admin record is identical.
+   */
+  submitSalary: verifiedProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        roleId: z.uuid(),
+        // A grouping key for `salary_stats_detail`, so it is a fixed list:
+        // free text made "Senior", "senior", and "Sr" three separate cells,
+        // none of which would ever reach five.
+        level: z.enum(SALARY_LEVELS).optional(),
+        yearsExperience: z.number().int().min(0).max(50).optional(),
+        cityId: z.uuid().optional(),
+        employmentType: z.enum(schema.employmentType.enumValues),
+        /**
+         * Whole currency units, as a person would write them. The minimum is 1,
+         * not just positive: 0.004 would round to zero minor units, publish,
+         * and drag the median down.
+         */
+        amount: z.number().min(1).max(50_000_000),
+        currency: z.enum(schema.salaryCurrency.enumValues),
+        period: z.enum(schema.salaryPeriod.enumValues),
+        hasBonus: z.boolean().default(false),
+        hasEquity: z.boolean().default(false),
+        isRemote: z.boolean().default(false),
+        year: z.number().int().min(2000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.year > new Date().getUTCFullYear())
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "That year has not happened yet.",
+        });
+      const company = await companyContext(ctx.db, input.slug);
+      const [affiliation, fx, role] = await Promise.all([
+        affiliationFor(ctx.db, ctx.user.id, company.website),
+        input.currency === "USD" ? latestUsdToPkr(ctx.db) : null,
+        ctx.db.query.jobRoles.findFirst({
+          where: eq(schema.jobRoles.id, input.roleId),
+          columns: { name: true },
+        }),
+      ]);
+      if (!role)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown role." });
+      const city = input.cityId
+        ? await ctx.db.query.cities.findFirst({
+            where: eq(schema.cities.id, input.cityId),
+            columns: { name: true },
+          })
+        : null;
+      if (input.cityId && !city)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown city." });
+      return ctx.db.transaction(async (tx) => {
+        await rateLimit(
+          tx,
+          `company:salary:${ctx.user.id}`,
+          5,
+          24 * 60 * 60,
+          "You can add five salary points a day.",
+        );
+        const [row] = await tx
+          .insert(salaryPoints)
+          .values({
+            organizationId: company.id,
+            authorId: ctx.user.id,
+            status: "published",
+            roleId: input.roleId,
+            roleText: role.name,
+            level: input.level ?? null,
+            yearsExperience: input.yearsExperience ?? null,
+            cityId: input.cityId ?? null,
+            employmentType: input.employmentType,
+            // Minor units, so nothing is stored as a float.
+            amountMinor: Math.round(input.amount * 100),
+            currency: input.currency,
+            period: input.period,
+            fxRateToPkr: fx ? fx.rate.toFixed(4) : null,
+            hasBonus: input.hasBonus,
+            hasEquity: input.hasEquity,
+            isRemote: input.isRemote,
+            year: input.year,
+            affiliation,
+          })
+          .onConflictDoUpdate({
+            target: [salaryPoints.organizationId, salaryPoints.authorId],
+            set: {
+              roleId: input.roleId,
+              roleText: role.name,
+              level: input.level ?? null,
+              yearsExperience: input.yearsExperience ?? null,
+              cityId: input.cityId ?? null,
+              employmentType: input.employmentType,
+              amountMinor: Math.round(input.amount * 100),
+              currency: input.currency,
+              period: input.period,
+              fxRateToPkr: fx ? fx.rate.toFixed(4) : null,
+              hasBonus: input.hasBonus,
+              hasEquity: input.hasEquity,
+              isRemote: input.isRemote,
+              year: input.year,
+              affiliation,
+              // An edit is unverified again, and a point an admin hid stays
+              // hidden: only a decision moves it out of that state.
+              verifiedAt: null,
+              verifiedBy: null,
+              status: sql`case when ${salaryPoints.status} in ('hidden', 'rejected') then ${salaryPoints.status} else 'published'::contribution_status end`,
+              updatedAt: new Date(),
+            },
+          })
+          .returning({ id: salaryPoints.id, status: salaryPoints.status });
+        const amount = `${input.currency} ${input.amount.toLocaleString("en-GB")} / ${input.period === "yearly" ? "year" : "month"}`;
+        await salaryQueueItem(tx, {
+          reopen: row!.status === "published",
+          subjectId: row!.id,
+          userId: ctx.user.id,
+          payload: {
+            kind: "salary_point" as const,
+            data: {
+              companySlug: company.slug,
+              companyName: company.name,
+              role: role.name,
+              level: input.level,
+              city: city?.name,
+              amount,
+              year: input.year,
+              yearsExperience: input.yearsExperience,
+            },
+          },
+        });
+        return { id: row!.id };
+      });
+    }),
+
   /** The caller's own contributions and where each stands. */
   mine: protectedProcedure.query(async ({ ctx }) => {
-    const [reviews, interviews, proposals] = await Promise.all([
+    const [reviews, interviews, proposals, salaries] = await Promise.all([
       ctx.db
         .select({
           id: companyReviews.id,
@@ -284,8 +431,31 @@ export const contributionsRouter = router({
         )
         .where(eq(schema.companyProfiles.proposedBy, ctx.user.id))
         .orderBy(desc(schema.companyProfiles.createdAt)),
+      ctx.db
+        .select({
+          id: salaryPoints.id,
+          status: salaryPoints.status,
+          roleText: salaryPoints.roleText,
+          // The one place an amount is read back from a row, and only ever the
+          // caller's own: without it a contributor cannot tell whether what
+          // they entered was right. The public path stays aggregates-only.
+          amountMinor: salaryPoints.amountMinor,
+          currency: salaryPoints.currency,
+          period: salaryPoints.period,
+          verifiedAt: salaryPoints.verifiedAt,
+          createdAt: salaryPoints.createdAt,
+          companyName: organizations.name,
+          companySlug: organizations.slug,
+        })
+        .from(salaryPoints)
+        .innerJoin(
+          organizations,
+          eq(organizations.id, salaryPoints.organizationId),
+        )
+        .where(eq(salaryPoints.authorId, ctx.user.id))
+        .orderBy(desc(salaryPoints.createdAt)),
     ]);
-    return { reviews, interviews, proposals };
+    return { reviews, interviews, proposals, salaries };
   }),
 
   /** Whether the caller has already reviewed this company, for the form. */
@@ -302,6 +472,47 @@ export const contributionsRouter = router({
       return { review: review ?? null };
     }),
 });
+
+/** A salary point's queue item. Same audit trail, different payload shape. */
+async function salaryQueueItem(
+  tx: Tx,
+  args: {
+    reopen: boolean;
+    subjectId: string;
+    userId: string;
+    payload: { kind: "salary_point"; data: SalarySnapshot };
+  },
+) {
+  const existing = await tx.query.moderationItems.findFirst({
+    where: and(
+      eq(schema.moderationItems.subjectType, "salary_point"),
+      eq(schema.moderationItems.subjectId, args.subjectId),
+    ),
+    columns: { id: true },
+  });
+  if (existing && !args.reopen) return;
+  if (existing)
+    await tx
+      .update(schema.moderationItems)
+      .set({
+        status: "pending",
+        payload: args.payload,
+        decidedAt: null,
+        decidedBy: null,
+        reason: null,
+        policyClause: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.moderationItems.id, existing.id));
+  else
+    await tx.insert(schema.moderationItems).values({
+      subjectType: "salary_point",
+      subjectId: args.subjectId,
+      submittedBy: args.userId,
+      status: "pending",
+      payload: args.payload,
+    });
+}
 
 type Tx = Parameters<
   Parameters<typeof import("@repo/database").db.transaction>[0]

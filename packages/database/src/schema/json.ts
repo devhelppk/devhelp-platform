@@ -262,6 +262,21 @@ export const companyContributionSnapshotSchema = z
   })
   .strict();
 
+/** A salary point under review, snapshotted for the queue (S10b). */
+export const salarySnapshotSchema = z
+  .object({
+    companySlug: z.string().min(1),
+    companyName: z.string().min(1),
+    role: z.string().min(1),
+    level: z.string().optional(),
+    city: z.string().optional(),
+    /** Formatted for reading, e.g. "PKR 250,000 / month". */
+    amount: z.string().min(1),
+    year: z.number().int(),
+    yearsExperience: z.number().int().optional(),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -286,4 +301,5 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
     kind: z.literal("company_contribution"),
     data: companyContributionSnapshotSchema,
   }),
+  z.object({ kind: z.literal("salary_point"), data: salarySnapshotSchema }),
 ]);

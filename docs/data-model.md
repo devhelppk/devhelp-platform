@@ -140,9 +140,17 @@ Contributions (`company_reviews`, `interview_experiences`; `salary_points` in S1
 
 Everything a person submits is `pending` until an admin decides it in the ordinary moderation queue (`moderation_subject` gained `company_proposal`, `company_review`, `interview_experience`); company items carry no track, so mentors never see them. `company_stats` is a plain view over published contributions: not materialised, because a decision must move the numbers at once.
 
+### Salaries (implemented in S10b)
+
+`salary_points` holds one row per person per company: the amount in minor units, the currency it was earned in, the period, and a generated `monthly_minor` that divides a yearly figure by twelve so both periods aggregate together. The rate in force at submission is copied onto the row, so a historical figure never drifts. Unlike the other contributions a salary point is `published` on arrival and carries an `unverified` mark until an admin checks it.
+
+Nothing reads those rows directly. `salary_stats` (per company, role, currency) and `salary_stats_detail` (also per level and city) are plain views whose `having count(*) >= 5` is the privacy rule itself: an individual salary is unreachable through that path, not merely unselected. Quartiles come from `percentile_cont` inside Postgres.
+
+`fx_rates` is one row per day per pair, written by `pnpm fx:refresh` from an exchange-rate API and read by everything else; the platform never calls that API on a request path.
+
 ### Planned (see `spec.md`)
 
-- S9: `cohort_courses`. S10b: `salary_points`, and the salary columns on `company_stats`.
+- S9: `cohort_courses`.
 
 ## Open questions
 

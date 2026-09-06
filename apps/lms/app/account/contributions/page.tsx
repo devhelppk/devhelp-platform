@@ -11,6 +11,13 @@ import { Page } from "@/components/shell/site-header";
 export const metadata: Metadata = { title: "Your contributions" };
 export const dynamic = "force-dynamic";
 
+const outcomeText = {
+  offer: "Offer",
+  rejected: "Rejected",
+  withdrew: "Withdrew",
+  no_response: "No response",
+} as const;
+
 const statusText = {
   pending: "Waiting for review",
   published: "Published",
@@ -24,9 +31,13 @@ export default async function ContributionsPage() {
   const session = await auth.api.getSession({ headers: h });
   if (!session) redirect("/sign-in?callbackURL=%2Faccount%2Fcontributions");
   const caller = await api(new Headers(h));
-  const { reviews, interviews, proposals } = await caller.contributions.mine();
+  const { reviews, interviews, proposals, salaries } =
+    await caller.contributions.mine();
   const empty =
-    reviews.length === 0 && interviews.length === 0 && proposals.length === 0;
+    reviews.length === 0 &&
+    interviews.length === 0 &&
+    proposals.length === 0 &&
+    salaries.length === 0;
   return (
     <Page callbackURL="/account/contributions">
       <div className="flex flex-col gap-8">
@@ -35,8 +46,8 @@ export default async function ContributionsPage() {
             Your contributions
           </h1>
           <p className="max-w-prose text-sm text-muted-foreground">
-            Reviews, interview experiences, and companies you proposed. Nothing
-            here shows your name to anyone else.
+            Reviews, interview experiences, pay, and companies you proposed.
+            Nothing here shows your name to anyone else.
           </p>
         </header>
         {empty ? (
@@ -66,9 +77,33 @@ export default async function ContributionsPage() {
               key={i.id}
               href={`/companies/${i.companySlug}`}
               title={i.companyName}
-              detail={i.outcome.replace(/_/g, " ")}
+              detail={outcomeText[i.outcome]}
               status={statusText[i.status]}
               at={i.createdAt}
+            />
+          ))}
+        </Section>
+        <Section title="Pay you reported" empty={salaries.length === 0}>
+          {salaries.map((p) => (
+            <Row
+              key={p.id}
+              href={`/companies/${p.companySlug}`}
+              title={p.companyName}
+              detail={`${p.roleText ?? ""} · ${p.currency} ${(
+                p.amountMinor / 100
+              ).toLocaleString("en-GB")} / ${
+                p.period === "yearly" ? "year" : "month"
+              }`}
+              // A salary point is public from the moment it is sent, so the
+              // status a contributor cares about is whether it was checked.
+              status={
+                p.status === "published"
+                  ? p.verifiedAt
+                    ? "Checked"
+                    : "Counted, not yet checked"
+                  : statusText[p.status]
+              }
+              at={p.createdAt}
             />
           ))}
         </Section>
@@ -133,7 +168,7 @@ function Row({
   return (
     <li className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
       {name}
-      <span className="text-muted-foreground capitalize">{detail}</span>
+      <span className="text-muted-foreground">{detail}</span>
       <Badge
         variant={status === "Published" ? "secondary" : "outline"}
         className="ml-auto text-xs"

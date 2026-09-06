@@ -14,6 +14,7 @@ import {
   Rating,
   ScoreBar,
 } from "@/components/companies/bits";
+import { Pay } from "@/components/companies/pay";
 import { Page } from "@/components/shell/site-header";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +31,12 @@ const load = cache(async (slug: string) => {
   try {
     const caller = await api(new Headers(await headers()));
     const company = await caller.companies.bySlug({ slug });
-    const [reviews, interviews] = await Promise.all([
+    const [reviews, interviews, salaries] = await Promise.all([
       caller.companies.reviews({ slug, limit: 20 }),
       caller.companies.interviews({ slug, limit: 20 }),
+      caller.companies.salaries({ slug }),
     ]);
-    return { company, reviews, interviews };
+    return { company, reviews, interviews, salaries };
   } catch (e) {
     if (e instanceof TRPCError && e.code === "NOT_FOUND") notFound();
     throw e;
@@ -81,7 +83,7 @@ export default async function CompanyPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { company, reviews, interviews } = await load(slug);
+  const { company, reviews, interviews, salaries } = await load(slug);
   const facts: [string, string][] = [
     ["Industry", company.industry ?? ""],
     ["Size", company.size ?? ""],
@@ -140,7 +142,10 @@ export default async function CompanyPage({
         </header>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="flex flex-col gap-10">
+          {/* `min-w-0`: a grid item will not shrink below its content by
+              default, so without it the pay table's min-width pushes the whole
+              page into a horizontal scroll on a phone. */}
+          <div className="flex min-w-0 flex-col gap-10">
             {company.description || company.stack.length ? (
               <div className="flex flex-col gap-3">
                 {company.description ? (
@@ -255,6 +260,16 @@ export default async function CompanyPage({
                   ))}
                 </ul>
               )}
+            </section>
+
+            <section className="flex flex-col gap-4">
+              <h2 className="font-display text-xl font-semibold">Pay</h2>
+              <Pay
+                roles={salaries.roles}
+                detail={salaries.detail}
+                fx={salaries.fx}
+                companyName={company.name}
+              />
             </section>
 
             <section className="flex flex-col gap-4">

@@ -43,9 +43,11 @@ export default async function ContributePage({
             {company.name}
           </h1>
           <p className="max-w-prose text-muted-foreground">
-            Your name is never shown next to anything you write here. An
-            administrator reads every contribution before it is published. Be
-            specific and be fair: someone deciding where to work will read this.
+            Your name is never shown next to anything you write here. Reviews
+            and interview experiences are read by an administrator before they
+            appear; pay counts towards the aggregates straight away and is never
+            shown on its own. Be specific and be fair: someone deciding where to
+            work will read this.
           </p>
         </header>
         <LearnerProviders>

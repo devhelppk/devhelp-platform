@@ -9,6 +9,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ResendVerification } from "@/components/account/resend-verification";
+import { SALARY_LEVELS, type SalaryLevel } from "@repo/api/levels";
 import { useTRPC } from "@/lib/trpc/client";
 
 type Role = { id: string; slug: string; name: string };
@@ -53,7 +54,7 @@ export function ContributeForm({
   cities: City[];
 }) {
   const trpc = useTRPC();
-  const [tab, setTab] = useState<"review" | "interview">("review");
+  const [tab, setTab] = useState<"review" | "interview" | "salary">("review");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [rounds, setRounds] = useState([
@@ -70,6 +71,9 @@ export function ContributeForm({
   const interview = useMutation(
     trpc.contributions.submitInterview.mutationOptions({ onSuccess, onError }),
   );
+  const salary = useMutation(
+    trpc.contributions.submitSalary.mutationOptions({ onSuccess, onError }),
+  );
 
   if (!emailVerified)
     return (
@@ -85,9 +89,9 @@ export function ContributeForm({
     return (
       <div className="flex flex-col gap-3 rounded-lg border p-4">
         <p className="text-sm">
-          Thank you. An administrator reads every contribution before it is
-          published, usually within a couple of days. Nothing you wrote is shown
-          with your name.
+          {tab === "salary"
+            ? "Thank you. Your figure already counts towards this company's aggregates, and it will never be shown on its own: a role appears only once five or more people have reported it. An administrator checks it in due course."
+            : "Thank you. An administrator reads every contribution before it is published, usually within a couple of days. Nothing you wrote is shown with your name."}
         </p>
         <div className="flex gap-2">
           <Button asChild size="sm" variant="outline">
@@ -161,6 +165,29 @@ export function ContributeForm({
     });
   }
 
+  function submitSalary(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const str = (k: string) => String(f.get(k) ?? "").trim() || undefined;
+    salary.mutate({
+      slug,
+      roleId: str("roleId") ?? "",
+      level: str("level") as SalaryLevel | undefined,
+      yearsExperience: str("yearsExperience")
+        ? Number(str("yearsExperience"))
+        : undefined,
+      cityId: str("cityId"),
+      employmentType: (str("employmentType") ?? "full_time") as "full_time",
+      amount: Number(str("amount") ?? 0),
+      currency: (str("currency") ?? "PKR") as "PKR",
+      period: (str("period") ?? "monthly") as "monthly",
+      hasBonus: f.get("hasBonus") === "1",
+      hasEquity: f.get("hasEquity") === "1",
+      isRemote: f.get("isRemote") === "1",
+      year: Number(str("year") ?? new Date().getFullYear()),
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex gap-1 rounded-lg border p-1" role="tablist">
@@ -168,6 +195,7 @@ export function ContributeForm({
           [
             ["review", "Write a review"],
             ["interview", "Add an interview"],
+            ["salary", "Add your pay"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -256,7 +284,7 @@ export function ContributeForm({
             {review.isPending ? "Sending…" : "Submit review"}
           </Button>
         </form>
-      ) : (
+      ) : tab === "interview" ? (
         <form onSubmit={submitInterview} className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Select
@@ -398,6 +426,128 @@ export function ContributeForm({
             {interview.isPending ? "Sending…" : "Submit experience"}
           </Button>
         </form>
+      ) : (
+        <form onSubmit={submitSalary} className="flex flex-col gap-4">
+          <p className="max-w-prose rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+            Your figure is never shown on its own. A role appears on the company
+            page only once five or more people have reported it, and then only
+            as a median and a middle range.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Select name="roleId" label="Your role" options={roles} required />
+            <Select
+              name="level"
+              label="Level"
+              options={SALARY_LEVELS.map((l) => ({ id: l, name: l }))}
+            />
+            <Select name="cityId" label="City" options={cities} />
+            <Select
+              name="employmentType"
+              label="Employment"
+              required
+              defaultValue="full_time"
+              options={[
+                { id: "full_time", name: "Full time" },
+                { id: "part_time", name: "Part time" },
+                { id: "contract", name: "Contract" },
+                { id: "internship", name: "Internship" },
+              ]}
+            />
+          </div>
+          <fieldset className="grid gap-4 rounded-lg border p-4 sm:grid-cols-3">
+            <legend className="px-1 text-sm font-medium">Base pay</legend>
+            <Select
+              name="currency"
+              label="Currency"
+              required
+              defaultValue="PKR"
+              options={[
+                { id: "PKR", name: "PKR" },
+                { id: "USD", name: "USD" },
+              ]}
+            />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="amount">
+                Amount<span className="text-destructive"> *</span>
+              </Label>
+              <Input
+                id="amount"
+                name="amount"
+                type="number"
+                min={1}
+                max={50000000}
+                step={1}
+                required
+                placeholder="250000"
+              />
+            </div>
+            <Select
+              name="period"
+              label="Per"
+              required
+              defaultValue="monthly"
+              options={[
+                { id: "monthly", name: "Month" },
+                { id: "yearly", name: "Year" },
+              ]}
+            />
+          </fieldset>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="year">
+                Year this was your pay
+                <span className="text-destructive"> *</span>
+              </Label>
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                min={2000}
+                max={new Date().getFullYear()}
+                defaultValue={new Date().getFullYear()}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="yearsExperience">Years of experience</Label>
+              <Input
+                id="yearsExperience"
+                name="yearsExperience"
+                type="number"
+                min={0}
+                max={50}
+              />
+            </div>
+          </div>
+          <fieldset className="flex flex-wrap gap-4 rounded-lg border p-4">
+            <legend className="px-1 text-sm font-medium">Also</legend>
+            {(
+              [
+                ["hasBonus", "A bonus on top"],
+                ["hasEquity", "Equity or stock"],
+                ["isRemote", "Remote"],
+              ] as const
+            ).map(([name, label]) => (
+              <label key={name} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name={name}
+                  value="1"
+                  className="size-4 rounded border-input accent-brand-600"
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Button
+            type="submit"
+            disabled={salary.isPending}
+            className="self-start"
+          >
+            {salary.isPending ? "Sending…" : "Submit pay"}
+          </Button>
+        </form>
       )}
     </div>
   );
@@ -481,11 +631,14 @@ function Select({
   label,
   options,
   required,
+  defaultValue = "",
 }: {
   name: string;
   label: string;
   options: { id: string; name: string }[];
   required?: boolean;
+  /** Set where there is an obvious common case, so most people never touch it. */
+  defaultValue?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -497,7 +650,7 @@ function Select({
         id={name}
         name={name}
         required={required}
-        defaultValue=""
+        defaultValue={defaultValue}
         className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
         <option value="">

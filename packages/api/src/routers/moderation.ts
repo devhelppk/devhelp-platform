@@ -32,6 +32,7 @@ export const COMPANY_SUBJECTS: string[] = [
   "company_proposal",
   "company_review",
   "interview_experience",
+  "salary_point",
 ];
 
 type Tx = Parameters<
@@ -64,6 +65,23 @@ async function applySubjectStatus(
         updatedAt: now,
       })
       .where(eq(schema.companyProfiles.organizationId, item.subjectId));
+    return {};
+  }
+  // A salary point is already public when it reaches the queue (S10b), so
+  // approving it means "checked", not "publish". Hiding still hides.
+  if (item.subjectType === "salary_point") {
+    await tx
+      .update(schema.salaryPoints)
+      .set({
+        status: visible
+          ? "published"
+          : action === "reject"
+            ? "rejected"
+            : "hidden",
+        ...(visible ? { verifiedAt: now, verifiedBy: actorId } : {}),
+        updatedAt: now,
+      })
+      .where(eq(schema.salaryPoints.id, item.subjectId));
     return {};
   }
   if (
@@ -188,7 +206,9 @@ async function decidedNotification(
             ? "Your company review"
             : item.subjectType === "interview_experience"
               ? "Your interview experience"
-              : "Your review request";
+              : item.subjectType === "salary_point"
+                ? "Your salary point"
+                : "Your review request";
   const href =
     payload?.kind === "comment"
       ? payload.data.subjectType === "lesson"
@@ -196,7 +216,8 @@ async function decidedNotification(
         : `/courses/${payload.data.courseSlug}#discussion`
       : payload?.kind === "course_review"
         ? `/courses/${payload.data.courseSlug}`
-        : payload?.kind === "company_contribution"
+        : payload?.kind === "company_contribution" ||
+            payload?.kind === "salary_point"
           ? `/companies/${payload.data.companySlug}`
           : "/notifications";
   const verb = approved
@@ -430,7 +451,13 @@ export const moderationRouter = router({
                 ? "hidden"
                 : "approved";
         const allowed: Record<string, string[]> = {
-          pending: ["approve", "reject"],
+          // A salary point is public from the moment it is sent (S10b), so a
+          // pending one can be hidden as well as rejected: the queue item is a
+          // review task, not the thing standing between it and the page.
+          pending:
+            item.subjectType === "salary_point"
+              ? ["approve", "reject", "hide"]
+              : ["approve", "reject"],
           approved: ["hide"],
           hidden: ["unhide"],
           rejected: [],

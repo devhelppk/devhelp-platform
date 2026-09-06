@@ -1,13 +1,17 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   customType,
+  date,
+  doublePrecision,
   index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
   pgView,
+  primaryKey,
   numeric,
   smallint,
   text,
@@ -77,6 +81,14 @@ export const interviewOutcome = pgEnum("interview_outcome", [
   "rejected",
   "withdrew",
   "no_response",
+]);
+export const salaryCurrency = pgEnum("salary_currency", ["PKR", "USD"]);
+export const salaryPeriod = pgEnum("salary_period", ["monthly", "yearly"]);
+export const employmentType = pgEnum("employment_type", [
+  "full_time",
+  "part_time",
+  "contract",
+  "internship",
 ]);
 /**
  * How much we can say about the contributor without revealing them: an
@@ -241,6 +253,126 @@ export const interviewExperiences = pgTable(
     ),
   ],
 );
+
+/**
+ * What one person was paid (S10b). Unlike a review this publishes immediately
+ * and carries an `unverified` mark until an admin looks at it: there is no
+ * prose to moderate, and the aggregation floor means a single point is never
+ * visible on its own anyway. No procedure selects `amountMinor` from a row;
+ * everything public comes from the two views below.
+ */
+export const salaryPoints = pgTable(
+  "salary_points",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    organizationId: uuid()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    authorId: uuid().references(() => users.id, { onDelete: "set null" }),
+    status: contributionStatus().notNull().default("published"),
+    roleId: uuid().references(() => jobRoles.id, { onDelete: "set null" }),
+    roleText: text(),
+    level: text(),
+    yearsExperience: smallint(),
+    cityId: uuid().references(() => cities.id, { onDelete: "set null" }),
+    employmentType: employmentType().notNull().default("full_time"),
+    /** Minor units (paisa, cents) so nothing is stored as a float. */
+    amountMinor: bigint({ mode: "number" }).notNull(),
+    currency: salaryCurrency().notNull(),
+    period: salaryPeriod().notNull().default("monthly"),
+    /**
+     * The rate in force at submission. Nothing reads it yet: display uses the
+     * current rate, because a reader comparing offers wants today's money. It
+     * is recorded so that a later "what this was worth at the time" view is
+     * possible without having lost the information.
+     */
+    fxRateToPkr: numeric({ precision: 12, scale: 4 }),
+    hasBonus: boolean().notNull().default(false),
+    hasEquity: boolean().notNull().default(false),
+    isRemote: boolean().notNull().default(false),
+    year: smallint().notNull(),
+    affiliation: affiliation().notNull().default("unverified"),
+    verifiedAt: timestamp({ withTimezone: true }),
+    verifiedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    /**
+     * A yearly figure as a month, so both periods aggregate together. Plain
+     * arithmetic over this row's own columns, so it really is immutable.
+     */
+    monthlyMinor: bigint({ mode: "number" }).generatedAlwaysAs(
+      sql`case when period = 'yearly' then amount_minor / 12 else amount_minor end`,
+    ),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("salary_points_author_uidx").on(t.organizationId, t.authorId),
+    index("salary_points_agg_idx").on(t.organizationId, t.status, t.roleId),
+  ],
+);
+
+/**
+ * Daily USD to PKR, written by `pnpm fx:refresh` and never fetched on a request
+ * path. The primary key is the day, so re-running the script overwrites.
+ */
+export const fxRates = pgTable(
+  "fx_rates",
+  {
+    base: salaryCurrency().notNull(),
+    quote: salaryCurrency().notNull(),
+    rate: numeric({ precision: 12, scale: 4 }).notNull(),
+    asOf: date().notNull(),
+    source: text().notNull(),
+    fetchedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.base, t.quote, t.asOf] })],
+);
+
+/**
+ * Salary aggregates per role and per currency, defined in migration 0014.
+ *
+ * Three rules protect a contributor, and only together: a cell needs five
+ * people to exist, published figures are rounded to a per-currency step, and
+ * the middle half is withheld below eight. The rounding is not cosmetic —
+ * `percentile_cont` lands exactly on raw values at n = 5, so without it the
+ * quartiles would be three of those five people's exact pay. See the migration
+ * for the full reasoning, including what this cannot protect against.
+ */
+const salaryStatsColumns = {
+  organizationId: uuid().notNull(),
+  roleId: uuid(),
+  currency: salaryCurrency().notNull(),
+  n: integer().notNull(),
+  /** Null below n = 8: three order statistics of five people say too much. */
+  p25: doublePrecision(),
+  median: doublePrecision(),
+  p75: doublePrecision(),
+  firstYear: integer(),
+  lastYear: integer(),
+} as const;
+
+export const salaryStats = pgView(
+  "salary_stats",
+  salaryStatsColumns,
+).existing();
+
+/** The same, split by level and city. Same floor, applied per cell. */
+export const salaryStatsDetail = pgView("salary_stats_detail", {
+  ...salaryStatsColumns,
+  level: text(),
+  cityId: uuid(),
+}).existing();
+
+export const salaryPointsRelations = relations(salaryPoints, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [salaryPoints.organizationId],
+    references: [organizations.id],
+  }),
+  role: one(jobRoles, {
+    fields: [salaryPoints.roleId],
+    references: [jobRoles.id],
+  }),
+  city: one(cities, { fields: [salaryPoints.cityId], references: [cities.id] }),
+}));
 
 export const companyProfilesRelations = relations(
   companyProfiles,

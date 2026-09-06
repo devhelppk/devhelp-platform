@@ -11,6 +11,7 @@ import {
   sql,
 } from "@repo/database";
 import { companyProposalSchema } from "@repo/database/schema";
+import { latestUsdToPkr } from "@repo/database/fx";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -28,6 +29,8 @@ const {
   companyStats,
   interviewExperiences,
   organizations,
+  salaryStats,
+  salaryStatsDetail,
 } = schema;
 
 /** A URL-safe slug from a company name; collisions get a numeric suffix. */
@@ -308,6 +311,60 @@ export const companiesRouter = router({
         nextCursor:
           rows.length > input.limit ? input.cursor + input.limit : undefined,
       };
+    }),
+
+  /**
+   * Pay for one company (F2.6, F2.7). Everything comes from the two views,
+   * which apply the floor, the rounding, and the n >= 8 rule for the middle
+   * half; this procedure cannot reach a salary row even by mistake. The page
+   * gets the role rows, the finer cells that cleared the floor, and the latest
+   * rate, so it can render the whole fallback hierarchy in one round trip.
+   */
+  salaries: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const org = await companyIdBySlug(ctx.db, input.slug);
+      const [roles, detail, fx] = await Promise.all([
+        ctx.db
+          .select({
+            roleId: salaryStats.roleId,
+            roleName: schema.jobRoles.name,
+            currency: salaryStats.currency,
+            n: salaryStats.n,
+            p25: salaryStats.p25,
+            median: salaryStats.median,
+            p75: salaryStats.p75,
+            firstYear: salaryStats.firstYear,
+            lastYear: salaryStats.lastYear,
+          })
+          .from(salaryStats)
+          .leftJoin(schema.jobRoles, eq(schema.jobRoles.id, salaryStats.roleId))
+          .where(eq(salaryStats.organizationId, org))
+          .orderBy(asc(schema.jobRoles.name), asc(salaryStats.currency)),
+        ctx.db
+          .select({
+            roleId: salaryStatsDetail.roleId,
+            currency: salaryStatsDetail.currency,
+            level: salaryStatsDetail.level,
+            cityId: salaryStatsDetail.cityId,
+            cityName: schema.cities.name,
+            n: salaryStatsDetail.n,
+            p25: salaryStatsDetail.p25,
+            median: salaryStatsDetail.median,
+            p75: salaryStatsDetail.p75,
+            firstYear: salaryStatsDetail.firstYear,
+            lastYear: salaryStatsDetail.lastYear,
+          })
+          .from(salaryStatsDetail)
+          .leftJoin(
+            schema.cities,
+            eq(schema.cities.id, salaryStatsDetail.cityId),
+          )
+          .where(eq(salaryStatsDetail.organizationId, org))
+          .orderBy(asc(salaryStatsDetail.level), asc(schema.cities.name)),
+        latestUsdToPkr(ctx.db),
+      ]);
+      return { roles, detail, fx };
     }),
 
   /**
