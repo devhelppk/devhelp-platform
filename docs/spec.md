@@ -95,23 +95,23 @@ Acceptance criteria
 
 Depends on: S1.
 
-### S3. LMS catalogue and lesson experience — `planned`
+### S3. LMS catalogue and lesson experience — `done` (`1007fd6`)
 
-Plan: [`specs/S3-lms-experience/plan.md`](./specs/S3-lms-experience/plan.md)
+Plan, review, tests, screenshots: [`specs/S3-lms-experience/`](./specs/S3-lms-experience/)
 
 Scope: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10. Public catalogue, course page, path roadmap, lesson reader (article, video with completion, link), enrol, Continue, per-course progress UI. Uses the design system's app shell. Introduces `packages/api` (tRPC v11: `learning` router over `@repo/learning`, `catalogue` router over Drizzle reads), `@t3-oss/env-nextjs` in both apps, and `typedRoutes`.
 
 Acceptance criteria
 
-- [ ] Visitor can browse and read free lessons without an account; enrolling prompts sign-in.
-- [ ] Video completion via player API records a `progress_events` row once.
-- [ ] Continue lands on the first incomplete required lesson.
-- [ ] Lesson page first-load JS is under the 300 KB ceiling (target 250 KB), measured on a production server, and renders at 360px with no horizontal scroll.
-- [ ] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Visitor can browse and read free lessons without an account; enrolling prompts sign-in.
+- [x] Video completion via player API records a `progress_events` row once.
+- [x] Continue lands on the first incomplete required lesson.
+- [x] Lesson page first-load JS is under the 300 KB ceiling (target 250 KB), measured on a production server, and renders at 360px with no horizontal scroll.
+- [x] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S2.
 
-### S4. Quizzes and exercises — `todo`
+### S4. Quizzes and exercises — `todo` (next)
 
 Scope: F1.5, F1.6. Server-graded quizzes; Sandpack (web) and Pyodide (Python) exercises with CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
 
