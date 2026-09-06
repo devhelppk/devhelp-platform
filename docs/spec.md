@@ -62,7 +62,9 @@ Acceptance criteria
 
 Depends on: S0.
 
-### S2. Content pipeline: schema package, content repo, sync — `todo` (next)
+### S2. Content pipeline: schema package, content repo, sync — `planned`
+
+Plan: [`specs/S2-content-pipeline/plan.md`](./specs/S2-content-pipeline/plan.md)
 
 Scope: option C in requirements area 3, phase 1 (F3.1, F3.2, F3.5, F3.6, N3.3). Creates the `devhelp-content` repo, the shared Zod schema, the content check, and the sync into Postgres.
 
