@@ -26,16 +26,6 @@ jobs:
       mailpit:
         image: axllent/mailpit:v1.31
         ports: ["1025:1025", "8025:8025"]
-      minio:
-        image: bitnami/minio:2025.4.22
-        env:
-          MINIO_ROOT_USER: devhelp
-          MINIO_ROOT_PASSWORD: devhelp-minio
-          MINIO_DEFAULT_BUCKETS: devhelp
-        ports: ["9000:9000"]
-        options: >-
-          --health-cmd "curl -sf http://localhost:9000/minio/health/live"
-          --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       DATABASE_URL: postgresql://devhelp:devhelp@localhost:5432/devhelp
       EMAIL_PROVIDER: smtp
@@ -63,6 +53,19 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      # MinIO needs a command, which service containers cannot set, so it runs
+      # as a step. Same S3 API the platform uses against Cloudflare R2.
+      - name: Object storage (MinIO)
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=devhelp -e MINIO_ROOT_PASSWORD=devhelp-minio \
+            minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break || sleep 2
+          done
+          docker run --rm --network host --entrypoint /bin/sh \
+            minio/mc:RELEASE.2025-08-13T08-35-41Z \
+            -c "mc alias set ci http://localhost:9000 devhelp devhelp-minio && mc mb --ignore-existing ci/devhelp"
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm content:pull
