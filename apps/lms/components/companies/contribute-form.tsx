@@ -431,7 +431,7 @@ export function ContributeForm({
           <p className="max-w-prose rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
             Your figure is never shown on its own. A role appears on the company
             page only once five or more people have reported it, and then only
-            as a median and a middle range.
+            as a rounded median; the middle range needs eight.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Select name="roleId" label="Your role" options={roles} required />
