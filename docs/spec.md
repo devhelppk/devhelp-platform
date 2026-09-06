@@ -6,6 +6,18 @@ Source documents: `requirements.md` (what and why), `data-model.md` (schema deci
 
 Each spec gets its own directory under `docs/specs/<id>-<slug>/` holding `plan.md` (written in the plan step, approved before implementation) and, as the work proceeds, `review.md` (code-review findings and what was done about them) and `test.md` (what was tested, how, and the results). The spec's entry here links to that directory and carries the status.
 
+## Browser loop (applies to every spec that touches UI)
+
+Automated tests are not enough for UI. Before a UI spec can be marked complete:
+
+1. Start the dev server (`pnpm dev:lms` or `pnpm dev:web`) against the local Postgres with real synced content.
+2. Drive the new screens in Chrome with the browser tools: every route the spec adds or changes, every state (signed out, signed in, empty, error), light and dark, desktop and a 390px viewport.
+3. Critique against the design system (`packages/ui/DESIGN.md`) and the acceptance criteria; fix; reload; repeat until nothing is left to fix. At least two iterations are expected; record what each round found and changed.
+4. Check the console is clean on every load and that no page scrolls horizontally on mobile.
+5. Save the final screenshots (desktop and mobile, light and dark) and list them in `test.md` with the iteration log.
+
+The plan for a UI spec must name the routes and states the loop will cover.
+
 ## Type-safety rule (applies to every spec)
 
 Requirement X10: Drizzle-inferred types only, Zod for every jsonb column and every write boundary, tRPC v11 for any client-facing API (introduced in S3 as `packages/api`), `typedRoutes`, validated env. A spec is not complete if it adds a hand-written entity type, an unvalidated jsonb write, or an untyped fetch.
@@ -24,7 +36,7 @@ Requirement X10: Drizzle-inferred types only, Zod for every jsonb column and eve
 1. **Plan.** Write `docs/specs/<id>-<slug>/plan.md`: decisions, schema, API, files to touch, tests, out of scope. Founder approves; status becomes `planned`.
 2. **Implement.** Build exactly the plan. Schema changes go through `pnpm db:generate` with a named migration.
 3. **Review.** `/code-review` on the diff; fix findings; record them and any deliberate leftovers in `review.md`.
-4. **Test.** Unit tests for logic, integration tests against Postgres where data is involved, a browser check for UI. All existing tests still pass. Summarise in `test.md`.
+4. **Test.** Unit tests for logic, integration tests against Postgres where data is involved. **Every spec that touches UI must also pass the browser loop** (below). All existing tests still pass. Summarise in `test.md`.
 5. **Complete.** Update status, record commit, tick acceptance criteria, add follow-ups to the backlog at the bottom.
 
 ---
@@ -95,7 +107,7 @@ Acceptance criteria
 - [ ] Video completion via player API records a `progress_events` row once.
 - [ ] Continue lands on the first incomplete required lesson.
 - [ ] Lesson page ships under 150 KB JS (measured in the build output) and renders at 360px with no horizontal scroll.
-- [ ] Browser check in Chrome: catalogue, course, lesson, progress, light and dark.
+- [ ] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S2.
 

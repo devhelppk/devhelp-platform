@@ -66,7 +66,11 @@ Client wiring in the LMS: `lib/trpc/client.tsx` (provider with `httpBatchLink`, 
 2. `@repo/env`: missing `DATABASE_URL` fails validation; a GitHub id without a secret fails; defaults apply.
 3. LMS components (jsdom): `mark-done-button` calls the mutation once and disables; `lesson-nav` prev/next around module boundaries; `course-card` renders duration and level.
 4. Bundle budget script: fails on a fixture manifest over budget.
-5. Browser (Chrome): catalogue → course → lesson → sign-in → enrol → mark done → dashboard shows progress and Continue; video lesson embeds; 390px layout with sidebar collapsed into the mobile nav; light and dark.
+5. Browser loop on the dev server (`pnpm dev:lms`, real synced content, local Postgres), per the spec tracker's rule:
+   - Routes: `/`, `/courses` (with filters), `/paths/ai-engineering`, `/courses/ai-engineering-foundations`, every lesson type in that course (article, video, exercise placeholder, quiz placeholder), `/sign-in`, `/sign-up`.
+   - States: signed out (read freely, enrol prompts sign-in), signed in (enrol, mark done, video ended → completed, Continue advances, dashboard progress), empty dashboard (no enrolments), invalid sign-in, unknown course/lesson (404).
+   - Viewports: desktop and 390px (sidebar collapses into the mobile nav, no horizontal scroll). Themes: light and dark.
+   - Iterate: critique each screen against `DESIGN.md` and the acceptance criteria, fix, reload, repeat; at least two rounds, each recorded in `test.md` with what changed. Console clean on every load. Final screenshots saved and listed.
 6. Existing suites and the full pipeline; CI adds the budget check.
 
 ## Out of scope
@@ -79,7 +83,7 @@ Quiz and exercise runners (S4), ratings (S6), certificates (S7), badges and stre
 - [ ] Video completion via player API records a `progress_events` row once.
 - [ ] Continue lands on the first incomplete required lesson.
 - [ ] Lesson page ships under 150 KB JS (measured in the build output) and renders at 360px with no horizontal scroll.
-- [ ] Browser check in Chrome: catalogue, course, lesson, progress, light and dark.
+- [ ] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 

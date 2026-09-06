@@ -65,6 +65,7 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - **Tests:** Vitest + Testing Library. UI and app tests use `@repo/vitest-config/ui` (jsdom, `vitest.setup.ts` loads jest-dom). Node packages use `@repo/vitest-config/base`. Co-locate tests as `*.test.ts(x)`.
 - **Formatting:** Prettier with the Tailwind class-sorting plugin; run `pnpm format` before committing. CI runs `format:check`.
 - **Ports:** web 3000, lms 3001. Stop dev servers with `pgrep -f "next dev" | xargs -r kill`; `pkill -f "next dev"` will match and kill the invoking shell.
+- **UI specs need the browser loop.** Any spec that touches UI is tested on the dev server in Chrome (all routes and states, light/dark, desktop and 390px), critiqued against `DESIGN.md`, fixed, and re-checked for at least two rounds before it is marked done; see `docs/spec.md`.
 - **Scope discipline:** the LMS product surface (courses, lessons, progress UI) is intentionally thin until the research in `../research/` is acted on. Do not add domain-specific components to `packages/ui`; keep it generic.
 
 ## Reference material (outside this repo)
