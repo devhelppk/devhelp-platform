@@ -209,20 +209,33 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S10. Company bank — `planned`
+### S10a. Company bank: companies, reviews, interviews — `planned`
 
 Plan: [`specs/S10-company-bank/plan.md`](./specs/S10-company-bank/plan.md)
 
-Scope: area 2 phase 1 (F2.1 to F2.14, N2.1 to N2.3). Companies, reviews, interview experiences, salary aggregates per role with n ≥ 5, anonymisation, `verified`/`unverified` badge, moderation via S5, search, policy page, ISR company pages.
+Scope: area 2 phase 1 without salaries (F2.1 to F2.5, F2.8 to F2.14; N2.1 to N2.3). A company is an organisation (`kind = "company"`) in Postgres with its profile in `company_profiles` and its logo in R2; companies leave the content repo. Proposals, reviews, and interview experiences, all moderated by admins before they appear and anonymised by column set, with a directory, Postgres search, and indexable pages. Founder decisions 2026-09-07: split from salaries, aggregates from a plain Postgres view, thin pages indexed, admins only.
 
 Acceptance criteria
 
 - [ ] Public payloads and APIs contain no user ids or exact dates (test on serialisation).
-- [ ] Salary cells with n < 5 fall back to the role aggregate or "not enough data".
-- [ ] Reviews and interviews are invisible until approved; one review and one salary point per company per user.
-- [ ] Company page is static-rendered and revalidates on approval.
+- [ ] Reviews and interviews are invisible until approved; one review per company per user.
+- [ ] A company page is static-rendered and revalidates on approval.
+- [ ] A company is an organisation row; claiming one later is organisation membership, needing no re-modelling.
+- [ ] Browser loop passed on the dev server; at least two fix-and-reload iterations recorded in `test.md`.
 
-Depends on: S5. Parallel-safe with S6–S9.
+Depends on: S5, S7 (storage).
+
+### S10b. Company bank: salaries — `todo`
+
+Scope: F2.6, F2.7, F2.11 (the salary half of the split above). Salary points stored as earned, aggregated per role with the n ≥ 5 rule through the same view, PKR with USD supported at a stored rate, individual points never selectable.
+
+Acceptance criteria
+
+- [ ] Salary cells with n < 5 fall back to the role aggregate or "not enough data".
+- [ ] One salary point per company per user; individual points never appear in any public payload.
+- [ ] Percentiles are computed in Postgres, not over fetched rows.
+
+Depends on: S10a.
 
 ### S11. Mentor studio and dashboard — `todo`
 
@@ -244,7 +257,7 @@ Folded into S6 on 2026-09-06 (founder decision: discussions ship with ratings). 
 
 Scope: area 2 phase 2 (F2.12, F2.15). Company representative claims, public responses, links between company pages and courses.
 
-Depends on: S10, S3.
+Depends on: S10a, S3.
 
 ### S14. Search, analytics, launch hardening — `todo`
 

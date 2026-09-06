@@ -136,6 +136,10 @@ Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercis
 
 - S9: `cohort_courses`. S10: company bank tables.
 
+## Planned: the company bank (S10a)
+
+A company is an organisation (`organizations.kind = "company"`), so an employer and an institution are one kind of row and a company claim (S13) is ordinary membership. `company_profiles` holds the facts a company page needs beyond name, slug, logo, city, and website; logos live in R2 through `@repo/storage`. Contributions (`company_reviews`, `interview_experiences`, `salary_points`) carry an author id for the one-per-company rule and moderation, and every public read goes through a column set that cannot select it. `company_stats` is a plain view over published contributions.
+
 ## Open questions
 
 1. **Org-scoped content.** Should institutions be able to publish private courses? Leaning no for v1; all content is open and CC BY-SA. Organizations only add cohorts and visibility.

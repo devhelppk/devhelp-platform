@@ -151,7 +151,7 @@ A community-contributed, Pakistan-focused reference on employers: what it is lik
 
 - N2.1 Legal exposure: defamation risk is real in Pakistan; moderation before publish is mandatory for reviews and interviews, and the policy plus a takedown contact are published.
 - N2.2 Anonymity: public payloads never include user ids; internal linkage lives in a separate column set readable only by admins; exports strip it.
-- N2.3 Aggregates are computed in the database (materialised view refreshed on write) so company pages stay cheap.
+- N2.3 Aggregates are computed in the database so company pages stay cheap. As planned (S10a): a plain view, since company pages are ISR-cached and a view needs no refresh on every moderation decision; materialise it behind the same name if it ever gets slow.
 
 ### Build phases (all MVP)
 
@@ -159,7 +159,7 @@ Phase 1: company profiles (proposed and approved), reviews, interview experience
 
 ### Data-model hooks
 
-`companies`, `company_aliases`, `company_reviews`, `interview_experiences` (+ `interview_rounds` jsonb), `salary_points`, `company_claims`, `moderation_items` (polymorphic: subject type + id, status, moderator, reason), `content_flags`, `company_stats` (materialised view). Roles tags and cities as reference tables shared with the LMS (`cities`, `job_roles`).
+A company is an **organisation** (`kind = "company"`, founder decision 2026-09-07) with `company_profiles`, `company_aliases`, `company_reviews`, `interview_experiences` (+ `interview_rounds` jsonb), `salary_points`, `company_claims` (which become organisation memberships), `moderation_items` (polymorphic: subject type + id, status, moderator, reason), `content_flags`, `company_stats` (a plain Postgres view; materialise it only if it gets slow). Roles tags and cities as reference tables shared with the LMS (`cities`, `job_roles`).
 
 ---
 
@@ -182,7 +182,7 @@ How lessons, courses, quizzes, exercises, and company facts get written, reviewe
 
 Content is a public git repository, edited through PRs or a browser editor that produces PRs. Runtime data stays in Postgres. Concretely:
 
-- F3.1 `devhelp-content` repo: `courses/<course>/course.yaml`, `courses/<course>/<module>/<lesson>.mdx` with YAML frontmatter, `quizzes/*.yaml`, `exercises/<slug>/{README.mdx, starter/, tests/}`, `paths/*.yaml`, `badges/*.yaml`, `companies/*.yaml` (verified facts only; reviews and salaries are user data and live in Postgres). A Zod schema package (`@repo/content-schema`) is shared by the content repo's CI and the platform.
+- F3.1 `devhelp-content` repo (companies left it in S10a: they are organisations in Postgres with files in R2): `courses/<course>/course.yaml`, `courses/<course>/<module>/<lesson>.mdx` with YAML frontmatter, `quizzes/*.yaml`, `exercises/<slug>/{README.mdx, starter/, tests/}`, `paths/*.yaml`, `badges/*.yaml`, `companies/*.yaml` (verified facts only; reviews and salaries are user data and live in Postgres). A Zod schema package (`@repo/content-schema`) is shared by the content repo's CI and the platform.
 - F3.2 `pnpm content:check` in the content repo lints frontmatter, links, images, quiz answers, exercise tests (runs them), and the style guide. Required on every PR.
 - F3.3 Keystatic mounted at `learn.devhelp.pk/studio` in GitHub mode, restricted to `mentor` and `admin` roles, with collections mirroring the Zod schema. Saving creates a branch and a PR on `devhelp-content`; the mentor never touches git. Git-fluent mentors bypass it.
 - F3.4 Review: `CODEOWNERS` maps tracks to editor mentors; a PR needs one editor approval and one mentor review; PR preview deploy renders changed lessons with the real design system.
