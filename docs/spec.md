@@ -162,7 +162,9 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S7. Certificates and public profiles — `todo`
+### S7. Certificates and public profiles — `planned`
+
+Plan: [`specs/S7-certificates-profiles/plan.md`](./specs/S7-certificates-profiles/plan.md)
 
 Scope: F1.18 to F1.20, X5. Issue on completion criteria, verify page, PDF with QR, revocation, opt-in public profile with certificates.
 
@@ -170,7 +172,7 @@ Acceptance criteria
 
 - [ ] Certificate issues in the same transaction as course completion, with a criteria snapshot and `content_revision` reference.
 - [ ] `/verify/[uuid]` is public, indexable, shows the snapshot, and says "revoked" with reason when revoked.
-- [ ] PDF is generated server-side, cached in object storage (decide provider in plan), re-downloadable.
+- [ ] PDF is generated server-side, cached in storage (Postgres driver by default, S3/R2 by config; plan decision 4), re-downloadable.
 - [ ] Public profile shows name, city, certificates; private by default.
 
 Depends on: S3, S5.
