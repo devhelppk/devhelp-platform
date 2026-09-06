@@ -28,6 +28,9 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-secret-not-used-in-production-0000
       BETTER_AUTH_URL: http://localhost:3001
       CONTENT_SYNC_SECRET: ci-only-content-sync-secret
+      # Required whenever NODE_ENV=production (next build / typegen); localhost is fine for CI.
+      NEXT_PUBLIC_WEB_URL: http://localhost:3000
+      NEXT_PUBLIC_LMS_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v5
         with:
