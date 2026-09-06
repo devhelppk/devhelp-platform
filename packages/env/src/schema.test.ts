@@ -54,3 +54,18 @@ describe("client and database env", () => {
     ).toBe(true);
   });
 });
+
+describe("email env", () => {
+  it("defaults to the log transport and checks provider credentials", () => {
+    const parsed = schema.parse(base);
+    expect(parsed.EMAIL_PROVIDER).toBe("log");
+    expect(parsed.EMAIL_FROM).toContain("@");
+    expect(checkPairs({ EMAIL_PROVIDER: "resend" })).toEqual([
+      "EMAIL_PROVIDER=resend needs RESEND_API_KEY",
+    ]);
+    expect(checkPairs({ EMAIL_PROVIDER: "smtp" })).toHaveLength(1);
+    expect(
+      checkPairs({ EMAIL_PROVIDER: "smtp", SMTP_URL: "smtp://localhost:1025" }),
+    ).toHaveLength(0);
+  });
+});

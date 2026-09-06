@@ -9,6 +9,7 @@ import { Separator } from "@repo/ui/components/separator";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { safePath } from "@/lib/safe-path";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -40,11 +41,20 @@ export function AuthForm({
             password,
             name: String(form.get("name") ?? ""),
             city: String(form.get("city") ?? "") || undefined,
-            callbackURL,
+            // The verification link lands on /verify-email, which knows how to show success or an expired link.
+            callbackURL: `/verify-email?next=${encodeURIComponent(callbackURL)}`,
           });
     setBusy(false);
     if (res.error) {
       setError(res.error.message ?? "Something went wrong. Try again.");
+      return;
+    }
+    if (mode === "sign-up") {
+      // Signed in already; the verification email is on its way (contributing needs it, learning does not).
+      router.push(
+        `/verify-email?next=${encodeURIComponent(callbackURL)}` as Route,
+      );
+      router.refresh();
       return;
     }
     router.push(callbackURL as Route);
@@ -83,6 +93,16 @@ export function AuthForm({
         minLength={8}
         hint={mode === "sign-up" ? "At least 8 characters." : undefined}
       />
+      {mode === "sign-in" ? (
+        <p className="-mt-3 text-right text-xs">
+          <Link
+            href="/forgot-password"
+            className="text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        </p>
+      ) : null}
       {error ? (
         <p
           role="alert"
@@ -181,6 +201,5 @@ function Field({
 
 /** Only same-origin paths are honoured, so a crafted link cannot bounce users elsewhere. */
 export function safeCallback(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
+  return safePath(value);
 }

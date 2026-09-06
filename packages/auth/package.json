@@ -18,7 +18,9 @@
     "@better-auth/drizzle-adapter": "^1.7.2",
     "@repo/database": "workspace:*",
     "@repo/env": "workspace:*",
-    "better-auth": "^1.7.2"
+    "better-auth": "^1.7.2",
+    "@repo/email": "workspace:*",
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -28,6 +30,7 @@
     "auth": "^1.7.2",
     "eslint": "10.8.1",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@types/react": "^19.2.0"
   }
 }

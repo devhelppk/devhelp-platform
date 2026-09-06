@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
     "@repo/database",
     "@repo/auth",
     "@repo/learning",
+    "@repo/email",
+    "@repo/notify",
     "@repo/content-schema",
     "@repo/content",
   ],

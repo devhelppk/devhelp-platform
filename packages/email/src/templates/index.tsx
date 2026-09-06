@@ -1,0 +1,134 @@
+import { Text } from "react-email";
+import { Action, Layout, LinkFallback, styles } from "./layout";
+
+export function VerifyEmail({ name, url }: { name: string; url: string }) {
+  return (
+    <Layout
+      preview="Confirm your email to finish setting up devhelp"
+      heading="Confirm your email"
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        Confirm this address so you can contribute reviews, questions, and
+        projects on devhelp. Learning never needs it, contributing does.
+      </Text>
+      <Action href={url}>Confirm email</Action>
+      <LinkFallback href={url} />
+    </Layout>
+  );
+}
+
+export function ResetPassword({ name, url }: { name: string; url: string }) {
+  return (
+    <Layout preview="Reset your devhelp password" heading="Reset your password">
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        Someone asked to reset the password for this account. If that was you,
+        choose a new one below. If not, ignore this email; nothing changes.
+      </Text>
+      <Action href={url}>Choose a new password</Action>
+      <LinkFallback href={url} />
+    </Layout>
+  );
+}
+
+export function OrganizationInvitation({
+  inviter,
+  organization,
+  url,
+  expiresIn,
+}: {
+  inviter: string;
+  organization: string;
+  url: string;
+  expiresIn: string;
+}) {
+  return (
+    <Layout
+      preview={`${inviter} invited you to ${organization} on devhelp`}
+      heading={`Join ${organization}`}
+    >
+      <Text style={styles.text}>
+        {inviter} invited you to join {organization} on devhelp. Members can be
+        placed in cohorts and follow courses together.
+      </Text>
+      <Action href={url}>Accept invitation</Action>
+      <Text style={styles.muted}>The invitation expires in {expiresIn}.</Text>
+      <LinkFallback href={url} />
+    </Layout>
+  );
+}
+
+export function MentorApplicationDecided({
+  name,
+  approved,
+  reason,
+  policyUrl,
+  url,
+}: {
+  name: string;
+  approved: boolean;
+  reason?: string;
+  policyUrl?: string;
+  url: string;
+}) {
+  return (
+    <Layout
+      preview={
+        approved ? "You are a devhelp mentor" : "About your mentor application"
+      }
+      heading={approved ? "Welcome aboard, mentor" : "Your mentor application"}
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      {approved ? (
+        <Text style={styles.text}>
+          Your application was approved. You can now review contributions in
+          your tracks and propose content changes from the studio.
+        </Text>
+      ) : (
+        <Text style={styles.text}>
+          We are not taking your application forward right now.
+          {reason ? ` The reviewer wrote: "${reason}"` : ""}
+          {policyUrl ? " The relevant policy clause is linked below." : ""} You
+          can apply again in 30 days.
+        </Text>
+      )}
+      <Action href={url}>
+        {approved ? "Open the moderation queue" : "See your application"}
+      </Action>
+      {policyUrl ? <LinkFallback href={policyUrl} /> : null}
+    </Layout>
+  );
+}
+
+export function ModerationDecided({
+  name,
+  subject,
+  approved,
+  reason,
+  policyUrl,
+  url,
+}: {
+  name: string;
+  subject: string;
+  approved: boolean;
+  reason?: string;
+  policyUrl?: string;
+  url: string;
+}) {
+  return (
+    <Layout
+      preview={`${subject}: ${approved ? "published" : "not published"}`}
+      heading={approved ? `${subject} is live` : `${subject} was not published`}
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        {approved
+          ? "A moderator approved your submission and it is now visible."
+          : `A moderator did not publish your submission.${reason ? ` Reason: "${reason}"` : ""}`}
+      </Text>
+      <Action href={url}>{approved ? "View it" : "Review and edit"}</Action>
+      {policyUrl ? <LinkFallback href={policyUrl} /> : null}
+    </Layout>
+  );
+}

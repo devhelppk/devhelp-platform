@@ -72,6 +72,26 @@ export async function AccountMenu({
         >
           Courses
         </Link>
+        <Link
+          href="/notifications"
+          className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+        >
+          Notifications
+        </Link>
+        <Link
+          href="/account"
+          className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+        >
+          Account
+        </Link>
+        {session.user.role === "mentor" || session.user.role === "admin" ? (
+          <Link
+            href="/moderate"
+            className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          >
+            Moderation
+          </Link>
+        ) : null}
         <div className="my-1 h-px bg-border" />
         <form action={signOut}>
           <button

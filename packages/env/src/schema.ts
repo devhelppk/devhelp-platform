@@ -24,6 +24,11 @@ export const serverSchema = {
   GOOGLE_CLIENT_SECRET: optionalString,
   CONTENT_DIR: optionalString,
   CONTENT_SYNC_SECRET: optionalString,
+  /** Where email goes: Resend's API, any SMTP server (Mailpit locally), or an in-memory outbox that also logs. */
+  EMAIL_PROVIDER: z.enum(["resend", "smtp", "log"]).default("log"),
+  EMAIL_FROM: z.string().min(3).default("devhelp <no-reply@devhelp.pk>"),
+  RESEND_API_KEY: optionalString,
+  SMTP_URL: optionalString,
 };
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -44,14 +49,30 @@ export const databaseSchema = {
   DATABASE_POOL_MAX: serverSchema.DATABASE_POOL_MAX,
 };
 
-/** OAuth providers need both halves or neither. */
+/**
+ * OAuth providers need both halves or neither; the email provider needs its
+ * credentials. Whether `log` is allowed in production is checked when the
+ * first email is sent (`@repo/email`), not here: `next build` and `typegen`
+ * run with NODE_ENV=production and must not need mail credentials.
+ */
 export function checkPairs(env: {
+  NODE_ENV?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  EMAIL_PROVIDER?: "resend" | "smtp" | "log";
+  RESEND_API_KEY?: string;
+  SMTP_URL?: string;
 }) {
   const problems: string[] = [];
+  if (env.EMAIL_PROVIDER === "resend" && !env.RESEND_API_KEY)
+    problems.push("EMAIL_PROVIDER=resend needs RESEND_API_KEY");
+  if (env.EMAIL_PROVIDER === "smtp" && !env.SMTP_URL)
+    problems.push(
+      "EMAIL_PROVIDER=smtp needs SMTP_URL (e.g. smtp://localhost:1025)",
+    );
+
   if (!!env.GITHUB_CLIENT_ID !== !!env.GITHUB_CLIENT_SECRET)
     problems.push(
       "GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET must be set together",

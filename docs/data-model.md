@@ -96,13 +96,24 @@ Rules: `recordEvent` inserts the event and updates read models in one transactio
 
 Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercise_submitted` (attempt, passed, version, tests, failed) are recorded for every submission; a pass records `lesson_completed` with the enrolment generation key.
 
+### Shared systems (implemented in S5)
+
+| Table                | Key columns                                                                                                                                                                                   | Notes                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moderation_items`   | `subject_type` (enum: mentor_application, company_review_request, …), `subject_id`, `status`, `track`, `submitted_by`, `decided_by`, `decided_at`, `reason`, `policy_clause`, `payload` jsonb | One queue for every area. Unique (subject_type, subject_id). `payload` is a snapshot validated by `moderationPayloadSchema`. `track` null = admin-only. |
+| `moderation_actions` | `item_id`, `actor_id`, `action` (submit, approve, reject, edit, merge, hide, unhide, flag, dismiss_flag, request_review), `reason`, `policy_clause`, `before`, `after` jsonb                  | Append-only audit; written in the same transaction as every item change.                                                                                |
+| `content_flags`      | `subject_type`, `subject_id`, `reporter_id`, `reason` (enum), `details`, `status` (open, upheld, dismissed), `item_id`                                                                        | One flag per reporter per subject.                                                                                                                      |
+| `mentor_tracks`      | `user_id`, `track` (course_track), `granted_by`                                                                                                                                               | Which tracks a mentor moderates; admins moderate everything. Written when a mentor application is approved.                                             |
+| `notifications`      | `user_id`, `kind` (enum), `subject_type`, `subject_id`, `title`, `body`, `href`, `dedupe_key`, `read_at`, `emailed_at`                                                                        | Written only by `@repo/notify`. Unique (user_id, dedupe_key).                                                                                           |
+| `rate_limits`        | `key`, `count`, `window_started_at`                                                                                                                                                           | Fixed-window counters for per-user limits (mentor applications, verification resends, later reviews and comments).                                      |
+
 ### Learning (planned; see `spec.md`)
 
-- S5: `moderation_items`, `moderation_actions`, `content_flags`, `mentor_tracks`, `notifications`, `rate_limits` (see the S5 plan). S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`.
+- S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`.
 
 ## Open questions
 
 1. **Org-scoped content.** Should institutions be able to publish private courses? Leaning no for v1; all content is open and CC BY-SA. Organizations only add cohorts and visibility.
 2. **Mentors.** Is `mentor` a platform role (can create orgs, review projects anywhere) or an org role? Currently platform. Revisit when project review exists.
-3. **Email.** Invitations and verification need an email sender before organizations are usable in production. Resend or Postmark; free tiers cover early volume.
+3. **Email.** Settled in S5: Resend in production, Mailpit in development, through `@repo/email`.
 4. **Learner privacy inside orgs.** What can an org admin see about a member's progress? Aggregate only by default; per-learner only inside a cohort the learner opted into.

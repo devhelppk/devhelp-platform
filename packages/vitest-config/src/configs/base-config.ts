@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export const baseConfig = defineConfig({
   test: {
+    // Tests never send real email: the log transport keeps an in-memory outbox.
+    env: { EMAIL_PROVIDER: "log" },
     globals: true,
     passWithNoTests: true,
     coverage: {

@@ -1,6 +1,6 @@
 # S5 plan: email, moderation core, notifications
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S5. Requirements: X1 (email provider; verification before contributing), X2 (moderation: queue, flags, policy page, audit log, role-based access), X4 (in-app notifications), F2.8 to F2.10 and F2.12 (the parts that are the shared system, not the company bank), F3.7 (mentor onboarding, as the first real subject of the queue), F4.4 and F4.5 (the shared parts), N2.1 (policy and takedown contact published); X10. Builds on S1 (Better Auth with admin and organization plugins, `users.role`, `users.emailVerified`), S3 (tRPC, app shell, account menu).
+Status: `done` (see `review.md`, `test.md`). Deviations after implementation and review: `adminProcedure` dropped as unused (mentor applications are gated inside `decide`); the production guard on `EMAIL_PROVIDER=log` moved from env validation to the first send so builds need no mail credentials; role and verification are read from the users table in `mentorProcedure`, `verifiedProcedure`, and the role-gated pages because the session cookie cache cannot see an approval; `@repo/email` is loaded lazily by auth and the moderation router; the `changeEmail` procedure was not built (Better Auth's change-email flow needs its own verification round trip; S11 profile work). Founder confirmed the four open points on 2026-09-06. Spec entry: `docs/spec.md` → S5. Requirements: X1 (email provider; verification before contributing), X2 (moderation: queue, flags, policy page, audit log, role-based access), X4 (in-app notifications), F2.8 to F2.10 and F2.12 (the parts that are the shared system, not the company bank), F3.7 (mentor onboarding, as the first real subject of the queue), F4.4 and F4.5 (the shared parts), N2.1 (policy and takedown contact published); X10. Builds on S1 (Better Auth with admin and organization plugins, `users.role`, `users.emailVerified`), S3 (tRPC, app shell, account menu).
 
 ## Goal
 
@@ -86,11 +86,11 @@ Email digest scheduling (X4 P1), comments and their flags (S12), company bank su
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend (Postmark kept as a one-file alternative).
-- [ ] `moderation_items` supports any subject type; approve/reject/edit/merge actions are logged with actor and reason.
-- [ ] Mentors see only their track's content items; admins see all.
-- [ ] Notifications table with read state; in-app list in the app shell header.
-- [ ] Browser loop passed on the dev server for the flows in test item 6; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend (Postmark kept as a one-file alternative).
+- [x] `moderation_items` supports any subject type; approve/reject/edit/merge actions are logged with actor and reason.
+- [x] Mentors see only their track's content items; admins see all.
+- [x] Notifications table with read state; in-app list in the app shell header.
+- [x] Browser loop passed on the dev server for the flows in test item 6; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 

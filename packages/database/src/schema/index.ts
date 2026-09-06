@@ -6,3 +6,6 @@ export * from "./content";
 export * from "./courses";
 export * from "./assessments";
 export * from "./progress";
+// Shared systems (S5): moderation queue + audit log, notifications.
+export * from "./moderation";
+export * from "./notifications";

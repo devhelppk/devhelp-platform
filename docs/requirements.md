@@ -253,10 +253,10 @@ Phase 1: lesson ratings with tags, course reviews, per-lesson and per-course agg
 
 ## Cross-cutting requirements
 
-- X1 **Identity and organizations** as built: Better Auth, platform roles, organizations with cohorts. Email verification is required before contributing to areas 2 and 4; an email provider (Resend or Postmark) is therefore required for launch.
-- X2 **Moderation** is one system used by areas 2, 3, and 4: a queue, a flag model, a policy page, an audit log, and role-based access (mentor can approve content in their track; admin can do everything).
+- X1 **Identity and organizations** as built: Better Auth, platform roles, organizations with cohorts. Email verification is required before contributing to areas 2 and 4 (never for learning); the provider is Resend in production and Mailpit locally, behind `@repo/email` (S5).
+- X2 **Moderation** is one system used by areas 2, 3, and 4: a queue, a flag model, a policy page, an audit log, and role-based access (mentor can approve content in their track; admin can do everything). Built in S5 (`moderation_items`, `moderation_actions`, `content_flags`, `mentor_tracks`, `/moderate`, `/policy`); mentor onboarding is its first subject.
 - X3 **Search** across courses, lessons, companies, and (later) comments. Start with Postgres full-text search; move to Typesense/Meilisearch if needed.
-- X4 **Notifications** in-app with an email digest; a single `notifications` table with type, subject, read state.
+- X4 **Notifications** in-app with an email digest; a single `notifications` table with type, subject, read state. In-app inbox, header bell, and immediate email for the kinds that ask for it built in S5; the digest is a later scheduler change.
 - X5 **Public profiles** (opt-in): name, city, badges, certificates, accepted projects, contributions. The employer-facing signal from the curriculum review lives here.
 - X6 **Analytics** privacy-preserving (Plausible or Umami self-hosted): lesson drop-off, completion funnels, search terms. No third-party ad trackers.
 - X7 **Accessibility**: WCAG AA, keyboard and screen-reader paths. English-only UI; dates and currency formatted for Pakistan (PKR, DD Mon YYYY).

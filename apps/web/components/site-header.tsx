@@ -15,6 +15,9 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Main" className="flex items-center gap-1 sm:gap-2">
           <Button variant="ghost" size="sm" asChild>
+            <Link href="/policy">Policy</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
             <Link href="/design">Design</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>

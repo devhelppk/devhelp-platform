@@ -19,7 +19,11 @@
     "@repo/learning": "workspace:*",
     "@trpc/server": "^11.18.0",
     "superjson": "^2.2.6",
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "@repo/notify": "workspace:*",
+    "@repo/email": "workspace:*",
+    "@repo/env": "workspace:*",
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -28,6 +32,7 @@
     "@types/node": "26.2.0",
     "eslint": "10.8.1",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@types/react": "^19.2.0"
   }
 }

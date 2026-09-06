@@ -67,3 +67,48 @@ export const exerciseResultsSchema = z.array(
   }),
 );
 export type ExerciseResults = z.infer<typeof exerciseResultsSchema>;
+
+/** What a mentor applicant submits (F3.7); snapshotted on the moderation item. */
+export const mentorApplicationSchema = z
+  .object({
+    tracks: z.array(z.enum(["technical", "career"])).min(1),
+    github: z
+      .string()
+      .trim()
+      .regex(/^[a-zA-Z0-9-]{1,39}$/, "GitHub handle only, no URL"),
+    why: z.string().trim().min(40).max(2000),
+    link: z.url().optional(),
+  })
+  .strict();
+export type MentorApplication = z.infer<typeof mentorApplicationSchema>;
+
+/** A company asking for a specific post to be reviewed (F2.12). Companies arrive in S10. */
+export const companyReviewRequestSchema = z
+  .object({
+    companyId: z.uuid().optional(),
+    targetType: z.string().min(1),
+    targetId: z.uuid(),
+    message: z.string().trim().min(20).max(2000),
+    contactEmail: z.email(),
+  })
+  .strict();
+
+/** `moderation_items.payload`, discriminated by the item's subject type. */
+export const moderationPayloadSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("mentor_application"),
+    data: mentorApplicationSchema,
+  }),
+  z.object({
+    kind: z.literal("company_review_request"),
+    data: companyReviewRequestSchema,
+  }),
+]);
+export type ModerationPayload = z.infer<typeof moderationPayloadSchema>;
+
+/** `moderation_actions.before` / `after`: a shallow record of the fields an action changed. */
+export const auditChangeSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())]),
+);
+export type AuditChange = z.infer<typeof auditChangeSchema>;

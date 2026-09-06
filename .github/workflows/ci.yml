@@ -23,8 +23,14 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U devhelp -d devhelp"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.31
+        ports: ["1025:1025", "8025:8025"]
     env:
       DATABASE_URL: postgresql://devhelp:devhelp@localhost:5432/devhelp
+      EMAIL_PROVIDER: smtp
+      SMTP_URL: smtp://localhost:1025
+      MAILPIT_URL: http://localhost:8025
       BETTER_AUTH_SECRET: ci-only-secret-not-used-in-production-0000
       BETTER_AUTH_URL: http://localhost:3001
       CONTENT_SYNC_SECRET: ci-only-content-sync-secret

@@ -20,6 +20,7 @@ import { MarkDoneButton } from "@/components/learning/mark-done-button";
 import { VideoPlayer } from "@/components/learning/video-player";
 import { MDXContent } from "@/components/mdx/mdx-content";
 import { AccountMenu } from "@/components/shell/account-menu";
+import { NotificationBell } from "@/components/notifications/bell";
 import { Assessment } from "@/components/assessment/assessment";
 import { LazyMobileNav } from "@/components/shell/lazy-mobile-nav";
 import { LearnerProviders } from "@/components/shell/learner-providers";
@@ -109,6 +110,7 @@ export default async function LessonPage({
           </nav>
         </div>
         <ThemeToggle />
+        <NotificationBell />
         <AccountMenu callbackURL={`/courses/${courseSlug}/${lessonSlug}`} />
       </AppShellHeader>
       <AppShellContent
