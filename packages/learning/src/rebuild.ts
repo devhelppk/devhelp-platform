@@ -17,6 +17,11 @@ export async function rebuildLearner(
     await tx
       .delete(schema.enrollments)
       .where(eq(schema.enrollments.userId, userId));
+    // Activity is a read model and is rebuilt from the stream; awards and
+    // certificates are records and survive, like a certificate.
+    await tx
+      .delete(schema.userActivity)
+      .where(eq(schema.userActivity.userId, userId));
     const events = await tx.query.progressEvents.findMany({
       where: eq(schema.progressEvents.userId, userId),
       // Insert order is the only total order: derived events share occurredAt/recordedAt with their trigger.

@@ -1,5 +1,6 @@
 import type { ContentTree, Diagnostic, LoadedExercise } from "./load.ts";
 import { runJsInNode } from "@repo/exercise-runner/node";
+import { LUCIDE_ICONS } from "./lucide-icons.ts";
 
 export type ExerciseRunner = (
   ex: LoadedExercise,
@@ -253,6 +254,20 @@ export function checkContent(
       !tree.paths.some((p) => p.data.slug === r.path)
     )
       err(badge.file, "ref", `badge references unknown path "${r.path}"`);
+    if (!LUCIDE_ICONS.has(badge.data.icon))
+      err(
+        badge.file,
+        "icon",
+        `unknown lucide icon "${badge.data.icon}"; use a kebab-case name from lucide.dev/icons`,
+      );
+    // A rule can be valid and not yet earnable: project lessons are post-MVP
+    // (founder, S8). Warn so authors know, never fail the build.
+    if (r.kind === "first_project_accepted")
+      warn(
+        badge.file,
+        "rule",
+        "no lesson runs automated project checks yet, so this badge cannot be earned in this release; it awards as soon as one does",
+      );
   }
 
   return out;

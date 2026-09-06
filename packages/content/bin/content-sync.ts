@@ -28,7 +28,7 @@ syncContent({ dir, sha, repo: lock.repo })
       `  courses ${fmt(s.courses)}  modules ${fmt(s.modules)}  lessons ${fmt(s.lessons)}`,
     );
     console.log(
-      `  quizzes ${fmt(s.quizzes)}  exercises ${fmt(s.exercises)}  paths ${fmt(s.paths)}`,
+      `  quizzes ${fmt(s.quizzes)}  exercises ${fmt(s.exercises)}  paths ${fmt(s.paths)}  badges ${fmt(s.badges)}`,
     );
     process.exit(0);
   })

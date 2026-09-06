@@ -177,21 +177,21 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S8. Badges and streaks — `planned`
+### S8. Badges and streaks — `done` (PENDING)
 
 Plan: [`specs/S8-badges-streaks/plan.md`](./specs/S8-badges-streaks/plan.md)
 
 Scope: F1.16, F1.17, plus streak and activity computation from `progress_events`. Badge rules defined in the content repo and evaluated against the event stream, manual admin awards, streaks and an activity graph on the dashboard and public profile.
 
-Founder decisions 2026-09-06: **the MVP is self-learning with automated checks only.** Badge rules never fail CI, and `first_project_accepted` stays earnable once project lessons run their automated tests. Retroactive awards are silent and notification emails are throttled per learner. Leaderboards are out for now, not forever. Project submissions and their mentor review moved to the backlog with AI-assisted review; nothing in the MVP requires a human to accept a learner's work. Badges and streaks stay because they are computed, not judged.
+Founder decisions 2026-09-06: **the MVP is self-learning with automated checks only.** Badge rules never fail CI, and `first_project_accepted` stays earnable once project lessons run their automated tests. Notification emails are throttled per learner. No badge backfill: the MVP has no users, so badges apply from publication onward. Leaderboards are out for now, not forever. Project submissions and their mentor review moved to the backlog with AI-assisted review; nothing in the MVP requires a human to accept a learner's work. Badges and streaks stay because they are computed, not judged.
 
 Acceptance criteria
 
-- [ ] Badge rules defined in the content repo (`badges/*.yaml`) evaluate against events; a "5 lessons in 7 days" badge awards exactly once.
-- [ ] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
-- [ ] Admins can award and revoke a badge manually, with a reason, recorded on the award row and shown in `/admin/badges` (plan decision 7).
-- [ ] Streak and activity graph computed from events and shown on the dashboard and the public profile.
-- [ ] Retroactive awards are silent, and `notify()` throttles emails per learner without dropping the in-app row.
+- [x] Badge rules defined in the content repo (`badges/*.yaml`) evaluate against events; a "5 lessons in 7 days" badge awards exactly once.
+- [x] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
+- [x] Admins can award and revoke a badge manually, with a reason, recorded on the award row and shown in `/admin/badges` (plan decision 7).
+- [x] Streak and activity graph computed from events and shown on the dashboard and the public profile.
+- [x] `notify()` throttles emails per learner without dropping the in-app row.
 
 Depends on: S5, S7.
 
@@ -288,6 +288,7 @@ Technical
 - Offline tolerance for lesson pages and progress writes (F1.14).
 - Alternative video providers (Mux, Cloudflare Stream).
 - **Project submissions and review (deferred from S8 on 2026-09-06).** `project` lessons accepting a repo URL, a review queue with structured feedback, and the `submitted → changes_requested → accepted` flow. Post-MVP, and the founder wants AI-assisted review considered alongside mentor review when it returns. The schema already carries the `project` lesson type, the `submit` completion rule, the `project_submitted` event kind, the empty `projects` array in the certificate snapshot, and `requireProjectAccepted` in course completion criteria, so nothing needs to be re-modelled.
+- **Badge backfill (dropped from S8 on 2026-09-06: no users yet).** When learners exist and a badge is added, replay each learner's events through `evaluateBadges` to award it retroactively, silently. The evaluator already takes a whole event and is idempotent, so the script is short.
 - Peer review before mentor review on projects.
 - Company-bank verification mechanics (work-email or document) and employer accounts / job openings.
 - Email digests for notifications.

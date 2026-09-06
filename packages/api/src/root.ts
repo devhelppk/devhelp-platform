@@ -1,5 +1,6 @@
 import { accountRouter } from "./routers/account";
 import { assessmentsRouter } from "./routers/assessments";
+import { badgesRouter } from "./routers/badges";
 import { catalogueRouter } from "./routers/catalogue";
 import { certificatesRouter } from "./routers/certificates";
 import { commentsRouter } from "./routers/comments";
@@ -24,6 +25,7 @@ export const appRouter = router({
   reviews: reviewsRouter,
   comments: commentsRouter,
   certificates: certificatesRouter,
+  badges: badgesRouter,
   profiles: profilesRouter,
 });
 export type AppRouter = typeof appRouter;

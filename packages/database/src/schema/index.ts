@@ -13,3 +13,5 @@ export * from "./notifications";
 export * from "./feedback";
 // Certificates (S7).
 export * from "./certificates";
+// Badges, awards, and daily activity (S8).
+export * from "./badges";

@@ -187,6 +187,35 @@ export const certificateSnapshotSchema = z
   })
   .strict();
 
+/**
+ * Badge rules (S8). Mirrors `badgeFile.rule` in `@repo/content-schema`; the
+ * sync validates with this at the write boundary so the column and the YAML
+ * cannot drift.
+ */
+export const badgeRuleSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("lessons_in_window"),
+      count: z.number().int().positive(),
+      days: z.number().int().positive(),
+    })
+    .strict(),
+  z
+    .object({ kind: z.literal("course_completed"), course: z.string().min(1) })
+    .strict(),
+  z
+    .object({ kind: z.literal("path_completed"), path: z.string().min(1) })
+    .strict(),
+  z.object({ kind: z.literal("first_project_accepted") }).strict(),
+  z
+    .object({
+      kind: z.literal("streak_days"),
+      days: z.number().int().positive(),
+    })
+    .strict(),
+]);
+export type BadgeRule = z.infer<typeof badgeRuleSchema>;
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({

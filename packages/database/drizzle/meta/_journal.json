@@ -85,6 +85,13 @@
       "when": 1788712527169,
       "tag": "0011_handle_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788717469233,
+      "tag": "0012_badges_streaks",
+      "breakpoints": true
     }
   ]
 }

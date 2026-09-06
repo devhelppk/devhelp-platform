@@ -1,5 +1,7 @@
 import { and, eq, isNull, schema, sql } from "@repo/database";
 import { evaluateCompletion } from "./criteria";
+import { recordActivity } from "./activity";
+import { evaluateBadges } from "./badges";
 import { generationAt, issueCertificate } from "./certificates";
 import { quizScoreFacts } from "./quiz-facts";
 import type { Tx } from "./types";
@@ -11,6 +13,8 @@ type ApplyOptions = {
   emit: boolean;
   /** Called after a new certificate row is inserted (only when emitting, never on replay). */
   onCertificate?: (certificateId: string) => void;
+  /** Called with badge ids awarded by this event (only when emitting). */
+  onBadges?: (badgeIds: string[]) => void;
 };
 export type ApplyResult = { courseCompleted: boolean };
 
@@ -28,6 +32,27 @@ export async function applyEvent(
   if (!ev.courseId || (!ev.kind.startsWith("course_") && !ev.lessonId)) {
     return { courseCompleted: false };
   }
+  // Every event that lands is a day of activity. Cheap: one upsert. The
+  // auto-enrol derived from a first lesson is skipped: live it never reaches
+  // this function, so counting it on replay would inflate that day.
+  if (!isDerivedAutoEnrol(ev))
+    await recordActivity(tx, ev.userId, ev.occurredAt);
+  const result = await applyToReadModels(tx, ev, opts);
+  // Badges are evaluated after the read models move, so a rule that asks
+  // "is every course in this path complete?" sees this completion too. Video
+  // heartbeats are skipped: they are the hottest event and satisfy nothing.
+  if (ev.kind !== "lesson_progressed") {
+    const awarded = await evaluateBadges(tx, ev);
+    if (awarded.length && opts.emit) opts.onBadges?.(awarded);
+  }
+  return result;
+}
+
+async function applyToReadModels(
+  tx: Tx,
+  ev: EventRow,
+  opts: ApplyOptions,
+): Promise<ApplyResult> {
   switch (ev.kind) {
     case "course_enrolled":
       await upsertEnrollment(tx, ev, opts);
@@ -108,6 +133,13 @@ export async function applyEvent(
   }
 }
 
+/** `course_enrolled` appended by a first lesson, rather than an explicit enrol. */
+function isDerivedAutoEnrol(ev: EventRow) {
+  return (
+    ev.kind === "course_enrolled" && ev.idempotencyKey.includes(":derived:")
+  );
+}
+
 function requireCourse(ev: EventRow): string {
   if (!ev.courseId)
     throw new Error(`${ev.kind} event ${ev.id} has no courseId`);
@@ -184,6 +216,9 @@ async function ensureEnrollment(
   const derived = await appendDerived(tx, {
     userId: ev.userId,
     kind: "course_enrolled",
+    // Live, this event never reaches applyEvent, so its activity is the
+    // triggering event's day, already counted. Replay must not add it again:
+    // see the guard in applyEvent.
     courseId,
     lessonId: null,
     payload: null,

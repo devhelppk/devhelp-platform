@@ -1,4 +1,5 @@
 import { and, desc, eq, isNull, schema, sql } from "@repo/database";
+import { activityFor, streakFor } from "@repo/learning";
 import { profileLinksSchema } from "@repo/database/schema";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -46,9 +47,26 @@ export const profilesRouter = router({
         with: { course: { columns: { slug: true } } },
       });
       const links = profileLinksSchema.safeParse(user.links ?? {}).data ?? {};
+      const badges = await ctx.db.query.userBadges.findMany({
+        where: and(
+          eq(schema.userBadges.userId, user.id),
+          isNull(schema.userBadges.revokedAt),
+        ),
+        orderBy: [desc(schema.userBadges.awardedAt)],
+        columns: { awardedAt: true },
+        with: {
+          badge: {
+            columns: { slug: true, name: true, description: true, icon: true },
+          },
+        },
+      });
+      const [streak, activity] = await ctx.db.transaction(async (tx) => [
+        await streakFor(tx, user.id),
+        await activityFor(tx, user.id),
+      ]);
       // The internal user id never leaves the server on a public route.
       const { id: _id, ...profile } = user;
       void _id;
-      return { ...profile, links, certificates };
+      return { ...profile, links, certificates, badges, streak, activity };
     }),
 });

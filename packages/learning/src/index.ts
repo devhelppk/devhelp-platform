@@ -25,3 +25,13 @@ export {
   certificateSnapshot,
   generationAt,
 } from "./certificates";
+export {
+  recordActivity,
+  streakFor,
+  activityFor,
+  today,
+  ACTIVITY_TZ,
+  type Streak,
+  type ActivityDay,
+} from "./activity";
+export { evaluateBadges, awardBadge } from "./badges";

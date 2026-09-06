@@ -1,9 +1,11 @@
 import { and, asc, eq, isNull, schema } from "@repo/database";
 import {
+  activityFor,
   enroll,
   enrolmentGeneration,
   lessonEventKey,
   recordEvent,
+  streakFor,
 } from "@repo/learning";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -112,6 +114,21 @@ function continueFrom<
 }
 
 export const learningRouter = router({
+  /** Streak and the activity grid for the caller, both derived from the event stream. */
+  streak: protectedProcedure.query(({ ctx }) =>
+    ctx.db.transaction((tx) => streakFor(tx, ctx.user.id)),
+  ),
+
+  activity: protectedProcedure
+    .input(
+      z
+        .object({ weeks: z.number().int().min(1).max(53).default(53) })
+        .default({ weeks: 53 }),
+    )
+    .query(({ ctx, input }) =>
+      ctx.db.transaction((tx) => activityFor(tx, ctx.user.id, input.weeks)),
+    ),
+
   /** Progress for one course; works signed out (no progress) so pages can render for everyone. */
   myProgress: publicProcedure
     .input(z.object({ courseSlug: slug }))

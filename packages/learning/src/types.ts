@@ -28,6 +28,8 @@ export type RecordEventResult = {
   courseCompleted?: boolean;
   /** Set when completing issued a new certificate (S7). */
   certificateId?: string;
+  /** Badges this event earned (S8). */
+  badgeIds?: string[];
 };
 
 export const lessonProgressedPayload = z.object({

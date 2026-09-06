@@ -22,6 +22,7 @@ export const notificationKind = pgEnum("notification_kind", [
   "comment_held",
   "certificate_issued",
   "certificate_revoked",
+  "badge_awarded",
 ]);
 
 export const notifications = pgTable(

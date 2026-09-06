@@ -124,9 +124,17 @@ Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercis
 | `certificates` | `id` (verify uuid), `user_id, course_id, enrolment_generation, learner_name, course_title, content_revision_id, criteria jsonb, issued_at, revoked_at, revoked_reason, revoked_by, pdf_key` | Unique (user, course). Issued in the completion transaction; `criteria` validated by `certificateCriteriaSchema`; `pdf_key` points at object storage. Revocation logs a `certificate` moderation item. |
 | `users` (+)    | `handle` (unique, nullable), `profile_public`, `bio`, `links` jsonb                                                                                                                         | Public profile (X5), opt-in, at `/u/<handle>`.                                                                                                                                                         |
 
+### Badges and activity (implemented in S8)
+
+| Table           | Key columns                                                                                                                                            | Notes                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `badges`        | `slug` (unique), `name`, `description`, `icon` (lucide), `rule` jsonb, `content_path`, `content_hash`, `content_revision_id`, `archived_at`            | Owned by the content sync like a course. `rule` is validated by `badgeRuleSchema` at the write boundary.                        |
+| `user_badges`   | `user_id`, `badge_id`, `awarded_at`, `awarded_by` (null = automatic), `award_reason`, `trigger_event_id`, `revoked_at`, `revoked_reason`, `revoked_by` | PK on the pair, so an award is idempotent. Never deleted by a replay; revocation is a state and the row is its own audit trail. |
+| `user_activity` | `user_id`, `day` (date, Asia/Karachi), `events`                                                                                                        | Read model for streaks and the activity grid; rebuilt by `rebuildLearner`.                                                      |
+
 ### Learning (planned; see `spec.md`)
 
-- S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables.
+- S9: `cohort_courses`. S10: company bank tables.
 
 ## Open questions
 

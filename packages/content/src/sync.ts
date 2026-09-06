@@ -1,3 +1,4 @@
+import { badgeRuleSchema } from "@repo/database/schema";
 import { checkContentAsync } from "@repo/content-schema/check";
 import {
   loadContentTree,
@@ -15,6 +16,7 @@ export type SyncSummary = {
   quizzes: Counts;
   exercises: Counts;
   paths: Counts;
+  badges: Counts;
 };
 type Counts = {
   created: number;
@@ -89,6 +91,7 @@ export async function syncContent(input: {
       quizzes: counts(),
       exercises: counts(),
       paths: counts(),
+      badges: counts(),
     };
 
     const courseIdBySlug = new Map<string, string>();
@@ -138,6 +141,13 @@ export async function syncContent(input: {
       revisionId,
       ownedBy(schema.paths.contentRevisionId),
     );
+    await syncBadges(
+      tx,
+      tree,
+      summary,
+      revisionId,
+      ownedBy(schema.badges.contentRevisionId),
+    );
     return summary;
   });
 }
@@ -153,7 +163,9 @@ function countItems(tree: ContentTree): number {
         c.quizzes.length +
         c.exercises.length,
       0,
-    ) + tree.paths.length
+    ) +
+    tree.paths.length +
+    tree.badges.length
   );
 }
 
@@ -566,4 +578,80 @@ async function syncPaths(
     )
     .returning({ id: schema.paths.id });
   summary.paths.archived += archived.length;
+}
+
+/** Postgres reorders jsonb keys, so compare rules by a key-sorted encoding or every sync reports an update. */
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_k, v) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v as object).sort(([a], [b]) => a.localeCompare(b)),
+        )
+      : v,
+  );
+}
+
+/** Badges are content like anything else: created, updated, and archived by slug (S8). */
+async function syncBadges(
+  tx: Tx,
+  tree: ContentTree,
+  summary: SyncSummary,
+  revisionId: string,
+  ownedByRepo: ReturnType<typeof sql>,
+) {
+  const live: string[] = [];
+  for (const badge of tree.badges) {
+    const d = badge.data;
+    const values = {
+      slug: d.slug,
+      name: d.name,
+      description: d.description,
+      icon: d.icon,
+      // Validated at the write boundary so the column and the YAML cannot drift.
+      rule: badgeRuleSchema.parse(d.rule),
+      contentPath: badge.file,
+      contentRevisionId: revisionId,
+      archivedAt: null,
+    };
+    const prev = await tx.query.badges.findFirst({
+      where: eq(schema.badges.slug, d.slug),
+    });
+    if (!prev) {
+      const [row] = await tx
+        .insert(schema.badges)
+        .values(values)
+        .returning({ id: schema.badges.id });
+      live.push(row!.id);
+      summary.badges.created++;
+      continue;
+    }
+    live.push(prev.id);
+    const same =
+      prev.name === values.name &&
+      prev.description === values.description &&
+      prev.icon === values.icon &&
+      stableJson(prev.rule) === stableJson(values.rule) &&
+      prev.archivedAt === null;
+    if (same) {
+      summary.badges.unchanged++;
+      continue;
+    }
+    await tx
+      .update(schema.badges)
+      .set({ ...values, updatedAt: new Date() })
+      .where(eq(schema.badges.id, prev.id));
+    summary.badges.updated++;
+  }
+  const archived = await tx
+    .update(schema.badges)
+    .set({ archivedAt: new Date() })
+    .where(
+      and(
+        isNull(schema.badges.archivedAt),
+        live.length ? notInArray(schema.badges.id, live) : sql`true`,
+        ownedByRepo,
+      ),
+    )
+    .returning({ id: schema.badges.id });
+  summary.badges.archived += archived.length;
 }

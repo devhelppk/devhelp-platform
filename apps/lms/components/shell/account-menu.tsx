@@ -103,7 +103,15 @@ export async function AccountMenu({
             href="/admin/certificates"
             className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
           >
-            Admin
+            Admin: certificates
+          </Link>
+        ) : null}
+        {session.user.role === "admin" ? (
+          <Link
+            href="/admin/badges"
+            className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          >
+            Admin: badges
           </Link>
         ) : null}
         <div className="my-1 h-px bg-border" />

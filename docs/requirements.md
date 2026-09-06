@@ -65,6 +65,7 @@ The core product: structured courses made of modules and lessons, with tracked p
 
 - F1.16 Badges are defined in the repo (slug, name, description, icon, criteria as a rule: e.g. "complete 5 lessons in 7 days", "first accepted project", "finish path X"). Awarded automatically by evaluating rules against `progress_events`; admins can award manually.
 - F1.17 Badges show on the learner's public profile if the learner makes the profile public.
+- As built (S8): badges are content (`badges/*.yaml`), evaluated against the event stream inside the writing transaction, with manual admin awards recorded on the award row. Streaks and the activity grid are computed from `user_activity` in Pakistan time. No backfill for now (no users), and notification emails are throttled per learner.
 
 **Certificates**
 

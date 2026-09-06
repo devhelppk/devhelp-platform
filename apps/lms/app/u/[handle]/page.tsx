@@ -7,6 +7,9 @@ import { Award } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { ActivityGrid } from "@/components/badges/activity-grid";
+import { BadgeGrid } from "@/components/badges/badge-grid";
+import { StreakLine } from "@/components/badges/streak-line";
 import { Page } from "@/components/shell/site-header";
 
 export const dynamic = "force-dynamic";
@@ -143,9 +146,27 @@ export default async function ProfilePage({
             </p>
           )}
         </section>
-        <p className="text-xs text-muted-foreground">
-          Badges and streaks appear here in a later release.
-        </p>
+        <section
+          aria-labelledby="profile-badges"
+          className="flex flex-col gap-3"
+        >
+          <h2 id="profile-badges" className="text-lg font-semibold">
+            Badges
+          </h2>
+          <BadgeGrid
+            items={p.badges.map((b) => ({ ...b.badge, earnedAt: b.awardedAt }))}
+          />
+        </section>
+        <section
+          aria-labelledby="profile-activity"
+          className="flex flex-col gap-3"
+        >
+          <h2 id="profile-activity" className="text-lg font-semibold">
+            Activity
+          </h2>
+          <StreakLine streak={p.streak} />
+          {p.streak.activeDays > 1 ? <ActivityGrid days={p.activity} /> : null}
+        </section>
       </div>
     </Page>
   );

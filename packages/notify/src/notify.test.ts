@@ -60,3 +60,54 @@ describe("notify", () => {
     expect(await unreadCount(user.id)).toBe(2);
   });
 });
+
+describe("email throttle", () => {
+  it("keeps the in-app row and skips the email once a learner is over the cap", async () => {
+    // Its own learner: the counter is keyed by user and the tests above have
+    // already spent one of this run's emails.
+    const [fresh] = (await db
+      .insert(schema.users)
+      .values({
+        email: `throttle-${crypto.randomUUID()}@devhelp.test`,
+        name: "Throttle",
+      })
+      .returning()) as unknown as [{ id: string }];
+    const react = createElement("p", null, "x");
+    const results: boolean[] = [];
+    // The hourly cap is 4; the fifth email is skipped, the row is not.
+    for (let i = 0; i < 6; i++) {
+      const r = await notify({
+        userId: fresh.id,
+        kind: "moderation_decided",
+        title: `Throttle ${i}`,
+        dedupeKey: `throttle:${i}`,
+        email: { to: "t@devhelp.test", subject: `s${i}`, react },
+      });
+      results.push(r.emailed);
+      expect(r.created).toBe(true);
+    }
+    expect(results.filter(Boolean)).toHaveLength(4);
+    expect(outbox).toHaveLength(4);
+    // Every row landed even though two emails were dropped.
+    expect(await unreadCount(fresh.id)).toBe(6);
+    await db.delete(schema.users).where(eq(schema.users.id, fresh.id));
+  });
+
+  it("silent writes the row and sends nothing", async () => {
+    resetOutbox();
+    const r = await notify({
+      userId: user.id,
+      kind: "moderation_decided",
+      title: "Quiet",
+      dedupeKey: "quiet:1",
+      silent: true,
+      email: {
+        to: "t@devhelp.test",
+        subject: "s",
+        react: createElement("p", null, "x"),
+      },
+    });
+    expect(r).toMatchObject({ created: true, emailed: false });
+    expect(outbox).toHaveLength(0);
+  });
+});

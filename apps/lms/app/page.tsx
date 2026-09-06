@@ -4,6 +4,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { api } from "@repo/api/server";
 import { TRPCError } from "@trpc/server";
+import { ActivityGrid } from "@/components/badges/activity-grid";
+import { BadgeGrid } from "@/components/badges/badge-grid";
+import { StreakLine } from "@/components/badges/streak-line";
 import { ContinueCard } from "@/components/learning/continue-card";
 import { CourseCard } from "@/components/learning/course-card";
 import { Page } from "@/components/shell/site-header";
@@ -48,9 +51,14 @@ export default async function DashboardPage() {
   const active = enrollments.filter((e) => e.status === "active");
   const completed = enrollments.filter((e) => e.status === "completed");
   const latest = active[0];
-  const next = latest
-    ? await caller.learning.continue({ courseSlug: latest.course.slug })
-    : null;
+  const [next, streak, activity, earned] = await Promise.all([
+    latest
+      ? caller.learning.continue({ courseSlug: latest.course.slug })
+      : null,
+    caller.learning.streak(),
+    caller.learning.activity({ weeks: 53 }),
+    caller.badges.mine(),
+  ]);
 
   return (
     <Page wide>
@@ -68,6 +76,11 @@ export default async function DashboardPage() {
             </Button>
           }
         />
+        <section className="flex flex-col gap-4">
+          <StreakLine streak={streak} />
+          {/* A year of empty squares says nothing to someone who just joined. */}
+          {streak.activeDays > 1 ? <ActivityGrid days={activity} /> : null}
+        </section>
         {latest && next ? (
           <ContinueCard
             courseSlug={latest.course.slug}
@@ -129,6 +142,24 @@ export default async function DashboardPage() {
             </ul>
           </section>
         ) : null}
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Badges</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/badges">All badges</Link>
+            </Button>
+          </div>
+          {earned.length ? (
+            <BadgeGrid
+              compact
+              items={earned.map((e) => ({ ...e.badge, earnedAt: e.awardedAt }))}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              None yet. They arrive on their own as you work through lessons.
+            </p>
+          )}
+        </section>
       </div>
     </Page>
   );

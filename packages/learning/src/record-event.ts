@@ -1,4 +1,4 @@
-import { and, db, eq, schema } from "@repo/database";
+import { and, db, eq, inArray, schema } from "@repo/database";
 import { applyEvent } from "./reducer";
 import {
   courseEnrolledPayload,
@@ -59,10 +59,16 @@ export async function recordEvent(
       .returning();
     if (!event) return { duplicate: true };
     let certificateId: string | undefined;
+    const badgeIds: string[] = [];
     const { courseCompleted } = await applyEvent(tx, event, {
       emit: true,
       onCertificate: (id) => {
         certificateId = id;
+      },
+      onBadges: (ids) => {
+        // applyEvent recurses for derived events, so accumulate: one lesson can
+        // finish a course and earn a badge at both levels.
+        badgeIds.push(...ids);
       },
     });
     return {
@@ -70,9 +76,12 @@ export async function recordEvent(
       eventId: event.id,
       courseCompleted,
       certificateId,
+      badgeIds,
     };
   });
   if (result.certificateId) await announceCertificate(result.certificateId);
+  if (result.badgeIds?.length)
+    await announceBadges(input.userId, result.badgeIds);
   return result;
 }
 
@@ -141,4 +150,29 @@ export async function enroll(
     payload: opts.teamId ? { teamId: opts.teamId } : undefined,
     idempotencyKey: `course_enrolled:${userId}:${courseId}:${generation}`,
   });
+}
+
+/** In-app notice for each badge earned; no email (a badge is a pleasant surprise, not an interruption). */
+async function announceBadges(userId: string, badgeIds: string[]) {
+  if (!userId) return;
+  try {
+    const { notify } = await import("@repo/notify");
+    const rows = await db.query.badges.findMany({
+      where: inArray(schema.badges.id, badgeIds),
+      columns: { id: true, name: true, description: true },
+    });
+    for (const b of rows)
+      await notify({
+        userId,
+        kind: "badge_awarded",
+        title: `Badge earned: ${b.name}`,
+        body: b.description,
+        href: "/badges",
+        subjectType: "badge",
+        subjectId: b.id,
+        dedupeKey: `badge:${b.id}`,
+      });
+  } catch (e) {
+    console.error("[learning] badge announcement failed:", e);
+  }
 }

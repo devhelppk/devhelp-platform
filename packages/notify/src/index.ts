@@ -1,4 +1,4 @@
-import { and, count, eq, isNull, schema } from "@repo/database";
+import { and, count, eq, isNull, schema, sql } from "@repo/database";
 import { db } from "@repo/database";
 import { sendEmail } from "@repo/email";
 import type { ReactElement } from "react";
@@ -18,7 +18,36 @@ export type NotifyInput = {
   dedupeKey?: string;
   /** Sent at once when the kind emails (see `emailingKinds`); ignored otherwise. */
   email?: { to: string; subject: string; react: ReactElement };
+  /** Write the row and send nothing: retroactive awards and other bulk work. */
+  silent?: boolean;
 };
+
+/** Per-learner email caps, so no feature can bombard someone (founder, S8). */
+const EMAIL_PER_HOUR = 4;
+const EMAIL_PER_DAY = 12;
+
+/**
+ * Fixed-window counter that reports rather than throws, unlike the tRPC
+ * `rateLimit`: a throttled email must not fail the work that triggered it.
+ */
+export async function tryConsume(
+  key: string,
+  max: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  const [row] = await db
+    .insert(schema.rateLimits)
+    .values({ key, count: 1 })
+    .onConflictDoUpdate({
+      target: schema.rateLimits.key,
+      set: {
+        count: sql`case when ${schema.rateLimits.windowStartedAt} < now() - make_interval(secs => ${windowSeconds}) then 1 else ${schema.rateLimits.count} + 1 end`,
+        windowStartedAt: sql`case when ${schema.rateLimits.windowStartedAt} < now() - make_interval(secs => ${windowSeconds}) then now() else ${schema.rateLimits.windowStartedAt} end`,
+      },
+    })
+    .returning({ count: schema.rateLimits.count });
+  return (row?.count ?? 0) <= max;
+}
 
 /** Kinds that also send an email immediately. The digest (X4 P1) will take over the rest. */
 export const emailingKinds: ReadonlySet<Kind> = new Set<Kind>([
@@ -66,7 +95,18 @@ export async function notify(
     return { id: existing?.id ?? "", created: false, emailed: false };
   }
   let emailed = false;
-  if (input.email && emailingKinds.has(input.kind)) {
+  if (input.email && !input.silent && emailingKinds.has(input.kind)) {
+    // The in-app row is the record and is never dropped; only the email is
+    // throttled, so a burst of activity cannot flood someone's inbox.
+    const allowed =
+      (await tryConsume(`email-hour:${input.userId}`, EMAIL_PER_HOUR, 3600)) &&
+      (await tryConsume(`email-day:${input.userId}`, EMAIL_PER_DAY, 86_400));
+    if (!allowed) {
+      console.info(
+        `[notify] email for ${input.kind} to ${input.userId} skipped: over the per-learner cap`,
+      );
+      return { id: row.id, created: true, emailed: false };
+    }
     try {
       await sendEmail(input.email);
       await db
