@@ -182,7 +182,7 @@ How lessons, courses, quizzes, exercises, and company facts get written, reviewe
 
 Content is a public git repository, edited through PRs or a browser editor that produces PRs. Runtime data stays in Postgres. Concretely:
 
-- F3.1 `devhelp-content` repo (companies left it in S10a: they are organisations in Postgres with files in R2): `courses/<course>/course.yaml`, `courses/<course>/<module>/<lesson>.mdx` with YAML frontmatter, `quizzes/*.yaml`, `exercises/<slug>/{README.mdx, starter/, tests/}`, `paths/*.yaml`, `badges/*.yaml`, `companies/*.yaml` (verified facts only; reviews and salaries are user data and live in Postgres). A Zod schema package (`@repo/content-schema`) is shared by the content repo's CI and the platform.
+- F3.1 `devhelp-content` repo (companies left it in S10a: they are organisations in Postgres with files in R2): `courses/<course>/course.yaml`, `courses/<course>/<module>/<lesson>.mdx` with YAML frontmatter, `quizzes/*.yaml`, `exercises/<slug>/{README.mdx, starter/, tests/}`, `paths/*.yaml`, `badges/*.yaml`. A Zod schema package (`@repo/content-schema`) is shared by the content repo's CI and the platform.
 - F3.2 `pnpm content:check` in the content repo lints frontmatter, links, images, quiz answers, exercise tests (runs them), and the style guide. Required on every PR.
 - F3.3 Keystatic mounted at `learn.devhelp.pk/studio` in GitHub mode, restricted to `mentor` and `admin` roles, with collections mirroring the Zod schema. Saving creates a branch and a PR on `devhelp-content`; the mentor never touches git. Git-fluent mentors bypass it.
 - F3.4 Review: `CODEOWNERS` maps tracks to editor mentors; a PR needs one editor approval and one mentor review; PR preview deploy renders changed lessons with the real design system.
