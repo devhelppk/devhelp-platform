@@ -111,7 +111,7 @@ Acceptance criteria
 
 Depends on: S2.
 
-### S4. Quizzes and exercises — `planned`
+### S4. Quizzes and exercises — `done` (`8e0f80e`)
 
 Plan: [`specs/S4-quizzes-exercises/plan.md`](./specs/S4-quizzes-exercises/plan.md)
 
@@ -119,11 +119,11 @@ Scope: F1.5, F1.6. Server-graded quizzes; JS/TS exercises in a Web Worker with a
 
 Acceptance criteria
 
-- [ ] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
-- [ ] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
-- [ ] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
-- [ ] Pyodide loads only on Python exercises and is cached (second load is instant).
-- [ ] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
+- [x] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
+- [x] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
+- [x] Pyodide loads only on Python exercises and is cached (second load is instant).
+- [x] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S3.
 
