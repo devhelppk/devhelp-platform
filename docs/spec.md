@@ -111,16 +111,19 @@ Acceptance criteria
 
 Depends on: S2.
 
-### S4. Quizzes and exercises — `todo` (next)
+### S4. Quizzes and exercises — `planned`
 
-Scope: F1.5, F1.6. Server-graded quizzes; Sandpack (web) and Pyodide (Python) exercises with CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
+Plan: [`specs/S4-quizzes-exercises/plan.md`](./specs/S4-quizzes-exercises/plan.md)
+
+Scope: F1.5, F1.6. Server-graded quizzes; JS/TS exercises in a Web Worker with an in-house vitest-subset harness (Sandpack dropped: unmaintained since 2025-04) and Python on Pyodide, both with CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
 
 Acceptance criteria
 
 - [ ] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
 - [ ] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
-- [ ] A passing Sandpack exercise records an event with the submitted code; a failing one does not complete the lesson.
+- [ ] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
 - [ ] Pyodide loads only on Python exercises and is cached (second load is instant).
+- [ ] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S3.
 
@@ -242,6 +245,23 @@ Acceptance criteria
 Depends on: everything above.
 
 ---
+
+## Follow-ups (open, not tied to a spec)
+
+Founder actions
+
+- Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
+- Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
+- Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
+
+Technical
+
+- Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.
+- `courseProgress` in the learning router awaits three queries sequentially; batch if a course page ever exceeds a few hundred milliseconds.
+- `/courses` and `/paths/[path]` are dynamic because the header reads the session; if catalogue traffic grows, move the header behind Suspense and cache the rest.
+- Drizzle-kit rename prompts need a pty from agent shells (see `AGENTS.md`); a non-interactive flag upstream would remove the workaround.
+- Mobile checks ran at 500 px (Chrome's minimum window width here); verify 360 px on a real device or device emulation before launch.
+- The S1 review record was corrected in S3: an edit it claimed had not applied. When a python/sed edit targets prettier-formatted code, grep for the result before claiming it landed.
 
 ## Backlog (post-launch, recorded so they are not forgotten)
 
