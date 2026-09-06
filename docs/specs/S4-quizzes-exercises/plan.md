@@ -24,6 +24,20 @@ A learner can take a quiz and get graded without the answers ever reaching the b
     - Zod schemas for all three jsonb shapes in `packages/database/src/schema/json.ts` (X10).
 12. **`@repo/learning` gains `quizScoreFacts(userId, courseId)`** (best score per quiz, averaged) used by `recomputeCourse` when `completion_criteria.minQuizScore` is set, closing the S1 placeholder; `requireProjectAccepted` stays for S8.
 
+## Alternatives considered for the JS/TS runner (verified 2026-09-06)
+
+| Option                                                            | State                                                                  | Why not                                                                                                                        |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `codesandbox/sandpack` (Apache-2.0, 6.2k)                         | last push 2025-04-24                                                   | Unmaintained for 17 months; tests run through a remote bundler.                                                                |
+| StackBlitz WebContainers (`@webcontainer/api` 1.6, core repo MIT) | repo last push 2025-04-22; runtime proprietary, "free for open source" | Full Node in the browser needs COOP/COEP headers and is heavy on low-RAM phones; licence is a promise, not code.               |
+| `@codesandbox/nodebox`                                            | last publish 2025-04                                                   | Same fate as Sandpack.                                                                                                         |
+| LiveCodes (MIT, 1.5k, active)                                     | full playground app embedded by iframe                                 | An IDE, not a widget: megabytes of JS, its own UI and theme, tests are a playground feature rather than a contract we control. |
+| Codapi (`codapi-js`, MIT, active)                                 | runs snippets in-browser for JS/Python or via a Codapi server          | Output runner, no test harness; the server mode contradicts "no server-side execution".                                        |
+| Runno (MIT, 772, active)                                          | WASI runtimes (Python, Ruby, C, Rust, QuickJS) as a web component      | Program runner with stdin/stdout, no test harness or TS; the right building block if we add compiled languages later.          |
+| `quickjs-emscripten` (active)                                     | sandboxed JS interpreter in wasm                                       | Interpreter only; useful as an isolation layer if learner code ever runs outside a Worker.                                     |
+
+Conclusion: keep decision 3. The harness is ~300 lines we own, on Sucrase plus a Worker; Runno is the noted path for languages beyond JS/TS/Python.
+
 ## API (`packages/api`, `learning` router)
 
 ```
@@ -84,5 +98,5 @@ Project submissions and mentor review (S8), peer review, server-side execution o
 
 ## Open points for the founder
 
-1. Sandpack is dropped in favour of our own Worker harness (decision 3). It means we own a ~300-line test runner but nothing depends on a stale library or a remote bundler. OK?
-2. Client-side pass/fail for exercises (decision 7) is recorded, not verified. Acceptable for a free platform, with certificates able to require a reviewed project? Or should S7 re-run JS tests server-side in an isolated sandbox before issuing a certificate?
+1. Sandpack is dropped in favour of our own Worker harness (decision 3). Founder: fine after the alternatives sweep above found no maintained equivalent.
+2. Client-side pass/fail for exercises (decision 7) is recorded, not verified. Founder: acceptable; decide on server-side verification before certificates (recorded in `spec.md` follow-ups, to be settled at the end of this spec).
