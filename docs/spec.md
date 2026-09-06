@@ -229,7 +229,7 @@ Depends on: S5, S7 (storage).
 
 ### S10b. Company bank: salaries — `done`
 
-Plan: [`specs/S10b-salaries/plan.md`](./specs/S10b-salaries/plan.md). Records: [`review.md`](./specs/S10b-salaries/review.md), [`test.md`](./specs/S10b-salaries/test.md)
+Commit: `86bedb4`. Plan: [`specs/S10b-salaries/plan.md`](./specs/S10b-salaries/plan.md). Records: [`review.md`](./specs/S10b-salaries/review.md), [`test.md`](./specs/S10b-salaries/test.md)
 
 Scope: F2.6, F2.7, F2.11 (the salary half of the split above). Salary points stored as earned, aggregated per role with the n ≥ 5 rule, shown in the currency they were earned in, individual points never selectable. Founder decisions 2026-09-07: display in the submitted currency with conversion from a daily-refreshed `fx_rates` table; salary points publish at once and carry an unverified mark until an admin checks them; the floor stays at five for every cell.
 
