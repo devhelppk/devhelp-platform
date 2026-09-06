@@ -1,7 +1,7 @@
 {
   "name": "devhelp-platform",
   "private": true,
-  "description": "devhelp.pk — a free, open-source learning platform for Pakistan's software engineers and students.",
+  "description": "devhelp.pk \u2014 a free, open-source learning platform for Pakistan's software engineers and students.",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -18,7 +18,11 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,css}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
+    "content:pull": "pnpm --filter @repo/content pull",
+    "content:check": "pnpm --filter @repo/content-schema check",
+    "content:sync": "pnpm --filter @repo/content sync",
+    "content:refresh": "pnpm content:pull && pnpm content:check && pnpm content:sync"
   },
   "devDependencies": {
     "prettier": "3.9.6",

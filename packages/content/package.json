@@ -1,0 +1,33 @@
+{
+  "name": "@repo/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "pull": "tsx bin/content-pull.ts",
+    "sync": "tsx bin/content-sync.ts",
+    "lint": "eslint src bin --max-warnings 0",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@repo/content-schema": "workspace:*",
+    "@repo/database": "workspace:*",
+    "tar": "^7.5.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/learning": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/vitest-config": "workspace:*",
+    "@types/node": "26.2.0",
+    "eslint": "10.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "7.0.2",
+    "vitest": "^4.1.11"
+  }
+}

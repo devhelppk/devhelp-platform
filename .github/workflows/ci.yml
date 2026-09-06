@@ -12,8 +12,22 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: devhelp
+          POSTGRES_PASSWORD: devhelp
+          POSTGRES_DB: devhelp
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U devhelp -d devhelp"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://devhelp:devhelp@localhost:5432/devhelp
+      BETTER_AUTH_SECRET: ci-only-secret-not-used-in-production-0000
+      BETTER_AUTH_URL: http://localhost:3001
+      CONTENT_SYNC_SECRET: ci-only-content-sync-secret
     steps:
       - uses: actions/checkout@v5
         with:
@@ -25,6 +39,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
+      - run: pnpm content:pull
+      - run: pnpm content:check
+        env:
+          VITEST_BIN: ${{ github.workspace }}/packages/content-schema/node_modules/.bin/vitest
+      - run: pnpm db:migrate
+      - run: pnpm content:sync
       - run: pnpm lint
       - run: pnpm check-types
       - run: pnpm test

@@ -8,8 +8,9 @@ Thanks for helping build a free learning platform for Pakistan's software commun
 pnpm install
 cp .env.example .env
 pnpm db:up            # local Postgres via Docker
-pnpm db:push          # create tables
-pnpm db:seed          # starter content
+pnpm db:migrate       # create tables
+pnpm db:seed          # dev admin user
+pnpm content:refresh  # curriculum from devhelppk/devhelp-content
 pnpm dev              # web on :3000, lms on :3001
 ```
 
@@ -19,6 +20,8 @@ pnpm dev              # web on :3000, lms on :3001
 - `apps/lms` — the learning platform
 - `packages/ui` — shared shadcn/ui components and the design tokens
 - `packages/database` — Drizzle schema, migrations, seed
+- `packages/learning` — progress engine
+- `packages/content-schema`, `packages/content` — content validation and sync (curriculum lives in `devhelppk/devhelp-content`)
 - `packages/*-config` — shared ESLint, TypeScript, Tailwind, and Vitest config
 
 ## Adding a UI component

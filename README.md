@@ -29,7 +29,8 @@ Monorepo for [devhelp.pk](https://devhelp.pk): a free, open-source learning plat
 ```sh
 pnpm install
 cp .env.example .env
-pnpm db:up && pnpm db:push && pnpm db:seed
+pnpm db:up && pnpm db:migrate && pnpm db:seed
+pnpm content:refresh   # curriculum from github.com/devhelppk/devhelp-content
 pnpm dev
 ```
 

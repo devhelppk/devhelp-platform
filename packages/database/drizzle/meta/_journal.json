@@ -15,6 +15,13 @@
       "when": 1788654576466,
       "tag": "0001_learning_core",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788658816757,
+      "tag": "0002_path_content_revision",
+      "breakpoints": true
     }
   ]
 }

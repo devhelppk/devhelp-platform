@@ -1,0 +1,8 @@
+id: q1
+questions:
+  - id: a
+    type: single
+    prompt: Pick the right one please
+    options:
+      - { id: x, text: Wrong }
+      - { id: y, text: Also wrong }

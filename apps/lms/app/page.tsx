@@ -22,7 +22,7 @@ export default function DashboardPage() {
           published courses once Postgres is running (
           <code className="font-mono text-sm">pnpm db:up</code>, then{" "}
           <code className="font-mono text-sm">
-            pnpm db:push && pnpm db:seed
+            pnpm db:migrate && pnpm content:refresh
           </code>
           ).
         </p>

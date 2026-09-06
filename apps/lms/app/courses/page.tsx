@@ -24,7 +24,7 @@ export default async function CoursesPage() {
       {courses.length === 0 ? (
         <p className="text-muted-foreground">
           No published courses yet. Run{" "}
-          <code className="font-mono text-sm">pnpm db:seed</code>.
+          <code className="font-mono text-sm">pnpm content:refresh</code>.
         </p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">

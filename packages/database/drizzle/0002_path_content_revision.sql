@@ -1,0 +1,2 @@
+ALTER TABLE "paths" ADD COLUMN "content_revision_id" uuid;--> statement-breakpoint
+ALTER TABLE "paths" ADD CONSTRAINT "paths_content_revision_id_content_revisions_id_fk" FOREIGN KEY ("content_revision_id") REFERENCES "public"."content_revisions"("id") ON DELETE set null ON UPDATE no action;

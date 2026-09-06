@@ -10,12 +10,19 @@
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
     "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET"
+    "GOOGLE_CLIENT_SECRET",
+    "CONTENT_DIR",
+    "CONTENT_SYNC_SECRET"
   ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "$TURBO_ROOT$/.content/**",
+        "$TURBO_ROOT$/content.lock.json"
+      ],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "lint": {
@@ -44,5 +51,6 @@
     "db:seed": {
       "cache": false
     }
-  }
+  },
+  "globalPassThroughEnv": ["INIT_CWD", "VITEST_BIN"]
 }

@@ -1,0 +1,4 @@
+id: ex
+runner: sandpack
+language: typescript
+entry: add.ts

@@ -1,6 +1,6 @@
 # S2 plan: content pipeline
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S2. Requirements: area 3 option C, F3.1, F3.2, F3.5, F3.6, N3.1, N3.3, N1.3; X10 (type safety). Builds on S1 tables (`courses`, `modules`, `lessons`, `quizzes`, `questions`, `exercises`, `paths`, `path_courses`, `content_revisions`).
+Status: `done` (see `review.md`, `test.md`). Deviations after review: sync refuses empty trees and runs the cross-file checker; unchanged rows are never rewritten (deployed commit = newest `content_revisions` row); `paths.content_revision_id` added (migration 0002); archival scoped to the syncing repo; `CONTENT_DIR` resolves from the repo root everywhere; exercises carry a `solution/` that the checker runs. Spec entry: `docs/spec.md` → S2. Requirements: area 3 option C, F3.1, F3.2, F3.5, F3.6, N3.1, N3.3, N1.3; X10 (type safety). Builds on S1 tables (`courses`, `modules`, `lessons`, `quizzes`, `questions`, `exercises`, `paths`, `path_courses`, `content_revisions`).
 
 ## Goal
 
@@ -95,10 +95,10 @@ Keystatic studio and mentor dashboard (S11), lesson UX beyond the plain proof ro
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] `content:check` fails on a bad quiz answer, a broken link, and a failing exercise test; passes on the sample content.
-- [ ] Sync is idempotent: running twice produces no row changes; removing a lesson archives it and keeps its progress rows.
-- [ ] A lesson body renders in the LMS from the compiled MDX with prose styles.
-- [ ] Certificates-to-revision linkage is possible: each synced lesson row has a `content_revisions` entry with the commit SHA.
+- [x] `content:check` fails on a bad quiz answer, a broken link, and a failing exercise test; passes on the sample content.
+- [x] Sync is idempotent: running twice produces no row changes; removing a lesson archives it and keeps its progress rows.
+- [x] A lesson body renders in the LMS from the compiled MDX with prose styles.
+- [x] Certificates-to-revision linkage is possible: each synced lesson row has a `content_revisions` entry with the commit SHA.
 
 ## Open points for the founder
 

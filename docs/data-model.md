@@ -63,7 +63,7 @@ teams ──< cohort_courses >── courses                     (planned: what 
 
 ### Learning (ours, implemented in S1)
 
-Content metadata (owned by the content sync from S2; seeded locally until then):
+Content metadata (owned by `@repo/content` sync from the `devhelppk/devhelp-content` repo; `content_revision_id` on courses, lessons, and paths records the commit that last changed the row; the currently deployed commit is the newest `content_revisions` row for the repo. The seed no longer creates courses):
 
 | Table                   | Columns                                                                                                                                                                                                                                                         | Notes                                                                                                                                                                              |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

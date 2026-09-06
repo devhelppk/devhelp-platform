@@ -7,6 +7,7 @@ Monorepo for devhelp.pk: a free, open-source learning platform (marketing site +
 ```sh
 pnpm install                     # Node 24, pnpm 11 (see .nvmrc / packageManager)
 cp .env.example .env && pnpm db:up && pnpm db:migrate && pnpm db:seed
+pnpm content:refresh             # pull the pinned devhelp-content commit, check it, sync metadata into Postgres
 pnpm dev                         # web :3000, lms :3001
 pnpm format && pnpm lint && pnpm check-types && pnpm test && pnpm build   # must all pass before a commit
 pnpm --filter <pkg> <script>     # target one workspace, e.g. pnpm --filter @repo/database db:generate
@@ -16,16 +17,18 @@ Turborepo scopes tasks to the package of the current working directory. Always r
 
 ## Layout
 
-| Path                                         | Package                 | Notes                                                                                                                              |
-| -------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/web`                                   | `web`                   | Marketing site. `/design` is the living style guide.                                                                               |
-| `apps/lms`                                   | `lms`                   | Learning platform. `/courses` reads Postgres (`force-dynamic`).                                                                    |
-| `packages/ui`                                | `@repo/ui`              | shadcn/ui, consumed from source. Tokens + rules in `packages/ui/DESIGN.md`.                                                        |
-| `packages/database`                          | `@repo/database`        | Drizzle ORM + postgres-js. Schema in `src/schema/*.ts`, migrations in `drizzle/`. `schema/auth.ts` is generated, do not hand-edit. |
-| `packages/auth`                              | `@repo/auth`            | Better Auth server (`@repo/auth`) + React client (`@repo/auth/client`). Admin + organization (teams = cohorts) plugins.            |
-| `packages/learning`                          | `@repo/learning`        | Progress engine: `recordEvent`, `enroll`, `rebuildLearner`, `evaluateCompletion`. Integration tests hit Postgres.                  |
-| `packages/tailwind-config`                   | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper).                                                                   |
-| `packages/{eslint,typescript,vitest}-config` | `@repo/*-config`        | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this.                                            |
+| Path                                         | Package                 | Notes                                                                                                                                                         |
+| -------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`                                   | `web`                   | Marketing site. `/design` is the living style guide.                                                                                                          |
+| `apps/lms`                                   | `lms`                   | Learning platform. `/courses` reads Postgres (`force-dynamic`).                                                                                               |
+| `packages/ui`                                | `@repo/ui`              | shadcn/ui, consumed from source. Tokens + rules in `packages/ui/DESIGN.md`.                                                                                   |
+| `packages/database`                          | `@repo/database`        | Drizzle ORM + postgres-js. Schema in `src/schema/*.ts`, migrations in `drizzle/`. `schema/auth.ts` is generated, do not hand-edit.                            |
+| `packages/auth`                              | `@repo/auth`            | Better Auth server (`@repo/auth`) + React client (`@repo/auth/client`). Admin + organization (teams = cohorts) plugins.                                       |
+| `packages/learning`                          | `@repo/learning`        | Progress engine: `recordEvent`, `enroll`, `rebuildLearner`, `evaluateCompletion`. Integration tests hit Postgres.                                             |
+| `packages/content-schema`                    | `@repo/content-schema`  | Zod schemas, loader, hashing for the content repo; `@repo/content-schema/check` is the checker (shells out to vitest, never import it from app code).         |
+| `packages/content`                           | `@repo/content`         | `content:pull` (tarball of the pinned sha into `.content/`) and `content:sync` (idempotent upsert into Postgres, archives removed items, scoped to the repo). |
+| `packages/tailwind-config`                   | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper).                                                                                              |
+| `packages/{eslint,typescript,vitest}-config` | `@repo/*-config`        | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this.                                                                       |
 
 Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, `@repo/database`, and `@repo/auth`. These packages are transpiled by Next (`transpilePackages`), no build step. Product docs: `docs/requirements.md` (what/why), `docs/data-model.md` (schema), `docs/spec.md` (the ordered spec tracker: one spec at a time, plan → implement → review → test → complete; update its status and commit hash when a spec finishes).
 
@@ -37,6 +40,15 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - Client-facing APIs go through tRPC v11 in `packages/api` (from S3): React Query hooks on the client, direct callers in RSC. No untyped `fetch` to our own routes. Use Next `typedRoutes` for links and `@t3-oss/env-nextjs` for env.
 - Quiz answers never reach the browser: read questions through `questionPublicColumns` + `toPublicOptions`.
 - `packages/auth` and `packages/learning` set `declaration: false` because Better Auth / Drizzle inferred types are not portable; keep that when adding packages that re-export them.
+
+## Content pipeline (S2)
+
+- Curriculum lives in the public repo `devhelppk/devhelp-content` (MDX + YAML, CC BY-SA). `content.lock.json` pins the commit the platform builds against. `pnpm content:pull` downloads that sha into `.content/` (gitignored); `pnpm content:check` validates it (schema, refs, links, quiz answers, exercise tests against `solution/`); `pnpm content:sync` upserts metadata by slug and records a `content_revisions` row. `pnpm content:refresh` does all three.
+- While authoring, set `CONTENT_DIR=../devhelp-content` to use a sibling checkout instead of the tarball; `pnpm content:check ../devhelp-content` works from the repo root (paths resolve from `INIT_CWD`).
+- Lesson bodies are compiled at build time by Content Collections (`apps/lms/content-collections.ts`) and looked up by `lessons.content_path`; they are never stored in Postgres. New content therefore needs a platform rebuild; the promote workflow in the content repo opens a lock-bump PR on merge.
+- `POST /api/content/sync` (admin session or `CONTENT_SYNC_SECRET` bearer) re-runs the sync for the deployed content. It is a recovery tool, not a publish path.
+- Sync archives (never deletes) rows missing from content, and only rows previously produced by the same repo, so a sync from a fixture or another source cannot archive real content.
+- `@repo/content-schema` uses explicit `.ts` import extensions because Content Collections loads it through Node's native TS loader; consumers set `allowImportingTsExtensions`. Content Collections rejects function-form schemas: pass a Zod object (loose) and do strict validation in `transform`.
 
 ## Conventions and gotchas
 

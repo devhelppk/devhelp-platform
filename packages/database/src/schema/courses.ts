@@ -173,6 +173,9 @@ export const paths = pgTable("paths", {
   description: text(),
   isPublished: boolean().notNull().default(false),
   position: integer().notNull().default(0),
+  contentRevisionId: uuid().references(() => contentRevisions.id, {
+    onDelete: "set null",
+  }),
   archivedAt: timestamp({ withTimezone: true }),
   ...timestamps,
 });
@@ -247,7 +250,11 @@ export const lessonsRelations = relations(lessons, ({ one }) => ({
   }),
 }));
 
-export const pathsRelations = relations(paths, ({ many }) => ({
+export const pathsRelations = relations(paths, ({ one, many }) => ({
+  contentRevision: one(contentRevisions, {
+    fields: [paths.contentRevisionId],
+    references: [contentRevisions.id],
+  }),
   pathCourses: many(pathCourses),
 }));
 

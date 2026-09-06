@@ -17,6 +17,8 @@ export const nextJsConfig = [
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Content Collections build cache.
+    ".content-collections/**",
   ]),
   {
     languageOptions: {
