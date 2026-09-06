@@ -162,7 +162,7 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S7. Certificates and public profiles — `done` (PENDING)
+### S7. Certificates and public profiles — `done` (`f27af70`)
 
 Plan: [`specs/S7-certificates-profiles/plan.md`](./specs/S7-certificates-profiles/plan.md)
 
