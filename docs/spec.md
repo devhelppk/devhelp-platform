@@ -129,13 +129,15 @@ Acceptance criteria
 
 Depends on: S3.
 
-### S5. Email, moderation core, notifications — `todo`
+### S5. Email, moderation core, notifications — `planned`
+
+Plan: [`specs/S5-email-moderation-notifications/plan.md`](./specs/S5-email-moderation-notifications/plan.md)
 
 Scope: X1 (email provider), X2 (moderation queue, flags, audit log, policy page), X4 (in-app notifications). Better Auth email verification and organization invitations wired to the provider. Shared by S6, S7, S9, S10.
 
 Acceptance criteria
 
-- [ ] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend/Postmark (decide in plan).
+- [ ] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend (plan decision 1; Postmark kept as a one-file alternative).
 - [ ] `moderation_items` supports any subject type; approve/reject/edit/merge actions are logged with actor and reason.
 - [ ] Mentors see only their track's content items; admins see all.
 - [ ] Notifications table with read state; in-app list in the app shell header.

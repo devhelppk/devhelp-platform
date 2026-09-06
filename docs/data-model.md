@@ -98,7 +98,7 @@ Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercis
 
 ### Learning (planned; see `spec.md`)
 
-- S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`, `notifications`.
+- S5: `moderation_items`, `moderation_actions`, `content_flags`, `mentor_tracks`, `notifications`, `rate_limits` (see the S5 plan). S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`.
 
 ## Open questions
 
