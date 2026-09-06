@@ -177,17 +177,20 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S8. Projects, mentor review, badges, streaks — `todo`
+### S8. Badges and streaks — `todo`
 
-Scope: F1.15, F1.16, F1.17, plus streak computation from `progress_events`. Project submission by repo URL, mentor review queue with structured feedback, badge rules evaluated on events, manual awards.
+Scope: F1.16, F1.17, plus streak and activity computation from `progress_events`. Badge rules defined in the content repo and evaluated against the event stream, manual admin awards, streaks and an activity graph on the dashboard and public profile.
+
+Founder decision 2026-09-06: **the MVP is self-learning with automated checks only.** Project submissions and their mentor review moved to the backlog with AI-assisted review; nothing in the MVP requires a human to accept a learner's work. Badges and streaks stay because they are computed, not judged.
 
 Acceptance criteria
 
-- [ ] Submission status flow `submitted → changes_requested → accepted` with feedback visible to the learner.
-- [ ] Badge rules defined in content repo (`badges/*.yaml`) evaluate against events; a "5 lessons in 7 days" badge awards exactly once.
-- [ ] Streak and activity graph computed from events and shown on the dashboard and public profile.
+- [ ] Badge rules defined in the content repo (`badges/*.yaml`) evaluate against events; a "5 lessons in 7 days" badge awards exactly once.
+- [ ] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
+- [ ] Admins can award and revoke a badge manually, with a reason, through the existing audit trail.
+- [ ] Streak and activity graph computed from events and shown on the dashboard and the public profile.
 
-Depends on: S4, S5, S7.
+Depends on: S5, S7.
 
 ### S9. Cohorts: syllabus and org dashboards — `todo`
 
@@ -216,7 +219,7 @@ Depends on: S5. Parallel-safe with S6–S9.
 
 ### S11. Mentor studio and dashboard — `todo`
 
-Scope: area 3 phase 2 (F3.3, F3.7, F3.8, F3.9). Keystatic at `/studio` in GitHub mode for mentors; mentor application and role flip; dashboard with revision signals, project queue, moderation queue; attribution on lessons.
+Scope: area 3 phase 2 (F3.3, F3.7, F3.8, F3.9). Keystatic at `/studio` in GitHub mode for mentors; mentor application and role flip; dashboard with revision signals and the moderation queue; attribution on lessons. (The project review queue left with the S8 scope change.)
 
 Acceptance criteria
 
@@ -224,7 +227,7 @@ Acceptance criteria
 - [ ] Dashboard lists lessons below rating threshold or above unclear-tag rate (from S6).
 - [ ] Contributors page and lesson attribution render from frontmatter.
 
-Depends on: S2, S6, S8.
+Depends on: S2, S6.
 
 ### S12. Comments and Q&A — `merged into S6`
 
@@ -281,6 +284,7 @@ Technical
 
 - Offline tolerance for lesson pages and progress writes (F1.14).
 - Alternative video providers (Mux, Cloudflare Stream).
+- **Project submissions and review (deferred from S8 on 2026-09-06).** `project` lessons accepting a repo URL, a review queue with structured feedback, and the `submitted → changes_requested → accepted` flow. Post-MVP, and the founder wants AI-assisted review considered alongside mentor review when it returns. The schema already carries the `project` lesson type, the `submit` completion rule, the `project_submitted` event kind, the empty `projects` array in the certificate snapshot, and `requireProjectAccepted` in course completion criteria, so nothing needs to be re-modelled.
 - Peer review before mentor review on projects.
 - Company-bank verification mechanics (work-email or document) and employer accounts / job openings.
 - Email digests for notifications.

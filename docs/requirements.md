@@ -59,7 +59,7 @@ The core product: structured courses made of modules and lessons, with tracked p
 
 **Projects and review**
 
-- F1.15 `project` lessons accept a GitHub repo URL and optional live URL. Submissions have a status: `submitted`, `changes_requested`, `accepted`. Mentors review from a queue; learners see feedback in place. Peer review is P1 (two peers plus rubric before a mentor).
+- F1.15 `project` lessons accept a GitHub repo URL and optional live URL. Submissions have a status: `submitted`, `changes_requested`, `accepted`. Mentors review from a queue; learners see feedback in place. Peer review is P1 (two peers plus rubric before a mentor). **Deferred past the MVP (founder, 2026-09-06):** the MVP is self-learning with automated checks only, so nothing requires a human to accept a learner's work. Revisit with AI-assisted review if the platform gets traction; the data model already reserves the lesson type, completion rule, and event kind.
 
 **Badges**
 
@@ -284,6 +284,6 @@ Phase 1: lesson ratings with tags, course reviews, per-lesson and per-course agg
 
 ## Open questions for the founder
 
-1. Should certificates require an accepted project, or is quiz completion enough for a first tier? Two tiers ("completed" vs "verified with project") is an option.
+1. ~~Should certificates require an accepted project, or is quiz completion enough for a first tier?~~ Settled: one completion certificate per course (S7), and with project review deferred past the MVP (S8 decision) nothing gates a certificate on human judgement. The `requireProjectAccepted` criterion stays in the model for later.
 2. Who moderates on day one? Reviews, interviews, comments, and content PRs all need humans; the moderation queue is built for it, but staffing decides throughput.
 3. Content repo name and org: `devhelppk/devhelp-content` under the existing GitHub org?

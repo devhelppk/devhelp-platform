@@ -182,8 +182,9 @@ export default async function LessonPage({
         ) : null}
         {lesson.type === "project" ? (
           <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-            Project submissions arrive in a later release. Read the brief now;
-            completion for this type comes with it.
+            Project briefs are here to work through on your own. Submitting and
+            reviewing them is not part of this release; the MVP is
+            self-directed, with automated checks.
           </div>
         ) : null}
 

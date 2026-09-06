@@ -144,7 +144,7 @@ export default async function ProfilePage({
           )}
         </section>
         <p className="text-xs text-muted-foreground">
-          Badges and accepted projects appear here in a later release.
+          Badges and streaks appear here in a later release.
         </p>
       </div>
     </Page>
