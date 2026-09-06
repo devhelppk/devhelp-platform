@@ -129,7 +129,7 @@ Acceptance criteria
 
 Depends on: S3.
 
-### S5. Email, moderation core, notifications — `planned`
+### S5. Email, moderation core, notifications — `done` (`d586a0c`)
 
 Plan: [`specs/S5-email-moderation-notifications/plan.md`](./specs/S5-email-moderation-notifications/plan.md)
 
@@ -137,10 +137,10 @@ Scope: X1 (email provider), X2 (moderation queue, flags, audit log, policy page)
 
 Acceptance criteria
 
-- [ ] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend (plan decision 1; Postmark kept as a one-file alternative).
-- [ ] `moderation_items` supports any subject type; approve/reject/edit/merge actions are logged with actor and reason.
-- [ ] Mentors see only their track's content items; admins see all.
-- [ ] Notifications table with read state; in-app list in the app shell header.
+- [x] Verification and invitation emails send in dev via a local catcher (Mailpit in docker-compose) and in prod via Resend (plan decision 1; Postmark kept as a one-file alternative).
+- [x] `moderation_items` supports any subject type; approve/reject/edit/merge actions are logged with actor and reason.
+- [x] Mentors see only their track's content items; admins see all.
+- [x] Notifications table with read state; in-app list in the app shell header.
 
 Depends on: S1. Parallel-safe with S3/S4.
 
@@ -254,6 +254,7 @@ Depends on: everything above.
 
 Founder actions
 
+- Create the Resend account and verify the `devhelp.pk` sending domain, then set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` in production; create the `policy@devhelp.pk` mailbox named on `/policy` (S5).
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
 - Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
@@ -263,6 +264,8 @@ Technical
 - **Exercise verification (decided at the end of S4, founder to confirm):** exercise pass/fail stays browser-reported. Every submission stores the files and per-test results and the server rejects a pass claim that contradicts them, so any submission can be replayed later. Server-side execution (a sandboxed runner replaying stored files against the tests) is scheduled for S7, where certificates make it a trust requirement; until then the `verified` flag on exercise submissions does not exist and certificates must not be issued from exercise passes alone.
 - The `foundations-check` quiz description in the content repo says "Two questions" but the quiz has four; fix the copy in `devhelppk/devhelp-content`.
 - `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
+- Better Auth's `allowUserToCreateOrganization` reads the role from the session cookie cache, so a newly promoted mentor or admin can create an organization only after the cache expires (5 minutes) or a re-sign-in; role-gated platform pages already read fresh. Revisit if organization creation moves into a platform flow (S9).
+- The email digest for notifications (X4) is a scheduler over `notifications.emailed_at`; build it when S12 comments produce enough volume.
 - Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.
 - `courseProgress` in the learning router awaits three queries sequentially; batch if a course page ever exceeds a few hundred milliseconds.
 - `/courses` and `/paths/[path]` are dynamic because the header reads the session; if catalogue traffic grows, move the header behind Suspense and cache the rest.
