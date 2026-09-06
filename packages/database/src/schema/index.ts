@@ -11,3 +11,5 @@ export * from "./moderation";
 export * from "./notifications";
 // Area 4 (S6): lesson feedback, course reviews, discussions.
 export * from "./feedback";
+// Certificates (S7).
+export * from "./certificates";

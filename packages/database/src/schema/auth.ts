@@ -6,6 +6,7 @@ import {
   boolean,
   integer,
   uuid,
+  jsonb,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -28,6 +29,10 @@ export const users = pgTable("users", {
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
   city: text("city"),
+  handle: text("handle"),
+  profilePublic: boolean("profile_public").default(false),
+  bio: text("bio"),
+  links: jsonb("links"),
 });
 
 export const sessions = pgTable(

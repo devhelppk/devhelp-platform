@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "@repo/auth";
+import { clientEnv } from "@repo/env/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AccountForm } from "@/components/account/account-form";
@@ -34,7 +35,7 @@ export default async function AccountPage({
           ) : null}
         </header>
         <LearnerProviders>
-          <AccountForm />
+          <AccountForm lmsUrl={clientEnv.NEXT_PUBLIC_LMS_URL} />
         </LearnerProviders>
       </div>
     </Page>

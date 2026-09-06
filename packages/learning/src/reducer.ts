@@ -1,5 +1,6 @@
 import { and, eq, isNull, schema, sql } from "@repo/database";
 import { evaluateCompletion } from "./criteria";
+import { generationAt, issueCertificate } from "./certificates";
 import { quizScoreFacts } from "./quiz-facts";
 import type { Tx } from "./types";
 import { courseEnrolledPayload, lessonProgressedPayload } from "./types";
@@ -8,6 +9,8 @@ type EventRow = typeof schema.progressEvents.$inferSelect;
 type ApplyOptions = {
   /** When true, derived events (course_enrolled on first lesson, course_completed) are appended to the stream. */
   emit: boolean;
+  /** Called after a new certificate row is inserted (only when emitting, never on replay). */
+  onCertificate?: (certificateId: string) => void;
 };
 export type ApplyResult = { courseCompleted: boolean };
 
@@ -44,7 +47,8 @@ export async function applyEvent(
           ),
         );
       return { courseCompleted: false };
-    case "course_completed":
+    case "course_completed": {
+      const courseId = requireCourse(ev);
       await tx
         .update(enrollments)
         .set({
@@ -56,10 +60,20 @@ export async function applyEvent(
         .where(
           and(
             eq(enrollments.userId, ev.userId),
-            eq(enrollments.courseId, requireCourse(ev)),
+            eq(enrollments.courseId, courseId),
           ),
         );
+      // The certificate is part of completing (S7): same transaction, one per
+      // course, idempotent on replay, never deleted.
+      const issued = await issueCertificate(tx, {
+        userId: ev.userId,
+        courseId,
+        issuedAt: ev.occurredAt,
+        enrolmentGeneration: await generationAt(tx, ev.userId, courseId),
+      });
+      if (issued.created && opts.emit) opts.onCertificate?.(issued.id);
       return { courseCompleted: true };
+    }
     case "lesson_started":
     case "lesson_progressed":
     case "lesson_completed": {

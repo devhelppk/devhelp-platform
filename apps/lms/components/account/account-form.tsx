@@ -10,8 +10,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useTRPC } from "@/lib/trpc/client";
 import { ResendVerification } from "./resend-verification";
+import { ProfileForm } from "@/components/profile/profile-form";
 
-export function AccountForm() {
+export function AccountForm({ lmsUrl }: { lmsUrl: string }) {
   const trpc = useTRPC();
   const qc = useQueryClient();
   const router = useRouter();
@@ -107,6 +108,15 @@ export function AccountForm() {
           ) : null}
         </div>
       </form>
+      <ProfileForm
+        initial={{
+          handle: u.handle,
+          profilePublic: u.profilePublic,
+          bio: u.bio,
+          links: u.links,
+        }}
+        lmsUrl={lmsUrl}
+      />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Security</h2>

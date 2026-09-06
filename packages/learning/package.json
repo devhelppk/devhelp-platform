@@ -4,18 +4,23 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./certificate-email": "./src/certificate-email.ts"
   },
   "scripts": {
     "lint": "eslint src --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "certificates:backfill": "tsx bin/backfill-certificates.ts"
   },
   "dependencies": {
     "@repo/database": "workspace:*",
     "@repo/env": "workspace:*",
     "@repo/exercise-runner": "workspace:*",
-    "zod": "^4.5.4"
+    "zod": "^4.5.4",
+    "@repo/notify": "workspace:*",
+    "@repo/email": "workspace:*",
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -24,6 +29,8 @@
     "@types/node": "26.2.0",
     "eslint": "10.8.1",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@types/react": "^19.2.0",
+    "tsx": "^4.20.0"
   }
 }

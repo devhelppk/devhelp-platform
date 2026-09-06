@@ -160,6 +160,23 @@ export function ModerationItem({
                 {payload.data.body}
               </dd>
             </>
+          ) : payload.kind === "certificate" ? (
+            <>
+              <dt className="text-muted-foreground">Certificate</dt>
+              <dd>
+                <Link
+                  href={`/verify/${it.subjectId}` as Route}
+                  className="underline underline-offset-4"
+                >
+                  {payload.data.learnerName}: {payload.data.courseTitle}
+                </Link>
+                <span className="text-muted-foreground">
+                  {" "}
+                  issued{" "}
+                  {new Date(payload.data.issuedAt).toLocaleDateString("en-GB")}
+                </span>
+              </dd>
+            </>
           ) : payload.kind === "course_review" ? (
             <>
               <dt className="text-muted-foreground">Course</dt>

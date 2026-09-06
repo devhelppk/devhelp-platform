@@ -1,12 +1,14 @@
 import { accountRouter } from "./routers/account";
 import { assessmentsRouter } from "./routers/assessments";
 import { catalogueRouter } from "./routers/catalogue";
+import { certificatesRouter } from "./routers/certificates";
 import { commentsRouter } from "./routers/comments";
 import { feedbackRouter } from "./routers/feedback";
 import { learningRouter } from "./routers/learning";
 import { mentorRouter } from "./routers/mentor";
 import { moderationRouter } from "./routers/moderation";
 import { notificationsRouter } from "./routers/notifications";
+import { profilesRouter } from "./routers/profiles";
 import { reviewsRouter } from "./routers/reviews";
 import { createCallerFactory, router } from "./trpc";
 
@@ -21,6 +23,8 @@ export const appRouter = router({
   feedback: feedbackRouter,
   reviews: reviewsRouter,
   comments: commentsRouter,
+  certificates: certificatesRouter,
+  profiles: profilesRouter,
 });
 export type AppRouter = typeof appRouter;
 

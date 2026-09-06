@@ -1,5 +1,5 @@
-import { Text } from "react-email";
-import { Action, Layout, LinkFallback, styles } from "./layout";
+import { Link, Text } from "react-email";
+import { Action, Layout, LinkFallback, colours, styles } from "./layout";
 
 export function VerifyEmail({ name, url }: { name: string; url: string }) {
   return (
@@ -153,6 +153,66 @@ export function CommentAccepted({
         sits at the top of the thread for every learner who lands there.
       </Text>
       <Action href={url}>Open the thread</Action>
+    </Layout>
+  );
+}
+
+export function CertificateIssued({
+  name,
+  courseTitle,
+  verifyUrl,
+  pdfUrl,
+}: {
+  name: string;
+  courseTitle: string;
+  verifyUrl: string;
+  pdfUrl: string;
+}) {
+  return (
+    <Layout
+      preview={`Your certificate for ${courseTitle}`}
+      heading="You finished the course"
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        Your certificate for {courseTitle} is ready. The verify link shows
+        exactly what you did; share it on LinkedIn or a CV. The PDF carries the
+        same link and a QR code.
+      </Text>
+      <Action href={verifyUrl}>Open your certificate</Action>
+      <Text style={styles.muted}>
+        PDF:{" "}
+        <Link href={pdfUrl} style={{ color: colours.indigo }}>
+          {pdfUrl}
+        </Link>
+      </Text>
+    </Layout>
+  );
+}
+
+export function CertificateRevoked({
+  name,
+  courseTitle,
+  reason,
+  verifyUrl,
+}: {
+  name: string;
+  courseTitle: string;
+  reason: string;
+  verifyUrl: string;
+}) {
+  return (
+    <Layout
+      preview={`Your certificate for ${courseTitle} was revoked`}
+      heading="A certificate was revoked"
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        An administrator revoked your certificate for {courseTitle}. Reason:
+        &ldquo;{reason}&rdquo;. The verify page now says so. If you think this
+        is a mistake, reply to this email.
+      </Text>
+      <Action href={verifyUrl}>See the verify page</Action>
     </Layout>
   );
 }

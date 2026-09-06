@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_LMS_URL: env.NEXT_PUBLIC_LMS_URL,
     NEXT_PUBLIC_WEB_URL: env.NEXT_PUBLIC_WEB_URL,
   },
+  // PDF rendering runs in Node with vendored fonts; keep it out of the bundler.
+  serverExternalPackages: ["@react-pdf/renderer"],
+  // The PDF renderer reads vendored TTFs at runtime; tracing cannot see them.
+  outputFileTracingIncludes: {
+    "/api/certificates/[file]": ["../../packages/certificates/fonts/**"],
+  },
   transpilePackages: [
     "@repo/ui",
     "@repo/database",
@@ -15,6 +21,8 @@ const nextConfig: NextConfig = {
     "@repo/learning",
     "@repo/email",
     "@repo/notify",
+    "@repo/storage",
+    "@repo/certificates",
     "@repo/content-schema",
     "@repo/content",
   ],

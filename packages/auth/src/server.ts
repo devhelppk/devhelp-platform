@@ -88,6 +88,16 @@ export const auth = betterAuth({
     additionalFields: {
       // e.g. "Karachi", "Lahore": used for cohorts and local meetups.
       city: { type: "string", required: false },
+      // Public profile (X5, S7): opt-in, learner-chosen handle at /u/<handle>.
+      handle: { type: "string", required: false, input: false },
+      profilePublic: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
+      bio: { type: "string", required: false, input: false },
+      links: { type: "json", required: false, input: false },
     },
   },
   session: {

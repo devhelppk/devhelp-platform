@@ -64,6 +64,27 @@
       "when": 1788705821079,
       "tag": "0008_feedback_reviews_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788710337379,
+      "tag": "0009_certificates_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788710503192,
+      "tag": "0010_certificate_enums",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788712527169,
+      "tag": "0011_handle_unique",
+      "breakpoints": true
     }
   ]
 }

@@ -26,11 +26,28 @@ jobs:
       mailpit:
         image: axllent/mailpit:v1.31
         ports: ["1025:1025", "8025:8025"]
+      minio:
+        image: bitnami/minio:2025.4.22
+        env:
+          MINIO_ROOT_USER: devhelp
+          MINIO_ROOT_PASSWORD: devhelp-minio
+          MINIO_DEFAULT_BUCKETS: devhelp
+        ports: ["9000:9000"]
+        options: >-
+          --health-cmd "curl -sf http://localhost:9000/minio/health/live"
+          --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       DATABASE_URL: postgresql://devhelp:devhelp@localhost:5432/devhelp
       EMAIL_PROVIDER: smtp
       SMTP_URL: smtp://localhost:1025
       MAILPIT_URL: http://localhost:8025
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: auto
+      S3_BUCKET: devhelp
+      S3_ACCESS_KEY_ID: devhelp
+      S3_SECRET_ACCESS_KEY: devhelp-minio
+      S3_FORCE_PATH_STYLE: "1"
       BETTER_AUTH_SECRET: ci-only-secret-not-used-in-production-0000
       BETTER_AUTH_URL: http://localhost:3001
       CONTENT_SYNC_SECRET: ci-only-content-sync-secret

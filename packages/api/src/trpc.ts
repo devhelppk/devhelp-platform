@@ -62,6 +62,14 @@ export const verifiedProcedure = protectedProcedure.use(
   },
 );
 
+/** Admin only (role read from the table, like the other gates). */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const user = await freshUser(ctx);
+  if (user.role !== "admin")
+    throw new TRPCError({ code: "FORBIDDEN", message: "Admins only." });
+  return next({ ctx: { ...ctx, user } });
+});
+
 /** Mentor or admin. Track scoping is the router's job (see `moderatorTracks`). */
 export const mentorProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const user = await freshUser(ctx);

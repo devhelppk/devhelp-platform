@@ -3,6 +3,7 @@ export const subjectLabels = {
   company_review_request: "Company review request",
   comment: "Comment",
   course_review: "Course review",
+  certificate: "Certificate",
 } as const;
 
 export const statusLabels = {

@@ -119,6 +119,74 @@ export const courseReviewSnapshotSchema = z
   })
   .strict();
 
+export type ModerationPayload = z.infer<typeof moderationPayloadSchema>;
+
+/** `moderation_actions.before` / `after`: a shallow record of the fields an action changed. */
+export const auditChangeSchema = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())]),
+);
+export type AuditChange = z.infer<typeof auditChangeSchema>;
+
+/** What a certificate attests to, frozen at issue time (F1.18). */
+export const certificateCriteriaSchema = z
+  .object({
+    criteria: completionCriteriaSchema,
+    lessons: z.array(
+      z.object({
+        slug: z.string(),
+        title: z.string(),
+        type: z.string(),
+        completedAt: z.string(),
+      }),
+    ),
+    quizzes: z.array(
+      z.object({
+        lessonSlug: z.string(),
+        title: z.string(),
+        bestScore: z.number().int().min(0).max(100),
+        passScore: z.number().int().min(0).max(100),
+      }),
+    ),
+    projects: z.array(
+      z.object({
+        lessonSlug: z.string(),
+        title: z.string(),
+        repoUrl: z.string(),
+      }),
+    ),
+    contentCommit: z.string().optional(),
+    contentRepo: z.string().optional(),
+  })
+  .strict();
+export type CertificateCriteria = z.infer<typeof certificateCriteriaSchema>;
+
+/** Public profile links (X5). */
+export const profileLinksSchema = z
+  .object({
+    github: z
+      .string()
+      .trim()
+      .regex(/^[a-zA-Z0-9-]{1,39}$/)
+      .optional(),
+    // http(s) only: these render as links on a public page, and z.url() alone
+    // accepts javascript: and data: URLs.
+    website: z.url({ protocol: /^https?$/ }).optional(),
+    linkedin: z.url({ protocol: /^https?$/ }).optional(),
+  })
+  .strict();
+export type ProfileLinks = z.infer<typeof profileLinksSchema>;
+
+/** A certificate under review, snapshotted for the queue (S7). */
+export const certificateSnapshotSchema = z
+  .object({
+    learnerName: z.string(),
+    courseTitle: z.string(),
+    courseSlug: z.string(),
+    issuedAt: z.string(),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -134,12 +202,5 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
     kind: z.literal("course_review"),
     data: courseReviewSnapshotSchema,
   }),
+  z.object({ kind: z.literal("certificate"), data: certificateSnapshotSchema }),
 ]);
-export type ModerationPayload = z.infer<typeof moderationPayloadSchema>;
-
-/** `moderation_actions.before` / `after`: a shallow record of the fields an action changed. */
-export const auditChangeSchema = z.record(
-  z.string(),
-  z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.string())]),
-);
-export type AuditChange = z.infer<typeof auditChangeSchema>;

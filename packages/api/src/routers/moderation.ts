@@ -395,6 +395,15 @@ export const moderationRouter = router({
             code: "FORBIDDEN",
             message: "Only admins decide mentor applications.",
           });
+        // A certificate is revoked and restored through `certificates.revoke`
+        // / `.restore` (admin only), which own the row; the queue item is the
+        // audit trail, not a second control.
+        if (item.subjectType === "certificate")
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Certificates are revoked and restored from the certificates admin page.",
+          });
         const now = new Date();
         await tx
           .update(schema.moderationItems)

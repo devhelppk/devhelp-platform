@@ -72,6 +72,7 @@ The core product: structured courses made of modules and lessons, with tracked p
 - F1.19 `/verify/[uuid]` is public, indexable, and shows the criteria snapshot and links to accepted project repos.
 - F1.19a A downloadable PDF is generated from the same record (server-rendered with the brand mark, the verify URL and a QR code printed on it) and cached in object storage; the learner can re-download it any time and share the verify link independently.
 - F1.20 Certificates can be revoked by an admin with a reason; the verify page then says so.
+- As built (S7): one completion certificate per course (founder decision); PDFs rendered server-side and cached in object storage (R2 in production, MinIO locally; no raw files in Postgres); revocation is admin-only with a reason, logged, and notified; public profiles at `/u/<handle>` are opt-in.
 
 **Cohorts (organizations)**
 

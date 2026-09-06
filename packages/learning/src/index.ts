@@ -20,3 +20,8 @@ export {
   type RecordEventInput,
   type RecordEventResult,
 } from "./types";
+export {
+  issueCertificate,
+  certificateSnapshot,
+  generationAt,
+} from "./certificates";

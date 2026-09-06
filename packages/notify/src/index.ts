@@ -26,6 +26,8 @@ export const emailingKinds: ReadonlySet<Kind> = new Set<Kind>([
   "moderation_decided",
   "org_invitation",
   "comment_accepted",
+  "certificate_issued",
+  "certificate_revoked",
 ]);
 
 /**

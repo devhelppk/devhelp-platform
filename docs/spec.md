@@ -162,7 +162,7 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S7. Certificates and public profiles — `planned`
+### S7. Certificates and public profiles — `done` (PENDING)
 
 Plan: [`specs/S7-certificates-profiles/plan.md`](./specs/S7-certificates-profiles/plan.md)
 
@@ -170,10 +170,10 @@ Scope: F1.18 to F1.20, X5. Issue on completion criteria, verify page, PDF with Q
 
 Acceptance criteria
 
-- [ ] Certificate issues in the same transaction as course completion, with a criteria snapshot and `content_revision` reference.
-- [ ] `/verify/[uuid]` is public, indexable, shows the snapshot, and says "revoked" with reason when revoked.
-- [ ] PDF is generated server-side, cached in storage (Postgres driver by default, S3/R2 by config; plan decision 4), re-downloadable.
-- [ ] Public profile shows name, city, certificates; private by default.
+- [x] Certificate issues in the same transaction as course completion, with a criteria snapshot and `content_revision` reference.
+- [x] `/verify/[uuid]` is public, indexable, shows the snapshot, and says "revoked" with reason when revoked.
+- [x] PDF is generated server-side, cached in object storage (R2 in production, MinIO locally and in CI; no raw files in Postgres), re-downloadable.
+- [x] Public profile shows name, city, certificates; private by default.
 
 Depends on: S3, S5.
 
@@ -266,6 +266,8 @@ Technical
 - `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
 - Better Auth's `allowUserToCreateOrganization` reads the role from the session cookie cache, so a newly promoted mentor or admin can create an organization only after the cache expires (5 minutes) or a re-sign-in; role-gated platform pages already read fresh. Revisit if organization creation moves into a platform flow (S9).
 - The email digest for notifications (X4) is a scheduler over `notifications.emailed_at`; build it when S6 discussions produce enough volume.
+- Create the Cloudflare R2 bucket and API token and set `S3_*` in production; the env check fails deliberately without them, and `pnpm certificates:backfill` should run once on the first deploy.
+- The course page fetches the learner's certificate list to find one by course; add a `byCourse` procedure with the S8 dashboard work.
 - Comment code blocks are styled but not syntax-highlighted; run Shiki at write time if mentors ask (S6 decision 4).
 - The `comments.anchor` column is written by the API but the lesson UI does not yet offer "comment on this section"; add it with the S11 mentor tooling.
 - Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.
@@ -282,4 +284,3 @@ Technical
 - Peer review before mentor review on projects.
 - Company-bank verification mechanics (work-email or document) and employer accounts / job openings.
 - Email digests for notifications.
-- Two-tier certificates ("completed" vs "verified with project") pending founder decision.

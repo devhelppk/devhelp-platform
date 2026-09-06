@@ -26,6 +26,8 @@ export type RecordEventResult = {
   eventId?: string;
   /** True when this call caused the course to complete. */
   courseCompleted?: boolean;
+  /** Set when completing issued a new certificate (S7). */
+  certificateId?: string;
 };
 
 export const lessonProgressedPayload = z.object({

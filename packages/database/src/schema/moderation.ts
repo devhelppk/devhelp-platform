@@ -26,6 +26,7 @@ export const moderationSubject = pgEnum("moderation_subject", [
   "company_review_request",
   "comment",
   "course_review",
+  "certificate",
 ]);
 export const moderationStatus = pgEnum("moderation_status", [
   "pending",

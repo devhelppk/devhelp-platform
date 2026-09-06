@@ -25,7 +25,8 @@
     "react": "^19.2.0",
     "sanitize-html": "^2.17.7",
     "superjson": "^2.2.6",
-    "zod": "^4.1.0"
+    "zod": "^4.1.0",
+    "@repo/storage": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

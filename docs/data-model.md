@@ -40,7 +40,7 @@ users ──< enrollments >── courses ──< modules ──< lessons
 users ──< lesson_progress >── lessons
 users ──< quiz_attempts (S4) >── quizzes ──< questions
 users ──< project_submissions >── lessons(type=project)  (planned)
-users ──< certificates >── courses                       (planned)
+users ──< certificates >── courses                       (S7)
 paths ──< path_courses >── courses
 teams ──< cohort_courses >── courses                     (planned: what a cohort is working through)
 ```
@@ -117,9 +117,16 @@ Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercis
 | `comment_votes`   | `comment_id, user_id`                                                                                                                                                                                                                       | PK pair; `vote_count` kept in the same transaction.                                                                                                                         |
 | `lesson_watchers` | `user_id, lesson_id`                                                                                                                                                                                                                        | Mentors notified of new questions (`lesson_question`).                                                                                                                      |
 
+### Certificates and profiles (implemented in S7)
+
+| Table          | Key columns                                                                                                                                                                                 | Notes                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `certificates` | `id` (verify uuid), `user_id, course_id, enrolment_generation, learner_name, course_title, content_revision_id, criteria jsonb, issued_at, revoked_at, revoked_reason, revoked_by, pdf_key` | Unique (user, course). Issued in the completion transaction; `criteria` validated by `certificateCriteriaSchema`; `pdf_key` points at object storage. Revocation logs a `certificate` moderation item. |
+| `users` (+)    | `handle` (unique, nullable), `profile_public`, `bio`, `links` jsonb                                                                                                                         | Public profile (X5), opt-in, at `/u/<handle>`.                                                                                                                                                         |
+
 ### Learning (planned; see `spec.md`)
 
-- S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables.
+- S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables.
 
 ## Open questions
 

@@ -12,6 +12,7 @@ import { LessonList } from "@/components/learning/lesson-list";
 import { DiscussionIsland } from "@/components/discussion/discussion-island";
 import { CourseReviewForm } from "@/components/feedback/course-review-form";
 import { CourseReviews } from "@/components/feedback/course-reviews";
+import { CertificateCard } from "@/components/certificates/certificate-card";
 import { LearnerProviders } from "@/components/shell/learner-providers";
 import { Page } from "@/components/shell/site-header";
 
@@ -32,6 +33,12 @@ export default async function CoursePage({
     auth.api.getSession({ headers: await headers() }),
   ]);
   const signedIn = !!session;
+  const certificate =
+    signedIn && progress.enrollment?.status === "completed"
+      ? ((await caller.certificates.mine()).find(
+          (c) => c.courseId === course.id,
+        ) ?? null)
+      : null;
   const status = new Map(
     progress.lessons.map((l) => [l.slug, l.progress?.status ?? null]),
   );
@@ -92,6 +99,7 @@ export default async function CoursePage({
             }
           />
         ) : null}
+        {certificate ? <CertificateCard cert={certificate} /> : null}
         <LessonList
           courseSlug={slug}
           modules={course.modules.map((m) => ({

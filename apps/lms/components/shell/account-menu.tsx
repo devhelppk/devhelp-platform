@@ -79,6 +79,12 @@ export async function AccountMenu({
           Notifications
         </Link>
         <Link
+          href="/certificates"
+          className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+        >
+          Certificates
+        </Link>
+        <Link
           href="/account"
           className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
         >
@@ -90,6 +96,14 @@ export async function AccountMenu({
             className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
           >
             Moderation
+          </Link>
+        ) : null}
+        {session.user.role === "admin" ? (
+          <Link
+            href="/admin/certificates"
+            className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+          >
+            Admin
           </Link>
         ) : null}
         <div className="my-1 h-px bg-border" />

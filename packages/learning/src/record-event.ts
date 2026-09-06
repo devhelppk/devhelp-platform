@@ -43,7 +43,7 @@ export async function recordEvent(
   if (input.kind === "course_enrolled")
     courseEnrolledPayload.parse(input.payload ?? {});
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [event] = await tx
       .insert(schema.progressEvents)
       .values({
@@ -58,9 +58,59 @@ export async function recordEvent(
       .onConflictDoNothing({ target: schema.progressEvents.idempotencyKey })
       .returning();
     if (!event) return { duplicate: true };
-    const { courseCompleted } = await applyEvent(tx, event, { emit: true });
-    return { duplicate: false, eventId: event.id, courseCompleted };
+    let certificateId: string | undefined;
+    const { courseCompleted } = await applyEvent(tx, event, {
+      emit: true,
+      onCertificate: (id) => {
+        certificateId = id;
+      },
+    });
+    return {
+      duplicate: false,
+      eventId: event.id,
+      courseCompleted,
+      certificateId,
+    };
   });
+  if (result.certificateId) await announceCertificate(result.certificateId);
+  return result;
+}
+
+/** In-app notification plus email for a freshly issued certificate; after the commit, best effort. */
+async function announceCertificate(certificateId: string) {
+  try {
+    const [{ notify }, { sendEmailTemplate }] = await Promise.all([
+      import("@repo/notify"),
+      import("./certificate-email"),
+    ]);
+    const cert = await db.query.certificates.findFirst({
+      where: eq(schema.certificates.id, certificateId),
+      with: {
+        user: { columns: { email: true, name: true } },
+        course: { columns: { slug: true } },
+      },
+    });
+    if (!cert) return;
+    const href = `/verify/${cert.id}`;
+    await notify({
+      userId: cert.userId,
+      kind: "certificate_issued",
+      title: `Certificate issued: ${cert.courseTitle}`,
+      body: "Share the verify link or download the PDF from your certificates page.",
+      href,
+      subjectType: "certificate",
+      subjectId: cert.id,
+      dedupeKey: `certificate:${cert.id}`,
+      email: await sendEmailTemplate("issued", {
+        to: cert.user.email,
+        name: cert.user.name,
+        courseTitle: cert.courseTitle,
+        certificateId: cert.id,
+      }),
+    });
+  } catch (e) {
+    console.error("[learning] certificate announcement failed:", e);
+  }
 }
 
 /**

@@ -24,7 +24,8 @@
     "content:sync": "pnpm --filter @repo/content sync",
     "content:refresh": "pnpm content:pull && pnpm content:check && pnpm content:sync",
     "check-budget": "tsx scripts/check-bundle-budget.ts",
-    "test:scripts": "vitest run --root scripts"
+    "test:scripts": "vitest run --root scripts",
+    "certificates:backfill": "pnpm --filter @repo/learning certificates:backfill"
   },
   "devDependencies": {
     "prettier": "3.9.6",

@@ -40,3 +40,6 @@ dist/
 .content/
 .content.tmp/
 .content-collections/
+
+# Local fs storage driver (unit tests)
+.storage/

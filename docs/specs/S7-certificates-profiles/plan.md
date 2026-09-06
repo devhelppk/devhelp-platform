@@ -1,6 +1,6 @@
 # S7 plan: certificates and public profiles
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S7. Requirements: F1.18, F1.19, F1.19a, F1.20, X5; X10. Builds on S1 (`course_completed` events, `content_revisions`), S3 (course page, dashboard), S5 (notifications, admin role, account page), S6 (course reviews on the profile later).
+Status: `done` (see `review.md`, `test.md`). Deviations after implementation and review: the criteria snapshot carries the content repo and commit itself (the sync prunes `content_revisions`, so the foreign key can vanish and is now a convenience); `users.handle` uniqueness is a case-insensitive index in migration `0011` because `schema/auth.ts` is generated; the moderation queue records a certificate revocation but cannot reverse it (admin routes own that); the verify page is invalidated by a server action on revoke and restore. Founder decisions 2026-09-06: founder decisions 2026-09-06: R2 from day one and no raw files in Postgres ever (decision 4 rewritten); one completion certificate per course (decision 1 rewritten); profiles at `/u/<handle>` and admin-only revocation confirmed. Spec entry: `docs/spec.md` → S7. Requirements: F1.18, F1.19, F1.19a, F1.20, X5; X10. Builds on S1 (`course_completed` events, `content_revisions`), S3 (course page, dashboard), S5 (notifications, admin role, account page), S6 (course reviews on the profile later).
 
 ## Goal
 
@@ -8,10 +8,11 @@ Finishing a course produces something a learner can put on LinkedIn and an emplo
 
 ## Decisions (verified 2026-09-06)
 
-1. **Issue inside the completion transaction.** The reducer's `course_completed` case (`@repo/learning`) inserts the `certificates` row in the same transaction that marks the enrolment completed: `id` (the verify uuid), `userId`, `courseId`, `enrolmentGeneration`, `learnerName` (the name at issue time), `courseTitle`, `contentRevisionId` (the course's revision at issue), `criteria` snapshot jsonb (criteria object, required lessons with titles and completion dates, best quiz scores, accepted projects placeholder), `issuedAt`, `revokedAt`, `revokedReason`, `revokedBy`. Unique on `(userId, courseId, enrolmentGeneration)`: replaying the stream (`rebuildLearner`) is idempotent, and completing again after drop + re-enrol earns a second certificate rather than overwriting the first. Replay never re-issues (the row exists) and never deletes.
+1. **Issue inside the completion transaction.** The reducer's `course_completed` case (`@repo/learning`) inserts the `certificates` row in the same transaction that marks the enrolment completed: `id` (the verify uuid), `userId`, `courseId`, `enrolmentGeneration`, `learnerName` (the name at issue time), `courseTitle`, `contentRevisionId` (the course's revision at issue), `criteria` snapshot jsonb (criteria object, required lessons with titles and completion dates, best quiz scores, accepted projects placeholder), `issuedAt`, `revokedAt`, `revokedReason`, `revokedBy`. Unique on `(userId, courseId)`: one completion certificate per course (founder decision). Replaying the stream (`rebuildLearner`) is idempotent, and completing the course again after drop + re-enrol keeps the original certificate (`enrolmentGeneration` records which enrolment earned it). Replay never re-issues and never deletes.
 2. **The verify page lives on the LMS.** `learn.devhelp.pk/verify/[uuid]` is public, server-rendered, indexable (`robots: index`), cached with `revalidate` because it reads no session: learner name, course, issue date, the content revision (commit short sha with a link to the content repo at that commit), the snapshot as a checklist (lessons, quiz scores, projects), and a "Revoked on <date>: <reason>" banner when revoked. Unknown uuid → 404. The marketing site links to it; it does not need database access.
 3. **PDF with `@react-pdf/renderer` 4.9, generated on first request and cached.** Pure JS, no headless browser, React components for layout (A4 landscape, brand mark, Literata heading, learner name, course, date, criteria summary, the verify URL and a QR code from `qrcode` 1.5 rendered as an embedded PNG). Fonts: Literata and Geist TTFs vendored into `packages/certificates/fonts` (both are OFL; no network at generation time). Route: `/api/certificates/[uuid].pdf` streams the cached file with `Content-Disposition: attachment`; anyone with the uuid can download (the verify URL is already public).
-4. **Storage behind a two-line interface, Postgres first.** `packages/storage` (`@repo/storage`): `put(key, bytes, contentType)`, `get(key)`, `delete(key)`, `url(key)`. Driver chosen by `STORAGE_DRIVER`: `postgres` (a `blobs` table: `key`, `content_type`, `bytes bytea`, `size`, `created_at`) and `s3` (Cloudflare R2 or any S3-compatible bucket through `@aws-sdk/client-s3`, env `S3_*`). Postgres is the default and what CI and laptops use (X9); R2's free tier (10 GB) is the production switch when the bucket is created. A certificate PDF is ~60 KB; ten thousand certificates in Postgres is 600 MB, well inside what a small Postgres holds, so the driver switch is a capacity decision, not a launch blocker.
+4. **Object storage from day one: Cloudflare R2 in production, MinIO locally and in CI, never Postgres.** `packages/storage` (`@repo/storage`): `put(key, bytes, contentType)`, `get(key)`, `delete(key)`, `exists(key)`. One driver for every environment, `s3` through `@aws-sdk/client-s3` 3.11xx (R2 speaks the S3 API), configured by `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE`. `docker-compose.yml` gains MinIO (`minio/minio`, console on :9001) with a bucket created on start, and CI runs the same image, so a laptop and the pipeline exercise the real S3 path with no paid keys (X9). A `fs` driver (files under `.storage/`, gitignored) exists for unit tests only; app code never sees Postgres bytes. Founder decision: no raw files in Postgres, ever.
+
 5. **Revocation is an admin action with a reason, logged and notified.** `certificates.revoke({ id, reason })` (admin) sets `revokedAt/reason/by`, writes a `moderation_actions`-style audit row (the certificate gets a `moderation_items` row with subject `certificate` so the existing audit trail and `/moderate` history apply), invalidates the cached PDF (the regenerated PDF carries a REVOKED stamp), and notifies the learner (`certificate_revoked`, emailed). Un-revoke is a second admin action (`unhide`) for mistakes. Admin UI: `/admin/certificates` lists recent certificates with search by learner or course and the revoke form; the account menu shows "Admin" for admins.
 6. **Public profiles are opt-in with a handle.** Better Auth `user.additionalFields` gain `handle` (unique, 3–30 chars, lowercase letters, digits, hyphen), `profilePublic` (boolean, default false), `bio` (≤ 280), `links` jsonb (github, website, linkedin). `/u/[handle]` is public, indexable when `profilePublic`, otherwise 404: name, city, member since, bio and links, certificates (issued, not revoked) with verify links, and slots that S8 fills (badges, accepted projects) and S10 (contributions count). The account page gains a Profile section: handle, public toggle, bio, links, and a preview link. Handles are reserved words checked (`admin`, `verify`, `courses`, …).
 7. **Certificates on the learner's own pages.** The dashboard's completed courses show "View certificate" and "Download PDF"; the course page shows the certificate card when completed; `/certificates` lists all of a learner's certificates. Each has "Add to LinkedIn" (the prefilled `addToProfile` URL with name, issue date, and the verify URL as the credential URL) and a copy button for the verify link.
@@ -32,7 +33,7 @@ Finishing a course produces something a learner can put on LinkedIn and an emplo
 
 ## Schema (migration `0009_certificates_profiles`)
 
-- `certificates` (decision 1) with indexes on `userId`, `courseId`, `issuedAt`; `blobs` (decision 4); `users` gains `handle` (unique index, nullable), `profile_public`, `bio`, `links` jsonb (via the Better Auth generator, then drizzle); `moderation_subject` gains `certificate`; `notification_kind` gains `certificate_issued`, `certificate_revoked`.
+- `certificates` (decision 1) with indexes on `userId`, `courseId`, `issuedAt`; `users` gains `handle` (unique index, nullable), `profile_public`, `bio`, `links` jsonb (via the Better Auth generator, then drizzle); `moderation_subject` gains `certificate`; `notification_kind` gains `certificate_issued`, `certificate_revoked`.
 - jsonb: `certificateCriteriaSchema` and `profileLinksSchema` in `json.ts`; the moderation payload union gains `certificate` (learner, course, issue date).
 
 ## API (`packages/api`)
@@ -63,7 +64,7 @@ Emails: `CertificateIssued` (with the verify link and PDF link), `CertificateRev
 ## Tests
 
 1. `@repo/learning` (Postgres): completing a course issues exactly one certificate with the snapshot (required lessons, best quiz score, revision id, learner name); `rebuildLearner` does not duplicate or delete it; drop + re-enrol + complete issues a second with generation 2; backfill issues only the missing ones.
-2. `@repo/storage`: put/get/delete round trip on the Postgres driver; the S3 driver is exercised against a local MinIO only when `S3_ENDPOINT` is set (skipped otherwise; not in CI for now).
+2. `@repo/storage`: put/get/exists/delete round trip on the `fs` driver, and on the `s3` driver against MinIO (docker-compose locally, a service in CI).
 3. `@repo/certificates`: the PDF renders to a buffer with the learner name, verify URL text, and a QR image; a revoked certificate renders the stamp.
 4. `@repo/api`: `byId` for unknown uuid → `NOT_FOUND`; revoke needs admin and a reason, logs, notifies, and the verify data shows revoked; restore; handle validation (reserved, format, uniqueness, case-insensitive); private profile → `NOT_FOUND`, public → data; `mine` returns only the caller's.
 5. LMS (jsdom): certificate card links, profile form validation messages.
@@ -76,11 +77,11 @@ Badges and accepted projects on the profile (S8), contributions count (S10), cer
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] Certificate issues in the same transaction as course completion, with a criteria snapshot and `content_revision` reference.
-- [ ] `/verify/[uuid]` is public, indexable, shows the snapshot, and says "revoked" with reason when revoked.
-- [ ] PDF is generated server-side, cached in storage (Postgres driver by default, S3/R2 by config), re-downloadable.
-- [ ] Public profile shows name, city, certificates; private by default.
-- [ ] Browser loop passed on the dev server for the flows in test item 6; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Certificate issues in the same transaction as course completion, with a criteria snapshot and `content_revision` reference.
+- [x] `/verify/[uuid]` is public, indexable, shows the snapshot, and says "revoked" with reason when revoked.
+- [x] PDF is generated server-side, cached in object storage (R2 in production, MinIO locally and in CI), re-downloadable.
+- [x] Public profile shows name, city, certificates; private by default.
+- [x] Browser loop passed on the dev server for the flows in test item 6; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 
