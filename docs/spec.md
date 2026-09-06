@@ -209,19 +209,21 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S10a. Company bank: companies, reviews, interviews — `planned`
+### S10a. Company bank: companies, reviews, interviews — `done`
 
 Plan: [`specs/S10-company-bank/plan.md`](./specs/S10-company-bank/plan.md)
 
 Scope: area 2 phase 1 without salaries (F2.1 to F2.5, F2.8 to F2.14; N2.1 to N2.3). A company is an organisation (`kind = "company"`) in Postgres with its profile in `company_profiles` and its logo in R2; companies leave the content repo. Proposals, reviews, and interview experiences, all moderated by admins before they appear and anonymised by column set, with a directory, Postgres search, and indexable pages. Founder decisions 2026-09-07: split from salaries, aggregates from a plain Postgres view, thin pages indexed, admins only.
 
+Records: [`review.md`](./specs/S10-company-bank/review.md), [`test.md`](./specs/S10-company-bank/test.md)
+
 Acceptance criteria
 
-- [ ] Public payloads and APIs contain no user ids or exact dates (test on serialisation).
-- [ ] Reviews and interviews are invisible until approved; one review per company per user.
-- [ ] A company page is static-rendered and revalidates on approval.
-- [ ] A company is an organisation row; claiming one later is organisation membership, needing no re-modelling.
-- [ ] Browser loop passed on the dev server; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Public payloads and APIs contain no user ids or exact dates (tested on serialisation; `reviewPublicColumns` / `interviewPublicColumns` are the only public reads, and the month is computed in Asia/Karachi at read time).
+- [x] Reviews and interviews are invisible until approved; one review per company per user (unique index, and an edit returns the row to pending).
+- [~] A company page reflects a decision immediately, verified in the browser in both directions. It is not statically rendered: the shared header reads the session, so the page is dynamic like `/courses`. A cached-read layer was built and removed when it left a hidden review public for seconds; see `review.md`.
+- [x] A company is an organisation row; claiming one later is organisation membership, needing no re-modelling.
+- [x] Browser loop passed on the dev server; three fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S5, S7 (storage).
 

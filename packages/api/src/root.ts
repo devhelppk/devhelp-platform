@@ -4,6 +4,8 @@ import { badgesRouter } from "./routers/badges";
 import { catalogueRouter } from "./routers/catalogue";
 import { certificatesRouter } from "./routers/certificates";
 import { commentsRouter } from "./routers/comments";
+import { companiesRouter } from "./routers/companies";
+import { contributionsRouter } from "./routers/contributions";
 import { feedbackRouter } from "./routers/feedback";
 import { learningRouter } from "./routers/learning";
 import { mentorRouter } from "./routers/mentor";
@@ -24,6 +26,8 @@ export const appRouter = router({
   feedback: feedbackRouter,
   reviews: reviewsRouter,
   comments: commentsRouter,
+  companies: companiesRouter,
+  contributions: contributionsRouter,
   certificates: certificatesRouter,
   badges: badgesRouter,
   profiles: profilesRouter,

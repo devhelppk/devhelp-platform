@@ -43,7 +43,14 @@ export function ModerationItem({
     );
   const it = item.data;
   const payload = it.payload;
-  const canDecide = it.subjectType !== "mentor_application" || isAdmin;
+  // Mentor applications and everything in the company bank are admins' calls.
+  const adminOnly = [
+    "mentor_application",
+    "company_proposal",
+    "company_review",
+    "interview_experience",
+  ];
+  const canDecide = !adminOnly.includes(it.subjectType) || isAdmin;
 
   function submit(action: "approve" | "reject" | "hide" | "unhide") {
     return (e: FormEvent<HTMLFormElement>) => {
@@ -198,6 +205,52 @@ export function ModerationItem({
               ) : null}
               <dt className="text-muted-foreground">Review</dt>
               <dd className="whitespace-pre-wrap">{payload.data.body}</dd>
+            </>
+          ) : payload.kind === "company_proposal" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.name}</dd>
+              {payload.data.website ? (
+                <>
+                  <dt className="text-muted-foreground">Website</dt>
+                  <dd className="break-all">{payload.data.website}</dd>
+                </>
+              ) : null}
+              {payload.data.industry ? (
+                <>
+                  <dt className="text-muted-foreground">Industry</dt>
+                  <dd>{payload.data.industry}</dd>
+                </>
+              ) : null}
+              {payload.data.cities.length ? (
+                <>
+                  <dt className="text-muted-foreground">Cities</dt>
+                  <dd>{payload.data.cities.join(", ")}</dd>
+                </>
+              ) : null}
+              {payload.data.description ? (
+                <>
+                  <dt className="text-muted-foreground">Description</dt>
+                  <dd className="whitespace-pre-wrap">
+                    {payload.data.description}
+                  </dd>
+                </>
+              ) : null}
+              {payload.data.why ? (
+                <>
+                  <dt className="text-muted-foreground">Why</dt>
+                  <dd className="whitespace-pre-wrap">{payload.data.why}</dd>
+                </>
+              ) : null}
+            </>
+          ) : payload.kind === "company_contribution" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.companyName}</dd>
+              <dt className="text-muted-foreground">Kind</dt>
+              <dd className="capitalize">{payload.data.kind}</dd>
+              <dt className="text-muted-foreground">Submission</dt>
+              <dd className="whitespace-pre-wrap">{payload.data.summary}</dd>
             </>
           ) : (
             <>

@@ -74,6 +74,9 @@ jobs:
           VITEST_BIN: ${{ github.workspace }}/packages/content-schema/node_modules/.bin/vitest
       - run: pnpm db:migrate
       - run: pnpm content:sync
+      # The bundle budget measures a real company page, and `check-budget`
+      # counts a 404 as a failure, so CI needs the dev seed's one company.
+      - run: pnpm db:seed
       - run: pnpm lint
       - run: pnpm check-types
       - run: pnpm test

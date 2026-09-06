@@ -30,6 +30,10 @@ export const budgets: Budget[] = [
     maxKb: CEILING_KB,
   },
   { path: "/courses", maxKb: CEILING_KB },
+  // The company bank is server-rendered: its filters are a plain GET form, so
+  // these pages should stay well under a page that ships a runner.
+  { path: "/companies", maxKb: CEILING_KB },
+  { path: "/companies/arbisoft", maxKb: CEILING_KB },
   { path: "/", maxKb: CEILING_KB },
 ];
 

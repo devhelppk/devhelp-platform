@@ -92,6 +92,13 @@
       "when": 1788717469233,
       "tag": "0012_badges_streaks",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788728456100,
+      "tag": "0013_company_bank",
+      "breakpoints": true
     }
   ]
 }

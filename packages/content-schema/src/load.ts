@@ -6,7 +6,6 @@ import type { ZodType } from "zod";
 import { stableHash } from "./hash.ts";
 import {
   badgeFile,
-  companyFile,
   courseMeta,
   exerciseMeta,
   lessonFrontmatter,
@@ -14,7 +13,6 @@ import {
   pathFile,
   quizFile,
   type BadgeFile,
-  type CompanyFile,
   type CourseMeta,
   type ExerciseMeta,
   type LessonFrontmatter,
@@ -69,7 +67,6 @@ export type ContentTree = {
   courses: LoadedCourse[];
   paths: { file: string; data: PathFile }[];
   badges: { file: string; data: BadgeFile }[];
-  companies: { file: string; data: CompanyFile }[];
   /** Every non-content file (images etc.) as a root-relative path, for link/image checks. */
   assets: Set<string>;
   diagnostics: Diagnostic[];
@@ -327,7 +324,6 @@ export function loadContentTree(root: string): ContentTree {
     assets,
     paths: readCollection("paths", pathFile),
     badges: readCollection("badges", badgeFile),
-    companies: readCollection("companies", companyFile),
     diagnostics,
   };
 }

@@ -25,6 +25,14 @@ export function SiteHeader({ callbackURL = "/" }: { callbackURL?: string }) {
           >
             <Link href="/courses">Courses</Link>
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hidden sm:inline-flex"
+          >
+            <Link href="/companies">Companies</Link>
+          </Button>
           {/* Below `sm` the bell and avatar need the room; the theme follows the system there. */}
           <div className="hidden sm:block">
             <ThemeToggle />

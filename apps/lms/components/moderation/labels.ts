@@ -4,6 +4,9 @@ export const subjectLabels = {
   comment: "Comment",
   course_review: "Course review",
   certificate: "Certificate",
+  company_proposal: "Company proposal",
+  company_review: "Company review",
+  interview_experience: "Interview experience",
 } as const;
 
 export const statusLabels = {

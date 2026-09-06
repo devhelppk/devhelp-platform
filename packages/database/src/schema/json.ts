@@ -216,6 +216,52 @@ export const badgeRuleSchema = z.discriminatedUnion("kind", [
 ]);
 export type BadgeRule = z.infer<typeof badgeRuleSchema>;
 
+/** The rounds of an interview (S10a), stored as jsonb on the experience. */
+export const interviewRoundsSchema = z
+  .array(
+    z
+      .object({
+        type: z.enum([
+          "phone_screen",
+          "technical",
+          "system_design",
+          "take_home",
+          "pair_programming",
+          "behavioural",
+          "managerial",
+          "hr",
+          "other",
+        ]),
+        description: z.string().trim().min(3).max(1000),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(12);
+export type InterviewRounds = z.infer<typeof interviewRoundsSchema>;
+
+/** A proposed company, snapshotted for the queue (S10a). */
+export const companyProposalSchema = z
+  .object({
+    name: z.string().trim().min(2).max(100),
+    website: z.url({ protocol: /^https?$/ }).optional(),
+    description: z.string().trim().max(500).optional(),
+    industry: z.string().trim().max(80).optional(),
+    cities: z.array(z.string().trim().min(2)).max(10).default([]),
+    why: z.string().trim().min(10).max(500).optional(),
+  })
+  .strict();
+
+/** A company review or interview under moderation, snapshotted for the queue. */
+export const companyContributionSnapshotSchema = z
+  .object({
+    kind: z.enum(["review", "interview"]),
+    companySlug: z.string().min(1),
+    companyName: z.string().min(1),
+    summary: z.string().min(1).max(4000),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -232,4 +278,12 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
     data: courseReviewSnapshotSchema,
   }),
   z.object({ kind: z.literal("certificate"), data: certificateSnapshotSchema }),
+  z.object({
+    kind: z.literal("company_proposal"),
+    data: companyProposalSchema,
+  }),
+  z.object({
+    kind: z.literal("company_contribution"),
+    data: companyContributionSnapshotSchema,
+  }),
 ]);

@@ -27,6 +27,13 @@ const policyClause = z
   .regex(/^c[0-9]{1,2}$/)
   .optional();
 
+/** Company items never carry a course track, so mentors never see them. */
+export const COMPANY_SUBJECTS: string[] = [
+  "company_proposal",
+  "company_review",
+  "interview_experience",
+];
+
 type Tx = Parameters<
   Parameters<typeof import("@repo/database").db.transaction>[0]
 >[0];
@@ -39,8 +46,47 @@ async function applySubjectStatus(
   tx: Tx,
   item: { subjectType: string; subjectId: string },
   visible: boolean,
+  action?: "approve" | "reject" | "hide" | "unhide",
+  actorId?: string,
 ): Promise<{ announceCommentId?: string }> {
   const now = new Date();
+  // Company subjects (S10a). A proposal's subject is the organisation itself;
+  // a review or an interview is its own row. Rejected and hidden are kept
+  // apart so a contributor can tell "we said no" from "a moderator pulled it".
+  if (item.subjectType === "company_proposal") {
+    await tx
+      .update(schema.companyProfiles)
+      .set({
+        status: visible ? "published" : "hidden",
+        // Approving is a check of the facts, so it records who and when.
+        // Hiding is a visibility decision and leaves that record alone.
+        ...(visible ? { verifiedAt: now, verifiedBy: actorId } : {}),
+        updatedAt: now,
+      })
+      .where(eq(schema.companyProfiles.organizationId, item.subjectId));
+    return {};
+  }
+  if (
+    item.subjectType === "company_review" ||
+    item.subjectType === "interview_experience"
+  ) {
+    const table =
+      item.subjectType === "company_review"
+        ? schema.companyReviews
+        : schema.interviewExperiences;
+    await tx
+      .update(table)
+      .set({
+        status: visible
+          ? "published"
+          : action === "reject"
+            ? "rejected"
+            : "hidden",
+        updatedAt: now,
+      })
+      .where(eq(table.id, item.subjectId));
+    return {};
+  }
   if (item.subjectType === "comment") {
     const current = await tx.query.comments.findFirst({
       where: eq(schema.comments.id, item.subjectId),
@@ -136,7 +182,13 @@ async function decidedNotification(
       ? "Your comment"
       : item.subjectType === "course_review"
         ? "Your course review"
-        : "Your review request";
+        : item.subjectType === "company_proposal"
+          ? "The company you proposed"
+          : item.subjectType === "company_review"
+            ? "Your company review"
+            : item.subjectType === "interview_experience"
+              ? "Your interview experience"
+              : "Your review request";
   const href =
     payload?.kind === "comment"
       ? payload.data.subjectType === "lesson"
@@ -144,7 +196,9 @@ async function decidedNotification(
         : `/courses/${payload.data.courseSlug}#discussion`
       : payload?.kind === "course_review"
         ? `/courses/${payload.data.courseSlug}`
-        : "/notifications";
+        : payload?.kind === "company_contribution"
+          ? `/companies/${payload.data.companySlug}`
+          : "/notifications";
   const verb = approved
     ? item.subjectType === "company_review_request"
       ? "was accepted"
@@ -395,6 +449,17 @@ export const moderationRouter = router({
             code: "FORBIDDEN",
             message: "Only admins decide mentor applications.",
           });
+        // Company facts and the contributions attached to them are admin-only
+        // (founder decision, S10a): they are about named employers, and a
+        // wrong call is a reputational problem, not a tidiness one.
+        if (
+          COMPANY_SUBJECTS.includes(item.subjectType) &&
+          ctx.user.role !== "admin"
+        )
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only admins decide company items.",
+          });
         // A certificate is revoked and restored through `certificates.revoke`
         // / `.restore` (admin only), which own the row; the queue item is the
         // audit trail, not a second control.
@@ -453,6 +518,8 @@ export const moderationRouter = router({
             tx,
             item,
             next === "approved",
+            input.action,
+            ctx.user.id,
           ));
         return { item, next, announceCommentId };
       });

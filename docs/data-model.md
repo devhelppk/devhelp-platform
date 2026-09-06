@@ -132,13 +132,17 @@ Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercis
 | `user_badges`   | `user_id`, `badge_id`, `awarded_at`, `awarded_by` (null = automatic), `award_reason`, `trigger_event_id`, `revoked_at`, `revoked_reason`, `revoked_by` | PK on the pair, so an award is idempotent. Never deleted by a replay; revocation is a state and the row is its own audit trail. |
 | `user_activity` | `user_id`, `day` (date, Asia/Karachi), `events`                                                                                                        | Read model for streaks and the activity grid; rebuilt by `rebuildLearner`.                                                      |
 
-### Learning (planned; see `spec.md`)
+### The company bank (implemented in S10a)
 
-- S9: `cohort_courses`. S10: company bank tables.
+A company is an organisation (`organizations.kind = "company"`), so an employer and an institution are one kind of row and a company claim (S13) is ordinary membership. `company_profiles` holds the facts a company page needs beyond name, slug, logo, city, and website, keyed by the organisation id; logos live in R2 through `@repo/storage` under `logo_key`. `company_aliases` carries the other names a company goes by, for dedupe on proposal and for search.
 
-## Planned: the company bank (S10a)
+Contributions (`company_reviews`, `interview_experiences`; `salary_points` in S10b) carry an author id for the one-per-company rule and for moderation, and every public read goes through `reviewPublicColumns` / `interviewPublicColumns`, which cannot select it. Pages show the month a contribution landed, computed in Asia/Karachi at read time rather than stored. `cities` and `job_roles` are reference rows so filters and aggregates group on something stable; `pnpm db:reference` seeds them.
 
-A company is an organisation (`organizations.kind = "company"`), so an employer and an institution are one kind of row and a company claim (S13) is ordinary membership. `company_profiles` holds the facts a company page needs beyond name, slug, logo, city, and website; logos live in R2 through `@repo/storage`. Contributions (`company_reviews`, `interview_experiences`, `salary_points`) carry an author id for the one-per-company rule and moderation, and every public read goes through a column set that cannot select it. `company_stats` is a plain view over published contributions.
+Everything a person submits is `pending` until an admin decides it in the ordinary moderation queue (`moderation_subject` gained `company_proposal`, `company_review`, `interview_experience`); company items carry no track, so mentors never see them. `company_stats` is a plain view over published contributions: not materialised, because a decision must move the numbers at once.
+
+### Planned (see `spec.md`)
+
+- S9: `cohort_courses`. S10b: `salary_points`, and the salary columns on `company_stats`.
 
 ## Open questions
 

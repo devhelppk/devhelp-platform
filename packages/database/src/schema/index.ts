@@ -15,3 +15,5 @@ export * from "./feedback";
 export * from "./certificates";
 // Badges, awards, and daily activity (S8).
 export * from "./badges";
+// Company bank (S10a): companies are organisations; this is everything else.
+export * from "./companies";
