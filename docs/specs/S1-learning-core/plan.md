@@ -1,6 +1,6 @@
 # S1 plan: data model v1, learning core
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S1. Requirements: F1.1, F1.2, F1.8, F1.9, F1.11, F1.11a, F1.13, N1.2, N1.3; area 4 hook F4.6 (aggregate columns reserved). Data-model principles: `docs/data-model.md`.
+Status: `done` (see `review.md`, `test.md`). Deviations from the plan after review: `progress_events.seq` added for replay order; derived events keyed by trigger id; `enroll()` is a no-op when already enrolled and generation-keyed after a drop; composite FK `lessons(module_id, course_id)`; pool size env-driven. Spec entry: `docs/spec.md` → S1. Requirements: F1.1, F1.2, F1.8, F1.9, F1.11, F1.11a, F1.13, N1.2, N1.3; area 4 hook F4.6 (aggregate columns reserved). Data-model principles: `docs/data-model.md`.
 
 ## Goal
 
@@ -17,7 +17,9 @@ Replace the placeholder learning schema with the real one and ship the progress 
 7. **Archive, never delete** content rows (`archived_at`), so progress history survives content removal (N1.3). Archived required lessons are excluded from completion maths.
 8. **Quiz and exercise definitions live in S1; attempts and submissions in S4.** Correct answers are stored in `questions.options` / `questions.answer` and are never exposed by a query helper; `@repo/database` will export a `questionPublicColumns` selection for client-facing reads.
 9. **Aggregate columns reserved now** (`lessons.rating_avg`, `lessons.rating_count`, `courses.rating_avg`, `courses.rating_count`, `courses.enrollment_count`) so S6 does not need to alter hot tables. Nullable, unused until S6.
-10. **Migration is incremental** (`0001_learning_core`) on top of `0000_initial_schema`, per the acceptance criteria, with a hand-added backfill for the two existing dev rows shapes (see Migration).
+10. **Type safety (X10) inside S1.** Every jsonb column (`completion_criteria`, `questions.options`, `questions.answer`, `exercises.starter_files` / `test_files`, `progress_events.payload`) gets a Zod schema in `packages/database/src/schema/json.ts`, and the Drizzle `.$type<>()` uses the type inferred from that schema, so the column type and the validator cannot drift. `@repo/learning` validates every `recordEvent` input and every payload with Zod before touching the database. No API layer is added in S1 (no UI); tRPC lands in S3.
+11. **Read-model `updated_at` is derived from the event's `recorded_at`**, not `now()`, so a rebuild reproduces read models exactly, including timestamps. The rebuild test asserts full equality.
+12. **Migration is incremental** (`0001_learning_core`) on top of `0000_initial_schema`, per the acceptance criteria, with a hand-added backfill for the two existing dev rows shapes (see Migration).
 
 ## Schema
 

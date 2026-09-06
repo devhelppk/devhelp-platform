@@ -38,10 +38,10 @@ users ──< members >── organizations ──< teams ──< team_members >
 
 users ──< enrollments >── courses ──< modules ──< lessons
 users ──< lesson_progress >── lessons
-users ──< quiz_attempts >── quizzes ──< questions        (planned)
+users ──< quiz_attempts (S4) >── quizzes ──< questions
 users ──< project_submissions >── lessons(type=project)  (planned)
 users ──< certificates >── courses                       (planned)
-paths ──< path_courses >── courses                       (planned)
+paths ──< path_courses >── courses
 teams ──< cohort_courses >── courses                     (planned: what a cohort is working through)
 ```
 
@@ -61,25 +61,35 @@ teams ──< cohort_courses >── courses                     (planned: what 
 | `teams`         | `organization_id, name, starts_at, ends_at`                                                                   | Cohorts. `starts_at`/`ends_at` are ours.                                                        |
 | `team_members`  | `team_id, user_id`                                                                                            |                                                                                                 |
 
-### Learning (ours, existing)
+### Learning (ours, implemented in S1)
 
-| Table             | Columns                                                                                     | Planned changes                                                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `courses`         | `slug, title, summary, description, track, level, cover_image_url, is_published, author_id` | add `organization_id` nullable (org-private courses later), `content_path` for MDX source                                              |
-| `modules`         | `course_id, title, position`                                                                |                                                                                                                                        |
-| `lessons`         | `module_id, slug, title, type, content, duration_minutes, position, is_free`                | add `completion_rule` (view / quiz_pass / submit), `video_provider`, `video_id`; `type` += `project`, `link`                           |
-| `enrollments`     | `user_id, course_id, enrolled_at, completed_at`                                             | add `status` (active / completed / dropped), `progress_percent`, `last_lesson_id`, `team_id` (which cohort this enrollment belongs to) |
-| `lesson_progress` | `user_id, lesson_id, completed_at`                                                          | add `status` (not_started / in_progress / completed), `progress_percent`, `last_position_seconds`, `started_at`, `updated_at`          |
+Content metadata (owned by the content sync from S2; seeded locally until then):
 
-### Learning (ours, planned; not built until content pipeline is decided)
+| Table                   | Columns                                                                                                                                                                                                                                                         | Notes                                                                                                                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content_revisions`     | `repo, commit_sha, published_at, summary, item_count`                                                                                                                                                                                                           | One row per published content commit. Certificates will reference it.                                                                                                              |
+| `courses`               | `slug, title, summary, description, track, level, cover_image_url, estimated_hours, is_published, published_at, archived_at, author_id, content_path, content_hash, content_revision_id, completion_criteria jsonb, rating_avg, rating_count, enrollment_count` | `completion_criteria` validated by `completionCriteriaSchema`. Rating columns reserved for S6.                                                                                     |
+| `course_prerequisites`  | `course_id, prerequisite_id`                                                                                                                                                                                                                                    |                                                                                                                                                                                    |
+| `modules`               | `course_id, slug, title, summary, position, archived_at`                                                                                                                                                                                                        | unique (course, slug)                                                                                                                                                              |
+| `lessons`               | `module_id, course_id, slug, title, type, completion_rule, mode, is_required, is_free, duration_minutes, position, video_provider, video_id, content_path, content_hash, content_revision_id, archived_at, rating_avg, rating_count`                            | `type`: article, video, exercise, quiz, project, link. `completion_rule`: view, quiz_pass, exercise_pass, submit. `mode`: foundation, industry. Body comes from compiled MDX (S2). |
+| `paths`, `path_courses` | `slug, title, summary, description, is_published, position` / `path_id, course_id, position`                                                                                                                                                                    | Ordered course groupings ("AI Engineering").                                                                                                                                       |
+| `quizzes`               | `lesson_id (unique), pass_score, max_attempts, shuffle, version, content_hash`                                                                                                                                                                                  |                                                                                                                                                                                    |
+| `questions`             | `quiz_id, position, type, prompt, options jsonb, answer jsonb, explanation, points, version`                                                                                                                                                                    | `options[].isCorrect` and `answer` are server-only; read through `questionPublicColumns` + `toPublicOptions`.                                                                      |
+| `exercises`             | `lesson_id (unique), runner, language, starter_files jsonb, test_files jsonb, instructions, version, content_hash`                                                                                                                                              | runner: sandpack, pyodide.                                                                                                                                                         |
 
-- `quizzes`, `questions` (jsonb options, `version`), `quiz_attempts` (answers jsonb, score, passed, question version snapshot). Grade server-side.
-- `exercise_submissions` (code, runner, test results jsonb, passed) for Sandpack / Pyodide exercises.
-- `project_submissions` (repo_url, live_url, status, reviewer_id, feedback) for Odin-style projects.
-- `certificates` (user_id, course_id, verify_uuid, issued_at, criteria_snapshot) with a public `/verify/[uuid]` page.
-- `paths`, `path_courses` (ordered) for tracks like "AI Engineering Foundations".
-- `cohort_courses` (team_id, course_id, starts_at, due_at) so a cohort has a syllabus.
-- `progress_events` append-only (user_id, kind, subject_id, at) for streaks, analytics, and regrading.
+Learner progress (owned by `@repo/learning`; never written directly):
+
+| Table             | Columns                                                                                                                    | Notes                                                                                                                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `progress_events` | `user_id, kind, course_id, lesson_id, payload jsonb, idempotency_key (unique), occurred_at, recorded_at`                   | Append-only source of truth. Kinds: course_enrolled, course_completed, course_dropped, lesson_started, lesson_progressed, lesson_completed, quiz_attempted, exercise_submitted, project_submitted. |
+| `enrollments`     | `user_id, course_id, status, progress_percent, last_lesson_id, team_id, enrolled_at, completed_at, dropped_at, updated_at` | Read model. status: active, completed, dropped. `team_id` = cohort.                                                                                                                                |
+| `lesson_progress` | `user_id, lesson_id, course_id, status, progress_percent, last_position_seconds, started_at, completed_at, updated_at`     | Read model. status: not_started, in_progress, completed.                                                                                                                                           |
+
+Rules: `recordEvent` inserts the event and updates read models in one transaction; duplicate idempotency keys are ignored; the first lesson event auto-enrols; completing the last required (non-archived) lesson emits `course_completed` under a row lock; `rebuildLearner` replays the stream and reproduces read models exactly, including `updated_at` (derived from `recorded_at`).
+
+### Learning (planned; see `spec.md`)
+
+- S4: `quiz_attempts`, `exercise_submissions`. S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`, `notifications`.
 
 ## Open questions
 

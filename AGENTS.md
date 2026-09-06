@@ -23,10 +23,20 @@ Turborepo scopes tasks to the package of the current working directory. Always r
 | `packages/ui`                                | `@repo/ui`              | shadcn/ui, consumed from source. Tokens + rules in `packages/ui/DESIGN.md`.                                                        |
 | `packages/database`                          | `@repo/database`        | Drizzle ORM + postgres-js. Schema in `src/schema/*.ts`, migrations in `drizzle/`. `schema/auth.ts` is generated, do not hand-edit. |
 | `packages/auth`                              | `@repo/auth`            | Better Auth server (`@repo/auth`) + React client (`@repo/auth/client`). Admin + organization (teams = cohorts) plugins.            |
+| `packages/learning`                          | `@repo/learning`        | Progress engine: `recordEvent`, `enroll`, `rebuildLearner`, `evaluateCompletion`. Integration tests hit Postgres.                  |
 | `packages/tailwind-config`                   | `@repo/tailwind-config` | Brand `@theme` tokens (indigo `brand-*`, `madder-*`, ink/paper).                                                                   |
 | `packages/{eslint,typescript,vitest}-config` | `@repo/*-config`        | Shared configs. `vitest-config` must be built (`tsc`) before tests; turbo handles this.                                            |
 
 Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/globals.css`, `@repo/database`, and `@repo/auth`. These packages are transpiled by Next (`transpilePackages`), no build step. Product docs: `docs/requirements.md` (what/why), `docs/data-model.md` (schema), `docs/spec.md` (the ordered spec tracker: one spec at a time, plan → implement → review → test → complete; update its status and commit hash when a spec finishes).
+
+## Type safety (non-negotiable, requirement X10)
+
+- Entity types are Drizzle-inferred (`typeof table.$inferSelect`); never hand-write a row type.
+- Every `jsonb` column has a Zod schema in `packages/database/src/schema/json.ts`; the column's `.$type<>()` uses the type inferred from that schema. Validate with it at every write boundary.
+- Learner progress is written only through `recordEvent` / `enroll` from `@repo/learning` (Zod-validated, transactional, idempotent). Never insert into `progress_events`, `lesson_progress`, or `enrollments` directly outside that package. `rebuildLearner(userId)` replays the stream.
+- Client-facing APIs go through tRPC v11 in `packages/api` (from S3): React Query hooks on the client, direct callers in RSC. No untyped `fetch` to our own routes. Use Next `typedRoutes` for links and `@t3-oss/env-nextjs` for env.
+- Quiz answers never reach the browser: read questions through `questionPublicColumns` + `toPublicOptions`.
+- `packages/auth` and `packages/learning` set `declaration: false` because Better Auth / Drizzle inferred types are not portable; keep that when adding packages that re-export them.
 
 ## Conventions and gotchas
 
@@ -35,6 +45,7 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - **Brand mark:** use `BrandMark` / `BrandLogo` from `@repo/ui/components/*`. Static SVGs live in `packages/ui/src/assets/brand/`; app favicons are `app/icon.svg`.
 - **Internal links in apps must use `next/link`.** ESLint runs with `--max-warnings 0` and `@next/next/no-html-link-for-pages` fails the build on `<a href="/...">`.
 - **TypeScript 7:** `baseUrl` is removed. Use `paths` alone (`"@/*": ["./*"]`).
+- **Drizzle-kit prompts:** when a table both gains and loses columns, `pnpm db:generate` asks interactively whether each new column is a rename (first option, Enter = create). It needs a TTY; from an agent shell drive it through a pty (see `scratchpad/drive-generate.py` pattern) or run it in a real terminal. Hand-edit the SQL when a new NOT NULL column needs a backfill (add nullable, UPDATE, SET NOT NULL).
 - **Database:** write `camelCase` columns in Drizzle; `casing: "snake_case"` is set in both the client (`src/index.ts`) and `drizzle.config.ts`, so Postgres columns are `snake_case`. Keep both in sync. After a schema change run `pnpm db:generate`, rename the generated file to something descriptive (update `drizzle/meta/_journal.json` `tag` to match), then `pnpm db:migrate`. `db:push` is for throwaway prototyping only. Commit migrations.
 - **Auth schema:** identity tables come from the Better Auth config. Change `packages/auth/src/server.ts` (e.g. `additionalFields`), then `pnpm --filter @repo/auth auth:generate` (writes `packages/database/src/schema/auth.ts`), then `pnpm db:generate` + `pnpm db:migrate`. Use the `auth` CLI package (matches `better-auth` 1.7); `@better-auth/cli` is stale at 1.4 and emits an incompatible schema. Route handlers live at `app/api/auth/[...all]/route.ts` in each app.
 - **Auth tests** in `packages/auth` hit the real local Postgres and need `BETTER_AUTH_SECRET` in `.env`.

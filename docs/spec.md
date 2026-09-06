@@ -6,6 +6,10 @@ Source documents: `requirements.md` (what and why), `data-model.md` (schema deci
 
 Each spec gets its own directory under `docs/specs/<id>-<slug>/` holding `plan.md` (written in the plan step, approved before implementation) and, as the work proceeds, `review.md` (code-review findings and what was done about them) and `test.md` (what was tested, how, and the results). The spec's entry here links to that directory and carries the status.
 
+## Type-safety rule (applies to every spec)
+
+Requirement X10: Drizzle-inferred types only, Zod for every jsonb column and every write boundary, tRPC v11 for any client-facing API (introduced in S3 as `packages/api`), `typedRoutes`, validated env. A spec is not complete if it adds a hand-written entity type, an unvalidated jsonb write, or an untyped fetch.
+
 ## Status legend
 
 | Status        | Meaning                                                 |
@@ -79,7 +83,7 @@ Depends on: S1.
 
 ### S3. LMS catalogue and lesson experience — `todo`
 
-Scope: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1. Public catalogue, course page, path roadmap, lesson reader (article, video with completion, link), enrol, Continue, per-course progress UI. Uses the design system's app shell.
+Scope: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10. Public catalogue, course page, path roadmap, lesson reader (article, video with completion, link), enrol, Continue, per-course progress UI. Uses the design system's app shell. Introduces `packages/api` (tRPC v11: `learning` router over `@repo/learning`, `catalogue` router over Drizzle reads), `@t3-oss/env-nextjs` in both apps, and `typedRoutes`.
 
 Acceptance criteria
 
