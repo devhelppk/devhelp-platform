@@ -177,7 +177,9 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S8. Badges and streaks — `todo`
+### S8. Badges and streaks — `planned`
+
+Plan: [`specs/S8-badges-streaks/plan.md`](./specs/S8-badges-streaks/plan.md)
 
 Scope: F1.16, F1.17, plus streak and activity computation from `progress_events`. Badge rules defined in the content repo and evaluated against the event stream, manual admin awards, streaks and an activity graph on the dashboard and public profile.
 
@@ -187,7 +189,7 @@ Acceptance criteria
 
 - [ ] Badge rules defined in the content repo (`badges/*.yaml`) evaluate against events; a "5 lessons in 7 days" badge awards exactly once.
 - [ ] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
-- [ ] Admins can award and revoke a badge manually, with a reason, through the existing audit trail.
+- [ ] Admins can award and revoke a badge manually, with a reason, recorded on the award row and shown in `/admin/badges` (plan decision 7).
 - [ ] Streak and activity graph computed from events and shown on the dashboard and the public profile.
 
 Depends on: S5, S7.
