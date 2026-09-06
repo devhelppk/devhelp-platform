@@ -195,7 +195,9 @@ Acceptance criteria
 
 Depends on: S5, S7.
 
-### S9. Cohorts: syllabus and org dashboards — `todo`
+### S9. Cohorts: syllabus and org dashboards — `deferred`
+
+Deferred on 2026-09-07: cohorts serve institutions, and the platform has no learners yet, so an organisation dashboard would have nothing to show. The organisation and team tables, the `enrollments.team_id` column, and invitation emails already exist, so this resumes without re-modelling. Pick it up when an institution asks.
 
 Scope: F1.21, F1.22. `cohort_courses`, cohort deadlines on learner dashboard, org staff aggregate view, per-learner view scoped to cohort membership.
 
@@ -207,7 +209,9 @@ Acceptance criteria
 
 Depends on: S3, S5.
 
-### S10. Company bank — `todo`
+### S10. Company bank — `planned`
+
+Plan: [`specs/S10-company-bank/plan.md`](./specs/S10-company-bank/plan.md)
 
 Scope: area 2 phase 1 (F2.1 to F2.14, N2.1 to N2.3). Companies, reviews, interview experiences, salary aggregates per role with n ≥ 5, anonymisation, `verified`/`unverified` badge, moderation via S5, search, policy page, ISR company pages.
 
