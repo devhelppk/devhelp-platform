@@ -70,7 +70,6 @@ function ExerciseWorkspace({
   const qc = useQueryClient();
   const router = useRouter();
   const draftKey = `devhelp:exercise:${data.exerciseId}:v${data.version}`;
-  const kind = data.runner === "pyodide" ? "py" : "js";
   const fileNames = useMemo(
     () => Object.keys(data.starterFiles),
     [data.starterFiles],
@@ -93,21 +92,13 @@ function ExerciseWorkspace({
   const [active, setActive] = useState(fileNames[0] ?? "");
   const [outcome, setOutcome] = useState<RunOutcome | null>(null);
   const [running, setRunning] = useState(false);
-  const [runtime, setRuntime] = useState<"idle" | "loading" | "ready">(
-    kind === "py" ? "loading" : "idle",
-  );
   const runnerRef = useRef<Runner | null>(null);
 
   useEffect(() => {
-    const r = createRunner(kind);
+    const r = createRunner();
     runnerRef.current = r;
-    if (kind === "py") {
-      r.warmup()
-        .then(() => setRuntime("ready"))
-        .catch(() => setRuntime("idle"));
-    }
     return () => r.terminate();
-  }, [kind]);
+  }, []);
 
   useEffect(() => {
     try {
@@ -141,7 +132,6 @@ function ExerciseWorkspace({
     });
     setOutcome(result);
     setRunning(false);
-    if (kind === "py") setRuntime("ready");
   }
 
   const reset = () => {
@@ -167,9 +157,7 @@ function ExerciseWorkspace({
           <Badge variant="outline" className="capitalize">
             {data.language}
           </Badge>
-          <Badge variant="outline">
-            {kind === "py" ? "Python in your browser" : "Runs in your browser"}
-          </Badge>
+          <Badge variant="outline">Runs in your browser</Badge>
           {completed ? (
             <Badge>Completed</Badge>
           ) : submitted ? (
@@ -179,12 +167,6 @@ function ExerciseWorkspace({
           ) : null}
         </div>
       </div>
-
-      {kind === "py" && runtime === "loading" ? (
-        <p className="text-sm text-muted-foreground">
-          Loading the Python runtime (about 10 MB, once). You can start editing.
-        </p>
-      ) : null}
 
       <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border">
         <div
@@ -253,10 +235,7 @@ function ExerciseWorkspace({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          onClick={run}
-          disabled={running || (kind === "py" && runtime === "loading")}
-        >
+        <Button onClick={run} disabled={running}>
           <Play aria-hidden="true" /> {running ? "Running…" : "Run tests"}
         </Button>
         {outcome?.passed ? (

@@ -8,8 +8,7 @@
     "./harness": "./src/harness.ts",
     "./js": "./src/js-runner.ts",
     "./node": "./src/node.ts",
-    "./js.worker": "./src/js.worker.ts",
-    "./py.worker": "./src/py.worker.ts"
+    "./js.worker": "./src/js.worker.ts"
   },
   "scripts": {
     "lint": "eslint src --max-warnings 0",

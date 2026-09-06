@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { slug } from "./common.ts";
 
-export const exerciseRunner = z.enum(["sandpack", "pyodide"]);
+export const exerciseRunner = z.enum(["sandpack"]);
 
 /** `exercises/<id>/exercise.yaml`; `starter/` and `tests/` are read from disk. */
 export const exerciseMeta = z
   .object({
     id: slug,
     runner: exerciseRunner,
-    language: z.enum(["javascript", "typescript", "react", "html", "python"]),
+    language: z.enum(["javascript", "typescript", "react", "html"]),
     /** Entry file shown first in the editor. */
     entry: z.string().min(1),
   })

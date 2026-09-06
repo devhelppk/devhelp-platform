@@ -1,39 +1,28 @@
 import type { RunOutcome, RunRequest } from "./types.ts";
 
 export type { FileMap, RunOutcome, RunRequest, TestResult } from "./types.ts";
-export { PYODIDE_VERSION } from "./py-runner.ts";
 
 export type Runner = {
   run(request: Omit<RunRequest, "runner">): Promise<RunOutcome>;
-  /** Python only: start downloading the runtime before the learner clicks Run. */
-  warmup(): Promise<void>;
   terminate(): void;
 };
 
 /**
- * Browser runner backed by a dedicated Worker per exercise mount. A run that
- * exceeds `timeoutMs` (infinite loop) kills the Worker and reports a fatal
- * result; the next run spins up a fresh one.
+ * Browser runner backed by a dedicated module Worker per exercise mount
+ * (Turbopack bundles module workers into chunks; a classic worker's file is
+ * emitted as a raw asset). A run that exceeds `timeoutMs` (infinite loop)
+ * kills the Worker and reports a fatal result; the next run spins up a fresh
+ * one. JavaScript and TypeScript only (founder decision, end of S4).
  */
-export function createRunner(
-  kind: "js" | "py",
-  opts: { timeoutMs?: number } = {},
-): Runner {
+export function createRunner(opts: { timeoutMs?: number } = {}): Runner {
   let worker: Worker | null = null;
   let seq = 0;
-  const timeoutMs = opts.timeoutMs ?? (kind === "py" ? 60_000 : 8_000);
+  const timeoutMs = opts.timeoutMs ?? 8_000;
 
-  // Both workers are `type: "module"`: Turbopack bundles module workers into
-  // their own chunk, while a classic worker is emitted as a raw asset.
   const spawn = () => {
-    worker ??=
-      kind === "js"
-        ? new Worker(new URL("./js.worker.ts", import.meta.url), {
-            type: "module",
-          })
-        : new Worker(new URL("./py.worker.ts", import.meta.url), {
-            type: "module",
-          });
+    worker ??= new Worker(new URL("./js.worker.ts", import.meta.url), {
+      type: "module",
+    });
     return worker;
   };
 
@@ -85,7 +74,7 @@ export function createRunner(
       const started = Date.now();
       try {
         const { outcome } = await post<{ outcome: RunOutcome }>(
-          { ...request, runner: kind },
+          { ...request, runner: "js" },
           timeoutMs,
         );
         return outcome;
@@ -98,10 +87,6 @@ export function createRunner(
           fatal: e instanceof Error ? e.message : String(e),
         };
       }
-    },
-    async warmup() {
-      if (kind !== "py") return;
-      await post<{ ready: true }>({ warmup: true }, timeoutMs);
     },
     terminate() {
       worker?.terminate();

@@ -29,7 +29,7 @@ export const questionOptionsSchema = z.array(questionOptionSchema);
 export const questionAnswerSchema = z.array(z.string().min(1)).min(1);
 export type QuestionAnswer = z.infer<typeof questionAnswerSchema>;
 
-/** A file map as Sandpack / Pyodide expect it: path -> contents. */
+/** A file map for the browser runner: path -> contents. */
 export const fileMapSchema = z.record(z.string().min(1), z.string());
 export type FileMap = z.infer<typeof fileMapSchema>;
 

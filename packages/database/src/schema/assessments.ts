@@ -29,10 +29,8 @@ export const questionType = pgEnum("question_type", [
   "multi",
   "short",
 ]);
-export const exerciseRunner = pgEnum("exercise_runner", [
-  "sandpack",
-  "pyodide",
-]);
+/** Only the in-house browser JS/TS runner remains (founder decision, end of S4). */
+export const exerciseRunner = pgEnum("exercise_runner", ["sandpack"]);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

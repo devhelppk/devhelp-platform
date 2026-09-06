@@ -18,7 +18,7 @@ export type RunOutcome = {
 };
 
 export type RunRequest = {
-  runner: "js" | "py";
+  runner: "js";
   /** Learner-editable files (starter with edits). */
   files: FileMap;
   /** Test files; imports resolve against `files` under `../starter/…` or `./…`. */

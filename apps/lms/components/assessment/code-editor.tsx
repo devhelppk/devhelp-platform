@@ -1,7 +1,6 @@
 "use client";
 
 import { javascript } from "@codemirror/lang-javascript";
-import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 import { useTheme } from "next-themes";
@@ -45,13 +44,10 @@ export function CodeEditor({
   ariaLabel: string;
 }) {
   const { resolvedTheme } = useTheme();
-  const lang =
-    language === "python"
-      ? python()
-      : javascript({
-          typescript: language === "typescript" || language === "react",
-          jsx: language === "react",
-        });
+  const lang = javascript({
+    typescript: language === "typescript" || language === "react",
+    jsx: language === "react",
+  });
   return (
     <CodeMirror
       value={value}

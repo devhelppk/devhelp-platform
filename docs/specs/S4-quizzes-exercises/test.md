@@ -45,6 +45,8 @@ Database after the loop (loop learner): `quiz_attempts` 2 (attempt 1 score 0 fai
 
 Screenshots (`docs/specs/S4-quizzes-exercises/screenshots/`, captured signed out after round 2): `quiz-light-desktop.jpg`, `quiz-dark-desktop.jpg`, `quiz-light-mobile.jpg`, `quiz-dark-mobile.jpg`, `exercise-light-desktop.jpg`, `exercise-dark-desktop.jpg`, `exercise-dark-mobile.jpg`, `exercise-python-light-desktop.jpg`, `exercise-python-dark-desktop.jpg`. The signed-in states (feedback per question, attempts list, "Recorded. Lesson completed.", sidebar ticks) were verified live in the loop.
 
+Post-landing (founder decision, same day): exercises are JavaScript/TypeScript only. The Python runner and the `count-words` content exercise were removed; the Python screenshots were deleted, the TypeScript exercise was re-verified on the dev server after the removal, and the sync archived the Python lesson.
+
 ## Known gaps
 
 - The quiz description in content still says "Two questions" while the quiz has four (content repo copy fix).

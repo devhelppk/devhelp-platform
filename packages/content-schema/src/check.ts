@@ -213,18 +213,14 @@ export function checkContent(
             "tests",
             `solution does not pass its tests:\n${solution.output.trim().slice(-800)}`,
           );
-        // Python is only syntax-checked here (tests run in the browser), so "passes" means nothing for it.
+        const starter = options.runExercises(ex, ex.starterFiles);
 
-        if (ex.meta.runner !== "pyodide") {
-          const starter = options.runExercises(ex, ex.starterFiles);
-
-          if (starter.passed)
-            warn(
-              ex.file,
-              "tests",
-              "starter already passes every test; the exercise has nothing to fix",
-            );
-        }
+        if (starter.passed)
+          warn(
+            ex.file,
+            "tests",
+            "starter already passes every test; the exercise has nothing to fix",
+          );
       }
       const used = course.modules.some((m) =>
         m.lessons.some(
@@ -265,7 +261,7 @@ export function checkContent(
 export type { Diagnostic } from "./load.ts";
 
 /**
- * `checkContent` plus the browser-harness parity run for sandpack (JS/TS)
+ * `checkContent` plus the browser-harness parity run for every exercise
  * exercises: solution must pass, starter must not fully pass.
  */
 export async function checkContentAsync(

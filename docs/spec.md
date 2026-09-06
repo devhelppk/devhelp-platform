@@ -115,14 +115,16 @@ Depends on: S2.
 
 Plan: [`specs/S4-quizzes-exercises/plan.md`](./specs/S4-quizzes-exercises/plan.md)
 
-Scope: F1.5, F1.6. Server-graded quizzes; JS/TS exercises in a Web Worker with an in-house vitest-subset harness (Sandpack dropped: unmaintained since 2025-04) and Python on Pyodide, both with CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
+Scope: F1.5, F1.6. Server-graded quizzes; JS/TS exercises in a Web Worker with an in-house vitest-subset harness (Sandpack dropped: unmaintained since 2025-04), edited in CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
+
+Decision (founder, 2026-09-06, after S4 landed): **exercises are JavaScript and TypeScript only.** The Pyodide Python runner shipped in S4 was removed the same day (`exercise_runner` enum reduced to `sandpack`, migration `0004_drop_python_runner`, the Python exercise removed from the content repo). One runner, done well, is the product; a second language is a new spec, not a runner flag.
 
 Acceptance criteria
 
 - [x] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
 - [x] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
 - [x] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
-- [x] Pyodide loads only on Python exercises and is cached (second load is instant).
+- [x] ~~Pyodide loads only on Python exercises and is cached (second load is instant).~~ Verified, then superseded by the JS/TS-only decision below; the runner was removed.
 - [x] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S3.
