@@ -62,9 +62,9 @@ Acceptance criteria
 
 Depends on: S0.
 
-### S2. Content pipeline: schema package, content repo, sync — `planned`
+### S2. Content pipeline: schema package, content repo, sync — `done` (`c3c3c07`)
 
-Plan: [`specs/S2-content-pipeline/plan.md`](./specs/S2-content-pipeline/plan.md)
+Plan, review, tests: [`specs/S2-content-pipeline/`](./specs/S2-content-pipeline/)
 
 Scope: option C in requirements area 3, phase 1 (F3.1, F3.2, F3.5, F3.6, N3.3). Creates the `devhelp-content` repo, the shared Zod schema, the content check, and the sync into Postgres.
 
@@ -76,14 +76,14 @@ Deliverables
 
 Acceptance criteria
 
-- [ ] `content:check` fails on a bad quiz answer, a broken link, and a failing exercise test; passes on the sample content.
-- [ ] Sync is idempotent: running twice produces no row changes; removing a lesson archives it and keeps its progress rows.
-- [ ] A lesson body renders in the LMS from the compiled MDX with prose styles.
-- [ ] Certificates-to-revision linkage is possible: each synced lesson row has a `content_revisions` entry with the commit SHA.
+- [x] `content:check` fails on a bad quiz answer, a broken link, and a failing exercise test; passes on the sample content.
+- [x] Sync is idempotent: running twice produces no row changes; removing a lesson archives it and keeps its progress rows.
+- [x] A lesson body renders in the LMS from the compiled MDX with prose styles.
+- [x] Certificates-to-revision linkage is possible: each synced lesson row has a `content_revisions` entry with the commit SHA.
 
 Depends on: S1.
 
-### S3. LMS catalogue and lesson experience — `todo`
+### S3. LMS catalogue and lesson experience — `todo` (next)
 
 Scope: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10. Public catalogue, course page, path roadmap, lesson reader (article, video with completion, link), enrol, Continue, per-course progress UI. Uses the design system's app shell. Introduces `packages/api` (tRPC v11: `learning` router over `@repo/learning`, `catalogue` router over Drizzle reads), `@t3-oss/env-nextjs` in both apps, and `typedRoutes`.
 
