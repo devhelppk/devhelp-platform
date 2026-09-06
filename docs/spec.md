@@ -39,9 +39,9 @@ Monorepo, design system, Better Auth with organizations and cohorts, docs. Commi
 
 ## Sequence
 
-### S1. Data model v1: learning core — `planned`
+### S1. Data model v1: learning core — `done` (`4f9319b`)
 
-Plan: [`specs/S1-learning-core/plan.md`](./specs/S1-learning-core/plan.md)
+Plan, review, tests: [`specs/S1-learning-core/`](./specs/S1-learning-core/)
 
 Scope: replace the placeholder learning schema with the real one for courses, paths, lessons, quizzes, exercises, enrolment, and progress, following F1.1, F1.2, F1.8, F1.11, F1.11a, F1.13 and `data-model.md`. No UI.
 
@@ -54,15 +54,15 @@ Deliverables
 
 Acceptance criteria
 
-- [ ] Migration `0001_learning_core` applies on a fresh DB and on top of the current one.
-- [ ] Recording the same event twice (same idempotency key) leaves one row and unchanged read models.
-- [ ] Completing all required lessons flips `enrollments.status` to `completed` inside the same transaction.
-- [ ] `rebuildLearner` reproduces read models byte-for-byte from the stream (test compares before/after).
-- [ ] Integration tests cover the four points above against Postgres.
+- [x] Migration `0001_learning_core` applies on a fresh DB and on top of the current one.
+- [x] Recording the same event twice (same idempotency key) leaves one row and unchanged read models.
+- [x] Completing all required lessons flips `enrollments.status` to `completed` inside the same transaction.
+- [x] `rebuildLearner` reproduces read models byte-for-byte from the stream (test compares before/after).
+- [x] Integration tests cover the four points above against Postgres.
 
 Depends on: S0.
 
-### S2. Content pipeline: schema package, content repo, sync — `todo`
+### S2. Content pipeline: schema package, content repo, sync — `todo` (next)
 
 Scope: option C in requirements area 3, phase 1 (F3.1, F3.2, F3.5, F3.6, N3.3). Creates the `devhelp-content` repo, the shared Zod schema, the content check, and the sync into Postgres.
 

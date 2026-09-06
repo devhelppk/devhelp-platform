@@ -148,8 +148,8 @@ Quiz attempts and grading (S4), exercise submissions (S4), certificates (S7), ba
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] Migration `0001_learning_core` applies on a fresh DB and on top of the current one.
-- [ ] Recording the same event twice leaves one row and unchanged read models.
-- [ ] Completing all required lessons flips `enrollments.status` to `completed` inside the same transaction.
-- [ ] `rebuildLearner` reproduces read models byte-for-byte from the stream.
-- [ ] Integration tests cover the four points above against Postgres.
+- [x] Migration `0001_learning_core` applies on a fresh DB and on top of the current one.
+- [x] Recording the same event twice leaves one row and unchanged read models.
+- [x] Completing all required lessons flips `enrollments.status` to `completed` inside the same transaction.
+- [x] `rebuildLearner` reproduces read models byte-for-byte from the stream.
+- [x] Integration tests cover the four points above against Postgres.
