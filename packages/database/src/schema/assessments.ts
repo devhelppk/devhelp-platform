@@ -30,7 +30,7 @@ export const questionType = pgEnum("question_type", [
   "short",
 ]);
 /** Only the in-house browser JS/TS runner remains (founder decision, end of S4). */
-export const exerciseRunner = pgEnum("exercise_runner", ["sandpack"]);
+export const exerciseRunner = pgEnum("exercise_runner", ["browser"]);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -101,7 +101,7 @@ export const exercises = pgTable("exercises", {
     .notNull()
     .unique()
     .references(() => lessons.id, { onDelete: "cascade" }),
-  runner: exerciseRunner().notNull().default("sandpack"),
+  runner: exerciseRunner().notNull().default("browser"),
   language: text().notNull().default("typescript"),
   starterFiles: jsonb().$type<FileMap>().notNull().default({}),
   testFiles: jsonb().$type<FileMap>().notNull().default({}),

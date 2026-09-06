@@ -117,7 +117,7 @@ Plan: [`specs/S4-quizzes-exercises/plan.md`](./specs/S4-quizzes-exercises/plan.m
 
 Scope: F1.5, F1.6. Server-graded quizzes; JS/TS exercises in a Web Worker with an in-house vitest-subset harness (Sandpack dropped: unmaintained since 2025-04), edited in CodeMirror 6; results recorded as events; completion rules `quiz_pass` and `exercise_pass`.
 
-Decision (founder, 2026-09-06, after S4 landed): **exercises are JavaScript and TypeScript only.** The Pyodide Python runner shipped in S4 was removed the same day (`exercise_runner` enum reduced to `sandpack`, migration `0004_drop_python_runner`, the Python exercise removed from the content repo). One runner, done well, is the product; a second language is a new spec, not a runner flag.
+Decision (founder, 2026-09-06, after S4 landed): **exercises are JavaScript and TypeScript only.** The Pyodide Python runner shipped in S4 was removed the same day (`exercise_runner` enum reduced to one value, migration `0004_drop_python_runner`, then renamed `sandpack` → `browser` in `0005_rename_runner`, the Python exercise removed from the content repo). One runner, done well, is the product; a second language is a new spec, not a runner flag.
 
 Acceptance criteria
 
@@ -259,7 +259,6 @@ Founder actions
 Technical
 
 - **Exercise verification (decided at the end of S4, founder to confirm):** exercise pass/fail stays browser-reported. Every submission stores the files and per-test results and the server rejects a pass claim that contradicts them, so any submission can be replayed later. Server-side execution (a sandboxed runner replaying stored files against the tests) is scheduled for S7, where certificates make it a trust requirement; until then the `verified` flag on exercise submissions does not exist and certificates must not be issued from exercise passes alone.
-- The exercise `runner` value for the in-house JS/TS runner is still `sandpack` in content, the content schema, and the database (the enum predates dropping Sandpack). Rename to `browser-js` with a content-schema bump and a content repo migration when the next content-schema change lands.
 - The `foundations-check` quiz description in the content repo says "Two questions" but the quiz has four; fix the copy in `devhelppk/devhelp-content`.
 - `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
 - Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.

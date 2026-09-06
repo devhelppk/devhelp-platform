@@ -273,7 +273,7 @@ export async function checkContentAsync(
   for (const course of tree.courses) {
     for (const ex of course.exercises) {
       if (
-        ex.meta.runner !== "sandpack" ||
+        ex.meta.runner !== "browser" ||
         Object.keys(ex.testFiles).length === 0
       )
         continue;

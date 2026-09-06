@@ -1,4 +1,4 @@
 id: ex
-runner: sandpack
+runner: browser
 language: typescript
 entry: add.ts

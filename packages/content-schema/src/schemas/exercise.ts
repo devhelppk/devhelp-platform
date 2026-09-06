@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { slug } from "./common.ts";
 
-export const exerciseRunner = z.enum(["sandpack"]);
+export const exerciseRunner = z.enum(["browser"]);
 
 /** `exercises/<id>/exercise.yaml`; `starter/` and `tests/` are read from disk. */
 export const exerciseMeta = z

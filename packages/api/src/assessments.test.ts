@@ -121,7 +121,7 @@ beforeAll(async () => {
     .returning();
   await db.insert(schema.exercises).values({
     lessonId: exLesson!.id,
-    runner: "sandpack",
+    runner: "browser",
     language: "typescript",
     starterFiles: { "a.ts": "export const a = 0;" },
     testFiles: {
