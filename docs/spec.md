@@ -144,7 +144,7 @@ Acceptance criteria
 
 Depends on: S1. Parallel-safe with S3/S4.
 
-### S6. Ratings, course reviews, and discussions — `planned`
+### S6. Ratings, course reviews, and discussions — `done` (`5022ebb`)
 
 Plan: [`specs/S6-ratings-reviews-discussions/plan.md`](./specs/S6-ratings-reviews-discussions/plan.md)
 
@@ -152,13 +152,13 @@ Scope: area 4 in full (F4.1 to F4.7, N4.1 to N4.3). Inline lesson rating with ta
 
 Acceptance criteria
 
-- [ ] One rating per user per lesson, editable; aggregates recompute on write.
-- [ ] Course review form only appears at ≥ 50 percent completion; one review per learner per course, shown with a completion badge.
-- [ ] Unclear-tag rate, average rating, and open-question count are queryable per lesson (feeds S11).
-- [ ] Comments load after the lesson body (client island) and never block it; their text is not in the server HTML.
-- [ ] Threads are one level deep; accepted answer pins first in its thread; the question author is notified on replies.
-- [ ] Links from accounts younger than seven days are held for moderation; approve publishes, reject hides; readers can flag; every removal is logged.
-- [ ] Browser loop passed on the dev server; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] One rating per user per lesson, editable; aggregates recompute on write.
+- [x] Course review form only appears at ≥ 50 percent completion; one review per learner per course, shown with a completion badge.
+- [x] Unclear-tag rate, average rating, and open-question count are queryable per lesson (feeds S11).
+- [x] Comments load after the lesson body (client island) and never block it; their text is not in the server HTML.
+- [x] Threads are one level deep; accepted answer pins first in its thread; the question author is notified on replies.
+- [x] Links from accounts younger than seven days are held for moderation; approve publishes, reject hides; readers can flag; every removal is logged.
+- [x] Browser loop passed on the dev server; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S3, S5.
 
@@ -264,6 +264,8 @@ Technical
 - `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
 - Better Auth's `allowUserToCreateOrganization` reads the role from the session cookie cache, so a newly promoted mentor or admin can create an organization only after the cache expires (5 minutes) or a re-sign-in; role-gated platform pages already read fresh. Revisit if organization creation moves into a platform flow (S9).
 - The email digest for notifications (X4) is a scheduler over `notifications.emailed_at`; build it when S6 discussions produce enough volume.
+- Comment code blocks are styled but not syntax-highlighted; run Shiki at write time if mentors ask (S6 decision 4).
+- The `comments.anchor` column is written by the API but the lesson UI does not yet offer "comment on this section"; add it with the S11 mentor tooling.
 - Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.
 - `courseProgress` in the learning router awaits three queries sequentially; batch if a course page ever exceeds a few hundred milliseconds.
 - `/courses` and `/paths/[path]` are dynamic because the header reads the session; if catalogue traffic grows, move the header behind Suspense and cache the rest.
