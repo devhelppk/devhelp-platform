@@ -18,7 +18,7 @@ export function SiteHeader() {
             <Link href="/design">Design</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <a href="https://github.com/devhelp-pk/devhelp-platform">GitHub</a>
+            <a href="https://github.com/devhelppk/devhelp-platform">GitHub</a>
           </Button>
           <ThemeToggle />
         </nav>

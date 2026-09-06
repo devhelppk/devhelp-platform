@@ -40,6 +40,7 @@ export function pulledContentDir(root = findRepoRoot()): string {
  * counts as unset, so every tool agrees on one directory.
  */
 export function contentDir(root = findRepoRoot()): string {
+  // Read directly: content:pull must work on a fresh clone with no auth or database env.
   const override = process.env.CONTENT_DIR?.trim();
   return override ? resolve(root, override) : pulledContentDir(root);
 }

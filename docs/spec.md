@@ -106,7 +106,7 @@ Acceptance criteria
 - [ ] Visitor can browse and read free lessons without an account; enrolling prompts sign-in.
 - [ ] Video completion via player API records a `progress_events` row once.
 - [ ] Continue lands on the first incomplete required lesson.
-- [ ] Lesson page ships under 150 KB JS (measured in the build output) and renders at 360px with no horizontal scroll.
+- [ ] Lesson page first-load JS is under the 300 KB ceiling (target 250 KB), measured on a production server, and renders at 360px with no horizontal scroll.
 - [ ] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
 
 Depends on: S2.

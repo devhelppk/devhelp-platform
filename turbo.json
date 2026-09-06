@@ -12,7 +12,10 @@
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
     "CONTENT_DIR",
-    "CONTENT_SYNC_SECRET"
+    "CONTENT_SYNC_SECRET",
+    "NEXT_PUBLIC_LMS_URL",
+    "NEXT_PUBLIC_WEB_URL",
+    "SKIP_ENV_VALIDATION"
   ],
   "tasks": {
     "build": {

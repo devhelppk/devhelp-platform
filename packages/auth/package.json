@@ -17,6 +17,7 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.2",
     "@repo/database": "workspace:*",
+    "@repo/env": "workspace:*",
     "better-auth": "^1.7.2"
   },
   "devDependencies": {

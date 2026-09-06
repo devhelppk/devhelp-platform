@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { clientEnv } from "@repo/env/client";
 import { BrandLogo } from "@repo/ui/components/brand-logo";
 import { Button } from "@repo/ui/components/button";
 import { ThemeToggle } from "@repo/ui/components/theme-toggle";
@@ -28,11 +29,11 @@ export default function HomePage() {
             <Link href="/design">Design</Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
-            <a href="https://github.com/devhelp-pk">GitHub</a>
+            <a href="https://github.com/devhelppk">GitHub</a>
           </Button>
           <ThemeToggle />
           <Button size="sm" asChild>
-            <a href="http://localhost:3001">Start learning</a>
+            <a href={clientEnv.NEXT_PUBLIC_LMS_URL}>Start learning</a>
           </Button>
         </nav>
       </header>
@@ -48,10 +49,10 @@ export default function HomePage() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Button size="lg" asChild>
-            <a href="http://localhost:3001">Browse courses</a>
+            <a href={clientEnv.NEXT_PUBLIC_LMS_URL}>Browse courses</a>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <a href="https://github.com/devhelp-pk/devhelp-platform">
+            <a href="https://github.com/devhelppk/devhelp-platform">
               Contribute
             </a>
           </Button>

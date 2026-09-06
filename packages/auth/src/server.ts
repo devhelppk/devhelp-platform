@@ -3,6 +3,7 @@ import { nextCookies } from "better-auth/next-js";
 import { admin, organization } from "better-auth/plugins";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { db, schema } from "@repo/database";
+import { env } from "@repo/env";
 
 /**
  * Platform-level roles live on `users.role` (managed by the admin plugin).
@@ -12,9 +13,9 @@ export const platformRoles = ["student", "mentor", "admin"] as const;
 
 export const auth = betterAuth({
   appName: "devhelp",
-  baseURL: process.env.BETTER_AUTH_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
-  trustedOrigins: ["http://localhost:3000", "http://localhost:3001"],
+  baseURL: env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
+  trustedOrigins: [env.NEXT_PUBLIC_WEB_URL, env.NEXT_PUBLIC_LMS_URL],
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
@@ -24,7 +25,7 @@ export const auth = betterAuth({
     database: { generateId: "uuid" },
     // Sessions on devhelp.pk and learn.devhelp.pk share one cookie in production.
     crossSubDomainCookies: {
-      enabled: process.env.NODE_ENV === "production",
+      enabled: env.NODE_ENV === "production",
       domain: ".devhelp.pk",
     },
   },
@@ -33,19 +34,19 @@ export const auth = betterAuth({
     minPasswordLength: 8,
   },
   socialProviders: {
-    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
+    ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
       ? {
           github: {
-            clientId: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
           },
         }
       : {}),
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
           google: {
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
           },
         }
       : {}),

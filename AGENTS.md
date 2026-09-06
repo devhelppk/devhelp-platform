@@ -37,7 +37,8 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - Entity types are Drizzle-inferred (`typeof table.$inferSelect`); never hand-write a row type.
 - Every `jsonb` column has a Zod schema in `packages/database/src/schema/json.ts`; the column's `.$type<>()` uses the type inferred from that schema. Validate with it at every write boundary.
 - Learner progress is written only through `recordEvent` / `enroll` from `@repo/learning` (Zod-validated, transactional, idempotent). Never insert into `progress_events`, `lesson_progress`, or `enrollments` directly outside that package. `rebuildLearner(userId)` replays the stream.
-- Client-facing APIs go through tRPC v11 in `packages/api` (from S3): React Query hooks on the client, direct callers in RSC. No untyped `fetch` to our own routes. Use Next `typedRoutes` for links and `@t3-oss/env-nextjs` for env.
+- Client-facing APIs go through tRPC v11 in `packages/api`: React Query hooks on the client (`useTRPC()` from `@/lib/trpc/client`), the server caller `api(headers)` from `@repo/api/server` in RSC. No untyped `fetch` to our own routes. `typedRoutes` is on in both apps: cast dynamic hrefs with `as Route` (from `next`), never `as never`.
+- Env is validated by `@repo/env` (`env` = full server schema, `@repo/env/client` = `NEXT_PUBLIC_*`, `@repo/env/database` = the DB-only slice used by drizzle-kit and the seed). Public URLs default to localhost only outside production; both apps inline them from the validated env in `next.config.ts`. `SKIP_ENV_VALIDATION=1` bypasses validation for one-off scripts. `packages/content` reads `process.env` directly so `content:pull` works on a fresh clone.
 - Quiz answers never reach the browser: read questions through `questionPublicColumns` + `toPublicOptions`.
 - `packages/auth` and `packages/learning` set `declaration: false` because Better Auth / Drizzle inferred types are not portable; keep that when adding packages that re-export them.
 
@@ -65,6 +66,9 @@ Apps import `@repo/ui/components/<name>`, `@repo/ui/lib/utils`, `@repo/ui/global
 - **Tests:** Vitest + Testing Library. UI and app tests use `@repo/vitest-config/ui` (jsdom, `vitest.setup.ts` loads jest-dom). Node packages use `@repo/vitest-config/base`. Co-locate tests as `*.test.ts(x)`.
 - **Formatting:** Prettier with the Tailwind class-sorting plugin; run `pnpm format` before committing. CI runs `format:check`.
 - **Ports:** web 3000, lms 3001. Stop dev servers with `pgrep -f "next dev" | xargs -r kill`; `pkill -f "next dev"` will match and kill the invoking shell.
+- **Progress event keys carry the enrolment generation** (`:g<n>`, n = count of `course_enrolled` events) for lesson start/complete, and a mount-unique nonce for progress ticks, so a learner can re-do a course after dropping it and video sessions never collide.
+- **Keep the LMS root layout thin.** Every provider there ships to every page; the tRPC provider is `LearnerProviders`, applied per page. The account menu is server-rendered (`<details>` + server action). Budget: 250 KB target / 300 KB ceiling first-load JS, enforced by `pnpm check-budget` against a running production server (CI does this after build).
+- **Pages that read the session (`AccountMenu` calls `headers()`) or `searchParams` are dynamic**; do not add `revalidate` to them expecting ISR.
 - **UI specs need the browser loop.** Any spec that touches UI is tested on the dev server in Chrome (all routes and states, light/dark, desktop and 390px), critiqued against `DESIGN.md`, fixed, and re-checked for at least two rounds before it is marked done; see `docs/spec.md`.
 - **Scope discipline:** the LMS product surface (courses, lessons, progress UI) is intentionally thin until the research in `../research/` is acted on. Do not add domain-specific components to `packages/ui`; keep it generic.
 

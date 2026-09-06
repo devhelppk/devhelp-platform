@@ -1,6 +1,6 @@
 # S3 plan: LMS catalogue and lesson experience
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S3. Requirements: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10 (type safety: tRPC, validated env, typed routes). Builds on S1 (`@repo/learning`, progress tables) and S2 (compiled lesson bodies, synced metadata).
+Status: `done` (see `review.md`, `test.md`). Deviations after implementation and review: budget set by the founder to 250 KB target / 300 KB ceiling (the 150 KB figure was below the Next 16 floor); catalogue, path, and course pages render dynamically because the header reads the session (decision 8's ISR did not apply); lesson start/complete keys carry the enrolment generation; the account menu is server-rendered without the auth client; a database-only env slice exists so drizzle-kit needs no auth secrets. Spec entry: `docs/spec.md` → S3. Requirements: F1.1 to F1.4, F1.8, F1.9, F1.10, F1.12; N1.1; X10 (type safety: tRPC, validated env, typed routes). Builds on S1 (`@repo/learning`, progress tables) and S2 (compiled lesson bodies, synced metadata).
 
 ## Goal
 
@@ -19,7 +19,7 @@ A learner can find a course, read or watch a lesson, have their progress recorde
 9. **Continue** = first required, non-archived lesson in course order whose progress is not `completed`; falls back to the first lesson. Computed server-side in `learning.continue` so the dashboard and the course page agree.
 10. **Code highlighting with Shiki** at build time via a rehype plugin in the Content Collections config (`@shikijs/rehype`), themes mapped to the design tokens (light and dark CSS variables), so lesson pages ship no highlighter JS. The S2 copy-button `CodeBlock` stays.
 11. **Video via `@next/third-parties` `YouTubeEmbed`** for the lite embed, upgraded to the IFrame Player API on first interaction so completion can be observed. Provider stays a column so others can follow.
-12. **Performance budget enforced in CI**: a script reads `.next/app-build-manifest.json` and fails if the lesson route's first-load JS exceeds 150 KB (gzip estimate from file sizes). Exercise and quiz runners (S4) load on demand and are excluded.
+12. **Performance budget enforced in CI**: `scripts/check-bundle-budget.ts` fetches each page from a production server, sums the gzipped size of every `<script src>`, and fails above the ceiling. Founder-set during implementation: target 250 KB, ceiling 300 KB (the original 150 KB was below the framework floor of ~155 KB). Exercise and quiz runners (S4) load on demand and are excluded.
 
 ## Pages and components
 
@@ -79,11 +79,11 @@ Quiz and exercise runners (S4), ratings (S6), certificates (S7), badges and stre
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] Visitor can browse and read free lessons without an account; enrolling prompts sign-in.
-- [ ] Video completion via player API records a `progress_events` row once.
-- [ ] Continue lands on the first incomplete required lesson.
-- [ ] Lesson page ships under 150 KB JS (measured in the build output) and renders at 360px with no horizontal scroll.
-- [ ] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Visitor can browse and read free lessons without an account; enrolling prompts sign-in.
+- [x] Video completion via player API records a `progress_events` row once.
+- [x] Continue lands on the first incomplete required lesson.
+- [x] Lesson page first-load JS is under the 300 KB ceiling (target 250 KB), measured on a production server, and renders at 360px with no horizontal scroll.
+- [x] Browser loop passed on the dev server: catalogue, course, lesson, dashboard, sign-in; signed out and signed in; light and dark; desktop and 390px; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 

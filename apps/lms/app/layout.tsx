@@ -4,8 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Literata } from "next/font/google";
 import { ThemeProvider } from "@repo/ui/components/theme-provider";
-import { Toaster } from "@repo/ui/components/sonner";
-import { TooltipProvider } from "@repo/ui/components/tooltip";
+import { DeferredToaster } from "@/components/shell/deferred-toaster";
 
 const literata = Literata({
   subsets: ["latin"],
@@ -20,6 +19,10 @@ export const metadata: Metadata = {
     "The devhelp learning platform: courses, lessons, and progress tracking.",
 };
 
+/**
+ * Kept deliberately thin: every provider here ships to every page. The tRPC
+ * provider wraps only the pages with progress islands (see `LearnerProviders`).
+ */
 export default function RootLayout({
   children,
 }: {
@@ -33,8 +36,8 @@ export default function RootLayout({
     >
       <body className="min-h-dvh font-sans antialiased">
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster />
+          {children}
+          <DeferredToaster />
         </ThemeProvider>
       </body>
     </html>

@@ -1,9 +1,12 @@
 import { defineCollection, defineConfig } from "@content-collections/core";
 import { compileMDX } from "@content-collections/mdx";
 import { lessonFrontmatter } from "@repo/content-schema/schemas";
+import rehypeShiki from "@shikijs/rehype";
+import type { ShikiTransformer } from "shiki";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
-import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { z } from "zod";
 
 /* global process */
@@ -14,10 +17,18 @@ import { z } from "zod";
  * Metadata lives in Postgres (pnpm content:sync); this only carries the body.
  */
 // Same rule as @repo/content: CONTENT_DIR resolves from the repo root, empty means unset.
-const repoRoot = resolve(import.meta.dirname, "../..");
-const contentDir = resolve(
-  repoRoot,
-  process.env.CONTENT_DIR?.trim() || ".content",
+// Walk up from cwd (apps/lms in dev and build): import.meta is not reliable in a bundled config,
+// and Content Collections joins `directory` onto the config's directory, so it must be relative.
+function findRepoRoot(from: string): string {
+  let d = from;
+  while (!existsSync(join(d, "pnpm-workspace.yaml")) && dirname(d) !== d)
+    d = dirname(d);
+  return d;
+}
+const repoRoot = findRepoRoot(process.cwd());
+const contentDir = relative(
+  process.cwd(),
+  resolve(repoRoot, process.env.CONTENT_DIR?.trim() || ".content"),
 );
 
 const lessons = defineCollection({
@@ -36,7 +47,26 @@ const lessons = defineCollection({
     const meta = lessonFrontmatter.parse(frontmatter);
     const body = await compileMDX(ctx, doc, {
       remarkPlugins: [remarkGfm],
-      rehypePlugins: [rehypeSlug],
+      rehypePlugins: [
+        rehypeSlug,
+        // Highlight at build time; both themes are emitted as CSS variables so no highlighter JS ships.
+        [
+          rehypeShiki,
+          {
+            themes: { light: "github-light", dark: "github-dark" },
+            defaultColor: false,
+            // Expose the fence language so the code block can label it.
+            transformers: [
+              {
+                name: "devhelp:data-language",
+                pre(node) {
+                  node.properties["data-language"] = this.options.lang ?? "";
+                },
+              } satisfies ShikiTransformer,
+            ],
+          },
+        ],
+      ],
     });
     const [courseDir = "", moduleDir = ""] = _meta.directory.split("/");
     return {

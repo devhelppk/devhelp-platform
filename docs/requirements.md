@@ -80,7 +80,7 @@ The core product: structured courses made of modules and lessons, with tracked p
 
 ### Non-functional
 
-- N1.1 First lesson paint under 2 s on a mid-range Android over 3G; lesson pages under 150 KB of JS before exercise runners load on demand.
+- N1.1 First lesson paint under 2 s on a mid-range Android over 3G. First-load JavaScript target 250 KB gzipped per page with a 300 KB enforced ceiling (founder decision, S3; Next 16 + React alone is ~155 KB). Exercise and quiz runners load on demand and are excluded. The limit catches regressions; it does not drive quality trade-offs.
 - N1.2 Every progress write is idempotent (unique on user + lesson) so retries never double-count.
 - N1.3 Content changes deploy without a DB migration: MDX in git, a sync step upserts course/module/lesson rows by slug.
 

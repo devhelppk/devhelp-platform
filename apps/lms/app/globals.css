@@ -1,1 +1,13 @@
 @import "@repo/ui/globals.css";
+
+/* Shiki dual themes: pick the variable set for the active theme. */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}

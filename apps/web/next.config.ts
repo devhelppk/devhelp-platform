@@ -1,7 +1,14 @@
+import { env } from "@repo/env";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/ui", "@repo/database", "@repo/auth"],
+  // Validated at config time (fails the build if missing in production) and inlined for the client.
+  env: {
+    NEXT_PUBLIC_LMS_URL: env.NEXT_PUBLIC_LMS_URL,
+    NEXT_PUBLIC_WEB_URL: env.NEXT_PUBLIC_WEB_URL,
+  },
+  transpilePackages: ["@repo/ui", "@repo/database", "@repo/auth", "@repo/env"],
+  typedRoutes: true,
 };
 
 export default nextConfig;
