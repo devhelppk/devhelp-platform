@@ -1,5 +1,10 @@
-import { and, asc, count, eq, isNull, schema } from "@repo/database";
-import { enroll, recordEvent } from "@repo/learning";
+import { and, asc, eq, isNull, schema } from "@repo/database";
+import {
+  enroll,
+  enrolmentGeneration,
+  lessonEventKey,
+  recordEvent,
+} from "@repo/learning";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../trpc";
@@ -97,28 +102,6 @@ async function courseProgress(
   };
 }
 
-/**
- * Number of times this learner has enrolled in the course (auto-enrol counts).
- * Lesson event keys carry it so a lesson can be re-done after drop + re-enrol.
- */
-async function enrolmentGeneration(
-  ctx: { db: typeof import("@repo/database").db },
-  userId: string,
-  courseId: string,
-) {
-  const [row] = await ctx.db
-    .select({ n: count() })
-    .from(schema.progressEvents)
-    .where(
-      and(
-        eq(schema.progressEvents.userId, userId),
-        eq(schema.progressEvents.courseId, courseId),
-        eq(schema.progressEvents.kind, "course_enrolled"),
-      ),
-    );
-  return row?.n ?? 0;
-}
-
 function continueFrom<
   T extends { isRequired: boolean; progress: { status: string } | null },
 >(lessons: T[]): T | null {
@@ -210,12 +193,17 @@ export const learningRouter = router({
     .mutation(async ({ ctx, input }) => {
       const course = await courseBySlug(ctx, input.courseSlug);
       const lesson = await lessonBySlug(ctx, course.id, input.lessonSlug);
-      const gen = await enrolmentGeneration(ctx, ctx.user.id, course.id);
+      const gen = await enrolmentGeneration(ctx.db, ctx.user.id, course.id);
       return recordEvent({
         userId: ctx.user.id,
         kind: "lesson_started",
         lessonId: lesson.id,
-        idempotencyKey: `lesson_started:${ctx.user.id}:${lesson.id}:g${gen}`,
+        idempotencyKey: lessonEventKey(
+          "lesson_started",
+          ctx.user.id,
+          lesson.id,
+          gen,
+        ),
       });
     }),
 
@@ -256,12 +244,17 @@ export const learningRouter = router({
           message: "This lesson completes through its quiz or exercise.",
         });
       }
-      const gen = await enrolmentGeneration(ctx, ctx.user.id, course.id);
+      const gen = await enrolmentGeneration(ctx.db, ctx.user.id, course.id);
       return recordEvent({
         userId: ctx.user.id,
         kind: "lesson_completed",
         lessonId: lesson.id,
-        idempotencyKey: `lesson_completed:${ctx.user.id}:${lesson.id}:g${gen}`,
+        idempotencyKey: lessonEventKey(
+          "lesson_completed",
+          ctx.user.id,
+          lesson.id,
+          gen,
+        ),
       });
     }),
 });

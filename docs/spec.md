@@ -256,6 +256,10 @@ Founder actions
 
 Technical
 
+- **Exercise verification (decided at the end of S4, founder to confirm):** exercise pass/fail stays browser-reported. Every submission stores the files and per-test results and the server rejects a pass claim that contradicts them, so any submission can be replayed later. Server-side execution (a sandboxed runner replaying stored files against the tests) is scheduled for S7, where certificates make it a trust requirement; until then the `verified` flag on exercise submissions does not exist and certificates must not be issued from exercise passes alone.
+- The exercise `runner` value for the in-house JS/TS runner is still `sandpack` in content, the content schema, and the database (the enum predates dropping Sandpack). Rename to `browser-js` with a content-schema bump and a content repo migration when the next content-schema change lands.
+- The `foundations-check` quiz description in the content repo says "Two questions" but the quiz has four; fix the copy in `devhelppk/devhelp-content`.
+- `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
 - Lesson pages call `getSession` three times per request (header, page, tRPC context); thread the session through the API context when S5 touches auth.
 - `courseProgress` in the learning router awaits three queries sequentially; batch if a course page ever exceeds a few hundred milliseconds.
 - `/courses` and `/paths/[path]` are dynamic because the header reads the session; if catalogue traffic grows, move the header behind Suspense and cache the rest.

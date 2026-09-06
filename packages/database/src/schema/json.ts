@@ -35,3 +35,35 @@ export type FileMap = z.infer<typeof fileMapSchema>;
 
 export const progressEventPayloadSchema = z.record(z.string(), z.unknown());
 export type ProgressEventPayload = z.infer<typeof progressEventPayloadSchema>;
+
+/** A learner's answers to a quiz: option ids for single/multi, free text for short. */
+export const quizAnswersSchema = z.array(
+  z.object({
+    questionId: z.uuid(),
+    value: z.union([z.string(), z.array(z.string())]),
+  }),
+);
+export type QuizAnswers = z.infer<typeof quizAnswersSchema>;
+
+/** Per-question grading snapshot, frozen at submit time so regrading and history survive content changes. */
+export const quizSnapshotSchema = z.array(
+  z.object({
+    questionId: z.uuid(),
+    version: z.number().int(),
+    points: z.number().int(),
+    earned: z.number().int(),
+    correct: z.boolean(),
+  }),
+);
+export type QuizSnapshot = z.infer<typeof quizSnapshotSchema>;
+
+/** Results reported by the exercise runner (browser harness or Node parity run). */
+export const exerciseResultsSchema = z.array(
+  z.object({
+    name: z.string().min(1),
+    passed: z.boolean(),
+    error: z.string().optional(),
+    durationMs: z.number().optional(),
+  }),
+);
+export type ExerciseResults = z.infer<typeof exerciseResultsSchema>;

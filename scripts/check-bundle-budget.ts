@@ -20,6 +20,15 @@ export const TARGET_KB = 250;
 export const CEILING_KB = 300;
 export const budgets: Budget[] = [
   { path: "/courses/ai-engineering-foundations/welcome", maxKb: CEILING_KB },
+  // Quiz and exercise shells: runners and editors load after hydration and are not counted.
+  {
+    path: "/courses/ai-engineering-foundations/foundations-check",
+    maxKb: CEILING_KB,
+  },
+  {
+    path: "/courses/ai-engineering-foundations/trace-the-refund",
+    maxKb: CEILING_KB,
+  },
   { path: "/courses", maxKb: CEILING_KB },
   { path: "/", maxKb: CEILING_KB },
 ];

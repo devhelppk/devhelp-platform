@@ -2,7 +2,7 @@
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { checkContent, hasErrors } from "../src/check.ts";
+import { checkContentAsync, hasErrors } from "../src/check.ts";
 import { runExerciseTests } from "../src/exercise-runner.ts";
 import { loadContentTree } from "../src/index.ts";
 
@@ -23,11 +23,12 @@ const dir = explicit
   : resolve(repoRoot, process.env.CONTENT_DIR?.trim() || ".content");
 
 const tree = loadContentTree(dir);
-const diagnostics = checkContent(tree, {
+const diagnostics = await checkContentAsync(tree, {
   runExercises: args.includes("--no-exercises")
     ? undefined
     : (ex, files) =>
         runExerciseTests(ex, files, { vitestBin: process.env.VITEST_BIN }),
+  parity: !args.includes("--no-exercises"),
 });
 const errors = diagnostics.filter((d) => d.level === "error").length;
 const warnings = diagnostics.length - errors;

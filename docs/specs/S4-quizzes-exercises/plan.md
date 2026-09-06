@@ -1,6 +1,6 @@
 # S4 plan: quizzes and exercises
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S4. Requirements: F1.5, F1.6, F1.11 (completion rules `quiz_pass`, `exercise_pass`), F1.13; X10. Builds on S1 (`quizzes`, `questions`, `exercises` tables, `evaluateCompletion` with `minQuizScore` reserved), S2 (quiz YAML and exercise files synced from content), S3 (lesson page, tRPC, progress islands).
+Status: `done` (see `review.md`, `test.md`). Deviations after implementation, founder review on the dev server, and code review: one tabbed editor (test files as read-only tabs) instead of side-by-side panes; the app-shell content column widened to `max-w-4xl` (`max-w-5xl` on assessment lessons) and the lesson header groups wordmark and breadcrumb on one line; both runner workers are module workers (Turbopack does not bundle classic workers) and Pyodide loads through its ESM build; a better quiz retake re-evaluates `minQuizScore`, which only counts quizzes on required lessons; attempt limits are per quiz version and submissions are serialised with an advisory lock; a first attempt records `lesson_started`; `content:sync` gates on the harness parity check; `enrolmentGeneration` and the lesson event keys moved into `@repo/learning`. Spec entry: `docs/spec.md` → S4. Requirements: F1.5, F1.6, F1.11 (completion rules `quiz_pass`, `exercise_pass`), F1.13; X10. Builds on S1 (`quizzes`, `questions`, `exercises` tables, `evaluateCompletion` with `minQuizScore` reserved), S2 (quiz YAML and exercise files synced from content), S3 (lesson page, tRPC, progress islands).
 
 ## Goal
 
@@ -90,13 +90,13 @@ Project submissions and mentor review (S8), peer review, server-side execution o
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
-- [ ] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
-- [ ] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
-- [ ] Pyodide loads only on Python exercises and is cached (second load is instant).
-- [ ] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] Correct answers never reach the client (checked via network tab and a test on the RSC payload).
+- [x] Quiz attempt stores the question version snapshot; regrading after a content change is possible.
+- [x] A passing exercise records an event with the submitted code; a failing one does not complete the lesson.
+- [x] Pyodide loads only on Python exercises and is cached (second load is instant).
+- [x] Browser loop passed on the dev server for quiz and exercise lessons (both runners), signed out and in, light and dark, desktop and narrow; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 
 1. Sandpack is dropped in favour of our own Worker harness (decision 3). Founder: fine after the alternatives sweep above found no maintained equivalent.
-2. Client-side pass/fail for exercises (decision 7) is recorded, not verified. Founder: acceptable; decide on server-side verification before certificates (recorded in `spec.md` follow-ups, to be settled at the end of this spec).
+2. Client-side pass/fail for exercises (decision 7) is recorded, not verified. Founder: acceptable; decide on server-side verification before certificates. Outcome at the end of S4: the server stores the learner's files and per-test results with every submission and refuses a pass claim that contradicts the results, so a later verification job can replay any submission against the tests; actual server-side execution is deferred to S7 (certificates), where it becomes a trust requirement. Recorded in `spec.md` follow-ups for the founder to confirm.

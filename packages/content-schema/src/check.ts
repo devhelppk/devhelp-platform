@@ -1,4 +1,5 @@
 import type { ContentTree, Diagnostic, LoadedExercise } from "./load.ts";
+import { runJsInNode } from "@repo/exercise-runner/node";
 
 export type ExerciseRunner = (
   ex: LoadedExercise,
@@ -6,6 +7,12 @@ export type ExerciseRunner = (
 ) => { passed: boolean; output: string };
 
 export type CheckOptions = {
+  /**
+   * Also run JS/TS exercises through the browser harness (the exact code the
+   * LMS ships) so any test feature outside its vitest subset fails here.
+   * Default true; async, so use `checkContentAsync`.
+   */
+  parity?: boolean;
   /**
    * Runs exercise tests (solution must pass, starter should fail). Pass
    * `runExerciseTests` from `./exercise-runner` (a child process; keep it out of
@@ -206,13 +213,18 @@ export function checkContent(
             "tests",
             `solution does not pass its tests:\n${solution.output.trim().slice(-800)}`,
           );
-        const starter = options.runExercises(ex, ex.starterFiles);
-        if (starter.passed)
-          warn(
-            ex.file,
-            "tests",
-            "starter already passes every test; the exercise has nothing to fix",
-          );
+        // Python is only syntax-checked here (tests run in the browser), so "passes" means nothing for it.
+
+        if (ex.meta.runner !== "pyodide") {
+          const starter = options.runExercises(ex, ex.starterFiles);
+
+          if (starter.passed)
+            warn(
+              ex.file,
+              "tests",
+              "starter already passes every test; the exercise has nothing to fix",
+            );
+        }
       }
       const used = course.modules.some((m) =>
         m.lessons.some(
@@ -251,6 +263,68 @@ export function checkContent(
 }
 
 export type { Diagnostic } from "./load.ts";
+
+/**
+ * `checkContent` plus the browser-harness parity run for sandpack (JS/TS)
+ * exercises: solution must pass, starter must not fully pass.
+ */
+export async function checkContentAsync(
+  tree: ContentTree,
+  options: CheckOptions = {},
+): Promise<Diagnostic[]> {
+  const out = checkContent(tree, options);
+  if (options.parity === false) return out;
+  for (const course of tree.courses) {
+    for (const ex of course.exercises) {
+      if (
+        ex.meta.runner !== "sandpack" ||
+        Object.keys(ex.testFiles).length === 0
+      )
+        continue;
+      if (Object.keys(ex.solutionFiles).length) {
+        const sol = await runJsInNode({
+          files: ex.solutionFiles,
+          testFiles: ex.testFiles,
+        });
+        if (!sol.passed) {
+          const why =
+            sol.fatal ??
+            sol.results
+              .filter((r) => !r.passed)
+              .map((r) => `${r.name}: ${r.error}`)
+              .join("; ");
+          out.push({
+            level: "error",
+            file: ex.file,
+            rule: "parity",
+            message: `solution fails in the browser harness (only the vitest subset is supported): ${why}`,
+          });
+        }
+      }
+      const starter = await runJsInNode({
+        files: ex.starterFiles,
+        testFiles: ex.testFiles,
+      });
+      if (starter.passed)
+        out.push({
+          level: "warning",
+          file: ex.file,
+          rule: "parity",
+          message:
+            "starter already passes in the browser harness; nothing to fix",
+        });
+      if (starter.fatal && !/expected|AssertionError/.test(starter.fatal)) {
+        out.push({
+          level: "error",
+          file: ex.file,
+          rule: "parity",
+          message: `starter does not load in the browser harness: ${starter.fatal}`,
+        });
+      }
+    }
+  }
+  return out;
+}
 
 export function hasErrors(diagnostics: Diagnostic[]): boolean {
   return diagnostics.some((d) => d.level === "error");

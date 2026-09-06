@@ -1,0 +1,15 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["es2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["node"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src", "vitest.config.ts"],
+  "exclude": ["node_modules"]
+}

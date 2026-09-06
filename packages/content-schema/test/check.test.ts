@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkContent, hasErrors } from "../src/check.ts";
+import { checkContent, checkContentAsync, hasErrors } from "../src/check.ts";
 import { runExerciseTests } from "../src/exercise-runner.ts";
 import { loadContentTree, stableHash } from "../src/index.ts";
 
@@ -69,4 +69,16 @@ describe("checkContent", () => {
       "tests",
     );
   }, 60_000);
+});
+
+describe("checkContentAsync parity", () => {
+  it("fails an exercise whose tests use a matcher outside the browser subset", async () => {
+    const d = await checkContentAsync(
+      loadContentTree(fixture("invalid-parity")),
+      { parity: true },
+    );
+    expect(d.filter((x) => x.level === "error").map((x) => x.rule)).toContain(
+      "parity",
+    );
+  });
 });

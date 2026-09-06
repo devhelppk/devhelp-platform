@@ -1,4 +1,4 @@
-import { checkContent } from "@repo/content-schema/check";
+import { checkContentAsync } from "@repo/content-schema/check";
 import {
   loadContentTree,
   type ContentTree,
@@ -44,8 +44,12 @@ export async function syncContent(input: {
   allowEmpty?: boolean;
 }): Promise<SyncSummary> {
   const tree = loadContentTree(input.dir);
-  // Schema + cross-file rules (refs, unique slugs, order prefixes); exercise tests are content:check's job.
-  const fatal = checkContent(tree).filter((d) => d.level === "error");
+  // Schema + cross-file rules (refs, unique slugs, order prefixes) plus the
+  // harness parity run, so a sync can never publish tests the browser runner
+  // cannot execute. The vitest run against solutions stays content:check's job.
+  const fatal = (await checkContentAsync(tree)).filter(
+    (d) => d.level === "error",
+  );
   if (fatal.length) {
     throw new Error(
       `content has ${fatal.length} error(s); run content:check first:\n` +

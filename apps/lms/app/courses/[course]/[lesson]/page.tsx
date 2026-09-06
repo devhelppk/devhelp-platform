@@ -8,6 +8,8 @@ import {
 import { Badge } from "@repo/ui/components/badge";
 import { BrandLogo } from "@repo/ui/components/brand-logo";
 import { ThemeToggle } from "@repo/ui/components/theme-toggle";
+import { cn } from "@repo/ui/lib/utils";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -18,6 +20,7 @@ import { MarkDoneButton } from "@/components/learning/mark-done-button";
 import { VideoPlayer } from "@/components/learning/video-player";
 import { MDXContent } from "@/components/mdx/mdx-content";
 import { AccountMenu } from "@/components/shell/account-menu";
+import { Assessment } from "@/components/assessment/assessment";
 import { LazyMobileNav } from "@/components/shell/lazy-mobile-nav";
 import { LearnerProviders } from "@/components/shell/learner-providers";
 import { getCompiledLesson } from "@/lib/content";
@@ -81,23 +84,39 @@ export default async function LessonPage({
     <AppShell sidebar={sidebar}>
       <AppShellHeader>
         <LazyMobileNav title="Lessons">{sidebar}</LazyMobileNav>
-        <Link href="/" className="hidden sm:block">
-          <BrandLogo product="Learn" className="text-base" />
-        </Link>
-        <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
-          <Link
-            href={`/courses/${courseSlug}`}
-            className="hover:text-foreground"
-          >
-            {course.title}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Link href="/" className="hidden shrink-0 leading-none sm:block">
+            <BrandLogo product="Learn" className="text-base leading-none" />
           </Link>
-          <span className="mx-1">/</span>
-          <span className="text-foreground">{lesson.title}</span>
-        </p>
+          <span
+            aria-hidden="true"
+            className="hidden h-4 w-px shrink-0 bg-border sm:block"
+          />
+          <nav
+            aria-label="Breadcrumb"
+            className="flex min-w-0 items-center gap-1.5 text-sm leading-none text-muted-foreground"
+          >
+            <Link
+              href={`/courses/${courseSlug}`}
+              className="min-w-0 truncate hover:text-foreground"
+            >
+              {course.title}
+            </Link>
+            <ChevronRight aria-hidden="true" className="size-3.5 shrink-0" />
+            <span className="min-w-0 truncate text-foreground">
+              {lesson.title}
+            </span>
+          </nav>
+        </div>
         <ThemeToggle />
         <AccountMenu callbackURL={`/courses/${courseSlug}/${lessonSlug}`} />
       </AppShellHeader>
-      <AppShellContent className="flex flex-col gap-8">
+      <AppShellContent
+        className={cn(
+          "flex flex-col gap-8",
+          (lesson.type === "quiz" || lesson.type === "exercise") && "max-w-5xl",
+        )}
+      >
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             {lesson.title}
@@ -146,16 +165,21 @@ export default async function LessonPage({
           </p>
         )}
 
-        {lesson.type === "quiz" ||
-        lesson.type === "exercise" ||
-        lesson.type === "project" ? (
+        {lesson.type === "quiz" || lesson.type === "exercise" ? (
+          <LearnerProviders>
+            <Assessment
+              type={lesson.type}
+              courseSlug={courseSlug}
+              lessonSlug={lessonSlug}
+              signedIn={signedIn}
+              completed={completed}
+            />
+          </LearnerProviders>
+        ) : null}
+        {lesson.type === "project" ? (
           <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-            {lesson.type === "quiz"
-              ? "The quiz runner arrives in the next release."
-              : lesson.type === "exercise"
-                ? "The in-browser exercise runner arrives in the next release."
-                : "Project submissions arrive in a later release."}{" "}
-            Read the lesson now; completion for this type comes with it.
+            Project submissions arrive in a later release. Read the brief now;
+            completion for this type comes with it.
           </div>
         ) : null}
 

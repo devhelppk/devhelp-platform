@@ -1,5 +1,7 @@
 export { recordEvent, enroll } from "./record-event";
 export { rebuildLearner } from "./rebuild";
+export { quizScoreFacts } from "./quiz-facts";
+export { enrolmentGeneration, lessonEventKey } from "./generation";
 export {
   evaluateCompletion,
   type CompletionFacts,

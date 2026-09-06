@@ -87,9 +87,18 @@ Learner progress (owned by `@repo/learning`; never written directly):
 
 Rules: `recordEvent` inserts the event and updates read models in one transaction; duplicate idempotency keys are ignored; the first lesson event auto-enrols; completing the last required (non-archived) lesson emits `course_completed` under a row lock; `rebuildLearner` replays the stream and reproduces read models exactly, including `updated_at` (derived from `recorded_at`).
 
+### Assessments (implemented in S4)
+
+| Table                  | Columns                                                                                                                             | Notes                                                                                                                                                                                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quiz_attempts`        | `user_id, quiz_id, lesson_id, course_id, attempt, answers jsonb, snapshot jsonb, score, passed, quiz_version, submitted_at`         | Graded on the server. `snapshot` freezes each question's version, points, and result so regrading and history survive content changes. Unique (user, quiz, attempt). Best score per quiz feeds `completion_criteria.minQuizScore`. |
+| `exercise_submissions` | `user_id, exercise_id, lesson_id, attempt, files jsonb, results jsonb, passed, runner, exercise_version, duration_ms, submitted_at` | Pass/fail computed in the learner's browser and recorded, not verified; the server rejects a `passed` claim that disagrees with `results`. Unique (user, exercise, attempt).                                                       |
+
+Events: `quiz_attempted` (payload: attempt, score, passed, version) and `exercise_submitted` (attempt, passed, version, tests, failed) are recorded for every submission; a pass records `lesson_completed` with the enrolment generation key.
+
 ### Learning (planned; see `spec.md`)
 
-- S4: `quiz_attempts`, `exercise_submissions`. S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`, `notifications`.
+- S6: `lesson_feedback`, `course_reviews`. S7: `certificates`. S8: `project_submissions`, `project_reviews`, `badges`, `user_badges`. S9: `cohort_courses`. S10: company bank tables. S12: `comments`, `comment_votes`, `notifications`.
 
 ## Open questions
 

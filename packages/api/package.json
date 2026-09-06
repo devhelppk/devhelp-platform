@@ -15,6 +15,7 @@
   "dependencies": {
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
+    "@repo/exercise-runner": "workspace:*",
     "@repo/learning": "workspace:*",
     "@trpc/server": "^11.18.0",
     "superjson": "^2.2.6",

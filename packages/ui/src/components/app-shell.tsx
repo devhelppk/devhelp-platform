@@ -90,7 +90,7 @@ function AppShellContent({
     <main
       data-slot="app-shell-content"
       className={cn(
-        "mx-auto w-full max-w-3xl min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10 lg:py-10 xl:row-start-2",
+        "mx-auto w-full max-w-4xl min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10 lg:py-10 xl:row-start-2",
         className,
       )}
       {...props}

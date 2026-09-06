@@ -1,5 +1,6 @@
 import { and, eq, isNull, schema, sql } from "@repo/database";
 import { evaluateCompletion } from "./criteria";
+import { quizScoreFacts } from "./quiz-facts";
 import type { Tx } from "./types";
 import { courseEnrolledPayload, lessonProgressedPayload } from "./types";
 
@@ -80,10 +81,15 @@ export async function applyEvent(
       }
       return { courseCompleted: false };
     }
-    case "quiz_attempted":
+    case "quiz_attempted": {
+      // The lesson completes through lesson_completed; a later, better score
+      // can still be what finally satisfies `minQuizScore`, so re-evaluate.
+      const courseId = requireCourse(ev);
+      return recomputeCourse(tx, ev, courseId, opts);
+    }
     case "exercise_submitted":
     case "project_submitted":
-      // Stored only; S4 / S8 attach behaviour.
+      // Stored only; S8 attaches behaviour.
       return { courseCompleted: false };
   }
 }
@@ -281,9 +287,15 @@ async function recomputeCourse(
     .select({ criteria: courses.completionCriteria })
     .from(courses)
     .where(eq(courses.id, courseId));
+  // Quiz facts are only fetched when the course asks for them.
+  const quizFacts =
+    course?.criteria?.minQuizScore !== undefined
+      ? await quizScoreFacts(tx, ev.userId, courseId)
+      : {};
   const verdict = evaluateCompletion(course?.criteria, {
     requiredTotal,
     requiredDone,
+    ...quizFacts,
   });
   if (!verdict.complete) return { courseCompleted: false };
   if (!opts.emit) return { courseCompleted: false }; // replay: the course_completed event follows in the stream
