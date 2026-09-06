@@ -1,6 +1,6 @@
 # S6 plan: ratings, course reviews, and discussions
 
-Status: `planned`, awaiting founder approval. Spec entry: `docs/spec.md` → S6 (absorbs the former S12 "Comments and Q&A"; the founder asked for general discussion on lessons and courses alongside ratings). Requirements: area 4 in full: F4.1 to F4.7, N4.1 to N4.3; F3.8 inputs (revision signals); X10. Builds on S3 (lesson and course pages, tRPC islands), S4 (completion moments), S5 (moderation queue, flags, notifications, `verifiedProcedure`, `rateLimit`).
+Status: `done` (see `review.md`, `test.md`). Deviations after implementation and review: `comments.list` and `reviews.mine` read role and verification from the users table (the S5 rule); comment edits re-run the hold check and refresh the queue snapshot; a deleted comment is never changed by a moderation decision; `reply_count` is recounted from source rather than incremented; pagination is a keyset cursor on (votes, created_at); the `anchor` column exists without UI. Founder confirmed the four open points on 2026-09-06. Spec entry: `docs/spec.md` → S6 (absorbs the former S12 "Comments and Q&A"; the founder asked for general discussion on lessons and courses alongside ratings). Requirements: area 4 in full: F4.1 to F4.7, N4.1 to N4.3; F3.8 inputs (revision signals); X10. Builds on S3 (lesson and course pages, tRPC islands), S4 (completion moments), S5 (moderation queue, flags, notifications, `verifiedProcedure`, `rateLimit`).
 
 ## Goal
 
@@ -59,13 +59,13 @@ Email digest (X4), search over comments (S13/X3), comment reactions beyond upvot
 
 ## Acceptance criteria (from spec.md)
 
-- [ ] One rating per user per lesson, editable; aggregates recompute on write.
-- [ ] Course review form only appears at ≥ 50 percent completion; one review per learner per course, shown with a completion badge.
-- [ ] Unclear-tag rate, average rating, and open-question count are queryable per lesson (feeds S11).
-- [ ] Comments load after the lesson body (client island) and never block it; their text is not in the server HTML.
-- [ ] Threads are one level deep; accepted answer pins first in its thread; the question author is notified on replies.
-- [ ] Links from accounts younger than seven days are held for moderation; approve publishes, reject hides; readers can flag; every removal is logged.
-- [ ] Browser loop passed on the dev server for the flows in test item 4; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] One rating per user per lesson, editable; aggregates recompute on write.
+- [x] Course review form only appears at ≥ 50 percent completion; one review per learner per course, shown with a completion badge.
+- [x] Unclear-tag rate, average rating, and open-question count are queryable per lesson (feeds S11).
+- [x] Comments load after the lesson body (client island) and never block it; their text is not in the server HTML.
+- [x] Threads are one level deep; accepted answer pins first in its thread; the question author is notified on replies.
+- [x] Links from accounts younger than seven days are held for moderation; approve publishes, reject hides; readers can flag; every removal is logged.
+- [x] Browser loop passed on the dev server for the flows in test item 4; at least two fix-and-reload iterations recorded in `test.md`.
 
 ## Open points for the founder
 

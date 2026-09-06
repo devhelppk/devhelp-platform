@@ -16,6 +16,10 @@ export const notificationKind = pgEnum("notification_kind", [
   "moderation_decided",
   "org_invitation",
   "role_changed",
+  "comment_reply",
+  "comment_accepted",
+  "lesson_question",
+  "comment_held",
 ]);
 
 export const notifications = pgTable(

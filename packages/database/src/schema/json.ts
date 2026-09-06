@@ -93,6 +93,32 @@ export const companyReviewRequestSchema = z
   })
   .strict();
 
+/** A held comment, snapshotted for the queue (S6). */
+export const commentSnapshotSchema = z
+  .object({
+    subjectType: z.enum(["lesson", "course"]),
+    subjectId: z.uuid(),
+    courseSlug: z.string().min(1),
+    subjectSlug: z.string().min(1),
+    subjectTitle: z.string().min(1),
+    kind: z.enum(["question", "note", "answer"]),
+    body: z.string().min(1).max(5000),
+    anchor: z.string().optional(),
+    holdReason: z.string().min(1),
+  })
+  .strict();
+
+/** A flagged course review, snapshotted for the queue (S6). */
+export const courseReviewSnapshotSchema = z
+  .object({
+    courseSlug: z.string().min(1),
+    courseTitle: z.string().min(1),
+    rating: z.number().int().min(1).max(5),
+    title: z.string().optional(),
+    body: z.string().min(1).max(2000),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -102,6 +128,11 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("company_review_request"),
     data: companyReviewRequestSchema,
+  }),
+  z.object({ kind: z.literal("comment"), data: commentSnapshotSchema }),
+  z.object({
+    kind: z.literal("course_review"),
+    data: courseReviewSnapshotSchema,
   }),
 ]);
 export type ModerationPayload = z.infer<typeof moderationPayloadSchema>;

@@ -234,6 +234,7 @@ Lightweight signals that improve content and help learners help each other, with
 - F4.5 Moderation shares the queue and flag model from area 2: readers flag, mentors and admins hide or delete, actions logged. Automatic holds for links from new accounts.
 - F4.6 Aggregates per lesson and course: average rating, rating count, unclear-tag rate, open-question count. These drive the mentor revision list.
 - F4.7 Everything here is optional for the learner and never blocks completion.
+- As built (S6): F4.1 to F4.7 shipped, with course-level discussion added at the founder's request; notifications are in-app now (accepted answers also email) and the digest is a later scheduler change; search within a course over comments waits for X3.
 
 ### Non-functional
 

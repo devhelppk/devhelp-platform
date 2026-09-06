@@ -1,10 +1,13 @@
 import { accountRouter } from "./routers/account";
 import { assessmentsRouter } from "./routers/assessments";
 import { catalogueRouter } from "./routers/catalogue";
+import { commentsRouter } from "./routers/comments";
+import { feedbackRouter } from "./routers/feedback";
 import { learningRouter } from "./routers/learning";
 import { mentorRouter } from "./routers/mentor";
 import { moderationRouter } from "./routers/moderation";
 import { notificationsRouter } from "./routers/notifications";
+import { reviewsRouter } from "./routers/reviews";
 import { createCallerFactory, router } from "./trpc";
 
 export const appRouter = router({
@@ -15,6 +18,9 @@ export const appRouter = router({
   mentor: mentorRouter,
   moderation: moderationRouter,
   notifications: notificationsRouter,
+  feedback: feedbackRouter,
+  reviews: reviewsRouter,
+  comments: commentsRouter,
 });
 export type AppRouter = typeof appRouter;
 

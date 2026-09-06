@@ -24,6 +24,8 @@ import type { AuditChange, ModerationPayload } from "./json";
 export const moderationSubject = pgEnum("moderation_subject", [
   "mentor_application",
   "company_review_request",
+  "comment",
+  "course_review",
 ]);
 export const moderationStatus = pgEnum("moderation_status", [
   "pending",

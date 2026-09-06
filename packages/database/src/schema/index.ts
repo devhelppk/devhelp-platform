@@ -9,3 +9,5 @@ export * from "./progress";
 // Shared systems (S5): moderation queue + audit log, notifications.
 export * from "./moderation";
 export * from "./notifications";
+// Area 4 (S6): lesson feedback, course reviews, discussions.
+export * from "./feedback";

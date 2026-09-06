@@ -75,9 +75,10 @@ export const courses = pgTable(
       .$type<CompletionCriteria>()
       .notNull()
       .default({ requireAllRequiredLessons: true }),
-    // Aggregates: owned by S6 (ratings) and the enrolment reducer.
+    // Aggregates: reviews (S6, recomputed on write) and the enrolment reducer.
     ratingAvg: numeric({ precision: 3, scale: 2 }),
     ratingCount: integer().notNull().default(0),
+    reviewCount: integer().notNull().default(0),
     enrollmentCount: integer().notNull().default(0),
     ...timestamps,
   },
@@ -149,8 +150,11 @@ export const lessons = pgTable(
       onDelete: "set null",
     }),
     archivedAt: timestamp({ withTimezone: true }),
+    // Aggregates from lesson_feedback and comments (S6, recomputed on write).
     ratingAvg: numeric({ precision: 3, scale: 2 }),
     ratingCount: integer().notNull().default(0),
+    unclearCount: integer().notNull().default(0),
+    openQuestionCount: integer().notNull().default(0),
     ...timestamps,
   },
   (t) => [

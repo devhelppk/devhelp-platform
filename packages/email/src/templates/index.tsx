@@ -132,3 +132,27 @@ export function ModerationDecided({
     </Layout>
   );
 }
+
+export function CommentAccepted({
+  name,
+  subject,
+  url,
+}: {
+  name: string;
+  subject: string;
+  url: string;
+}) {
+  return (
+    <Layout
+      preview="A mentor accepted your answer"
+      heading="Your answer was accepted"
+    >
+      <Text style={styles.text}>Hi {name || "there"},</Text>
+      <Text style={styles.text}>
+        A mentor marked your reply on {subject} as the accepted answer. It now
+        sits at the top of the thread for every learner who lands there.
+      </Text>
+      <Action href={url}>Open the thread</Action>
+    </Layout>
+  );
+}

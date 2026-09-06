@@ -1,6 +1,8 @@
 export const subjectLabels = {
   mentor_application: "Mentor application",
   company_review_request: "Company review request",
+  comment: "Comment",
+  course_review: "Course review",
 } as const;
 
 export const statusLabels = {

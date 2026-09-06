@@ -6,6 +6,7 @@ import { Label } from "@repo/ui/components/label";
 import { Textarea } from "@repo/ui/components/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import type { Route } from "next";
 import { useState, type FormEvent } from "react";
 import { useTRPC } from "@/lib/trpc/client";
 import { ago, clauses, statusLabels, subjectLabels } from "./labels";
@@ -132,6 +133,54 @@ export function ModerationItem({
               ) : null}
               <dt className="text-muted-foreground">Why</dt>
               <dd className="whitespace-pre-wrap">{payload.data.why}</dd>
+            </>
+          ) : payload.kind === "comment" ? (
+            <>
+              <dt className="text-muted-foreground">On</dt>
+              <dd>
+                <Link
+                  href={
+                    (payload.data.subjectType === "lesson"
+                      ? `/courses/${payload.data.courseSlug}/${payload.data.subjectSlug}#discussion`
+                      : `/courses/${payload.data.courseSlug}#discussion`) as Route
+                  }
+                  className="underline underline-offset-4"
+                >
+                  {payload.data.subjectTitle}
+                </Link>
+                <span className="text-muted-foreground">
+                  {" "}
+                  ({payload.data.kind})
+                </span>
+              </dd>
+              <dt className="text-muted-foreground">Held because</dt>
+              <dd>{payload.data.holdReason}</dd>
+              <dt className="text-muted-foreground">Text</dt>
+              <dd className="font-mono text-xs whitespace-pre-wrap">
+                {payload.data.body}
+              </dd>
+            </>
+          ) : payload.kind === "course_review" ? (
+            <>
+              <dt className="text-muted-foreground">Course</dt>
+              <dd>
+                <Link
+                  href={`/courses/${payload.data.courseSlug}` as Route}
+                  className="underline underline-offset-4"
+                >
+                  {payload.data.courseTitle}
+                </Link>
+              </dd>
+              <dt className="text-muted-foreground">Rating</dt>
+              <dd>{payload.data.rating} / 5</dd>
+              {payload.data.title ? (
+                <>
+                  <dt className="text-muted-foreground">Title</dt>
+                  <dd>{payload.data.title}</dd>
+                </>
+              ) : null}
+              <dt className="text-muted-foreground">Review</dt>
+              <dd className="whitespace-pre-wrap">{payload.data.body}</dd>
             </>
           ) : (
             <>

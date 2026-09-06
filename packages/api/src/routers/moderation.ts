@@ -6,6 +6,8 @@ import {
 } from "@repo/database/schema";
 import { env } from "@repo/env";
 import { notify } from "@repo/notify";
+import { announceComment } from "../comment-notify";
+import { recountReplies } from "./comments";
 import { TRPCError } from "@trpc/server";
 import { createElement } from "react";
 import { z } from "zod";
@@ -24,6 +26,59 @@ const policyClause = z
   .string()
   .regex(/^c[0-9]{1,2}$/)
   .optional();
+
+type Tx = Parameters<
+  Parameters<typeof import("@repo/database").db.transaction>[0]
+>[0];
+
+/**
+ * What a moderation decision does to the thing itself (S6 subjects). Runs in
+ * the deciding transaction; mentor applications are handled inline in `decide`.
+ */
+async function applySubjectStatus(
+  tx: Tx,
+  item: { subjectType: string; subjectId: string },
+  visible: boolean,
+): Promise<{ announceCommentId?: string }> {
+  const now = new Date();
+  if (item.subjectType === "comment") {
+    const current = await tx.query.comments.findFirst({
+      where: eq(schema.comments.id, item.subjectId),
+      columns: { status: true },
+    });
+    // An author-deleted comment stays deleted whatever the item decides.
+    if (!current || current.status === "deleted") return {};
+    const [c] = await tx
+      .update(schema.comments)
+      .set({ status: visible ? "visible" : "hidden", updatedAt: now })
+      .where(eq(schema.comments.id, item.subjectId))
+      .returning({
+        parentId: schema.comments.parentId,
+        subjectType: schema.comments.subjectType,
+        subjectId: schema.comments.subjectId,
+      });
+    if (c?.parentId) await recountReplies(tx, c.parentId);
+    if (c?.subjectType === "lesson") {
+      const { recomputeLessonAggregates } = await import("@repo/learning");
+      await recomputeLessonAggregates(tx, c.subjectId);
+    }
+    return visible && current.status !== "visible"
+      ? { announceCommentId: item.subjectId }
+      : {};
+  }
+  if (item.subjectType === "course_review") {
+    const [r] = await tx
+      .update(schema.courseReviews)
+      .set({ status: visible ? "visible" : "hidden", updatedAt: now })
+      .where(eq(schema.courseReviews.id, item.subjectId))
+      .returning({ courseId: schema.courseReviews.courseId });
+    if (r) {
+      const { recomputeCourseAggregates } = await import("@repo/learning");
+      await recomputeCourseAggregates(tx, r.courseId);
+    }
+  }
+  return {};
+}
 
 /** Items the caller may see: everything for admins, own tracks for mentors, never track-less items for mentors. */
 function scope(tracks: ("technical" | "career")[] | null) {
@@ -75,29 +130,113 @@ async function decidedNotification(
       },
     });
   }
-  const label = "Your review request";
+  const payload = moderationPayloadSchema.safeParse(item.payload).data;
+  const subjectLabel =
+    item.subjectType === "comment"
+      ? "Your comment"
+      : item.subjectType === "course_review"
+        ? "Your course review"
+        : "Your review request";
+  const href =
+    payload?.kind === "comment"
+      ? payload.data.subjectType === "lesson"
+        ? `/courses/${payload.data.courseSlug}/${payload.data.subjectSlug}#discussion`
+        : `/courses/${payload.data.courseSlug}#discussion`
+      : payload?.kind === "course_review"
+        ? `/courses/${payload.data.courseSlug}`
+        : "/notifications";
+  const verb = approved
+    ? item.subjectType === "company_review_request"
+      ? "was accepted"
+      : "is published"
+    : approved === false && item.subjectType === "company_review_request"
+      ? "was declined"
+      : "was not published";
   return notify({
     userId: submitter.id,
     kind: "moderation_decided",
-    title: approved ? `${label} was accepted` : `${label} was declined`,
+    title: `${subjectLabel} ${verb}`,
     body: reason,
-    href: "/notifications",
+    href,
     subjectType: item.subjectType,
     subjectId: item.id,
     dedupeKey: `decided:${item.id}`,
     email: {
       to: submitter.email,
-      subject: approved ? `${label} was accepted` : `${label} was declined`,
+      subject: `${subjectLabel} ${verb} on devhelp`,
       react: createElement(ModerationDecided, {
         name: submitter.name,
-        subject: label,
+        subject: subjectLabel,
         approved,
         reason,
         policyUrl,
-        url: `${env.NEXT_PUBLIC_LMS_URL}/notifications`,
+        url: `${env.NEXT_PUBLIC_LMS_URL}${href}`,
       }),
     },
   });
+}
+
+/** Snapshot of a live comment or review for a flag-created item. */
+async function snapshotSubject(
+  db: typeof import("@repo/database").db,
+  subjectType: "comment" | "course_review",
+  subjectId: string,
+) {
+  if (subjectType === "comment") {
+    const c = await db.query.comments.findFirst({
+      where: eq(schema.comments.id, subjectId),
+    });
+    if (!c || c.status !== "visible") return null;
+    const course = await db.query.courses.findFirst({
+      where: eq(schema.courses.id, c.courseId),
+      columns: { slug: true, title: true, track: true },
+    });
+    if (!course) return null;
+    const lesson =
+      c.subjectType === "lesson"
+        ? await db.query.lessons.findFirst({
+            where: eq(schema.lessons.id, c.subjectId),
+            columns: { slug: true, title: true },
+          })
+        : null;
+    return {
+      track: course.track,
+      authorId: c.authorId,
+      payload: {
+        kind: "comment" as const,
+        data: {
+          subjectType: c.subjectType,
+          subjectId: c.subjectId,
+          courseSlug: course.slug,
+          subjectSlug: lesson?.slug ?? course.slug,
+          subjectTitle: lesson?.title ?? course.title,
+          kind: c.kind,
+          body: c.body,
+          anchor: c.anchor ?? undefined,
+          holdReason: "flagged by a reader",
+        },
+      },
+    };
+  }
+  const r = await db.query.courseReviews.findFirst({
+    where: eq(schema.courseReviews.id, subjectId),
+    with: { course: { columns: { slug: true, title: true, track: true } } },
+  });
+  if (!r || r.status !== "visible") return null;
+  return {
+    track: r.course.track,
+    authorId: r.userId,
+    payload: {
+      kind: "course_review" as const,
+      data: {
+        courseSlug: r.course.slug,
+        courseTitle: r.course.title,
+        rating: r.rating,
+        title: r.title ?? undefined,
+        body: r.body,
+      },
+    },
+  };
 }
 
 export const moderationRouter = router({
@@ -299,8 +438,17 @@ export const moderationRouter = router({
             )
             .onConflictDoNothing();
         }
-        return { item, next };
+        let announceCommentId: string | undefined;
+        if (input.action !== "reject" || item.status === "pending")
+          ({ announceCommentId } = await applySubjectStatus(
+            tx,
+            item,
+            next === "approved",
+          ));
+        return { item, next, announceCommentId };
       });
+      if (result.announceCommentId)
+        await announceComment(ctx.db, result.announceCommentId);
       // Notification after the commit; the item is the record, mail is best effort.
       if (
         result.item.submittedBy &&
@@ -340,13 +488,6 @@ export const moderationRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const item = await ctx.db.query.moderationItems.findFirst({
-        where: and(
-          eq(schema.moderationItems.subjectType, input.subjectType),
-          eq(schema.moderationItems.subjectId, input.subjectId),
-        ),
-        columns: { id: true },
-      });
       return ctx.db.transaction(async (tx) => {
         await rateLimit(
           tx,
@@ -355,6 +496,51 @@ export const moderationRouter = router({
           24 * 3600,
           "You have flagged a lot today. Try again tomorrow.",
         );
+        let item = await tx.query.moderationItems.findFirst({
+          where: and(
+            eq(schema.moderationItems.subjectType, input.subjectType),
+            eq(schema.moderationItems.subjectId, input.subjectId),
+          ),
+          columns: { id: true },
+        });
+        // Comments and reviews publish without an item; the first flag creates one so a moderator can act on it.
+        if (
+          !item &&
+          (input.subjectType === "comment" ||
+            input.subjectType === "course_review")
+        ) {
+          const snapshot = await snapshotSubject(
+            tx as unknown as typeof ctx.db,
+            input.subjectType,
+            input.subjectId,
+          );
+          if (!snapshot)
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Nothing to flag.",
+            });
+          const [created] = await tx
+            .insert(schema.moderationItems)
+            .values({
+              subjectType: input.subjectType,
+              subjectId: input.subjectId,
+              status: "approved",
+              track: snapshot.track,
+              submittedBy: snapshot.authorId,
+              payload: snapshot.payload,
+            })
+            .onConflictDoNothing()
+            .returning({ id: schema.moderationItems.id });
+          item =
+            created ??
+            (await tx.query.moderationItems.findFirst({
+              where: and(
+                eq(schema.moderationItems.subjectType, input.subjectType),
+                eq(schema.moderationItems.subjectId, input.subjectId),
+              ),
+              columns: { id: true },
+            }));
+        }
         const [flag] = await tx
           .insert(schema.contentFlags)
           .values({
@@ -462,6 +648,7 @@ export const moderationRouter = router({
               updatedAt: now,
             })
             .where(eq(schema.moderationItems.id, item.id));
+        if (hides) await applySubjectStatus(tx, item, false);
         await tx.insert(schema.moderationActions).values({
           itemId: item.id,
           actorId: ctx.user.id,

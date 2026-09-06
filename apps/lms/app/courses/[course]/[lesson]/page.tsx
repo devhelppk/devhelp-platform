@@ -22,6 +22,8 @@ import { MDXContent } from "@/components/mdx/mdx-content";
 import { AccountMenu } from "@/components/shell/account-menu";
 import { NotificationBell } from "@/components/notifications/bell";
 import { Assessment } from "@/components/assessment/assessment";
+import { DiscussionIsland } from "@/components/discussion/discussion-island";
+import { LessonFeedback } from "@/components/feedback/lesson-feedback";
 import { LazyMobileNav } from "@/components/shell/lazy-mobile-nav";
 import { LearnerProviders } from "@/components/shell/learner-providers";
 import { getCompiledLesson } from "@/lib/content";
@@ -201,7 +203,21 @@ export default async function LessonPage({
           </div>
         ) : null}
 
+        {completed && signedIn ? (
+          <LearnerProviders>
+            <LessonFeedback courseSlug={courseSlug} lessonSlug={lessonSlug} />
+          </LearnerProviders>
+        ) : null}
+
         <LessonNav courseSlug={courseSlug} prev={prev} next={next} />
+
+        <LearnerProviders>
+          <DiscussionIsland
+            courseSlug={courseSlug}
+            lessonSlug={lessonSlug}
+            signInHref={`/sign-in?callbackURL=${encodeURIComponent(`/courses/${courseSlug}/${lessonSlug}`)}`}
+          />
+        </LearnerProviders>
         <p className="text-xs text-muted-foreground">
           Something wrong in this lesson?{" "}
           <a

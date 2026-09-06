@@ -15,24 +15,27 @@
   "dependencies": {
     "@repo/auth": "workspace:*",
     "@repo/database": "workspace:*",
-    "@repo/exercise-runner": "workspace:*",
-    "@repo/learning": "workspace:*",
-    "@trpc/server": "^11.18.0",
-    "superjson": "^2.2.6",
-    "zod": "^4.1.0",
-    "@repo/notify": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
-    "react": "^19.2.0"
+    "@repo/exercise-runner": "workspace:*",
+    "@repo/learning": "workspace:*",
+    "@repo/notify": "workspace:*",
+    "@trpc/server": "^11.18.0",
+    "marked": "^18.0.11",
+    "react": "^19.2.0",
+    "sanitize-html": "^2.17.7",
+    "superjson": "^2.2.6",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/vitest-config": "workspace:*",
     "@types/node": "26.2.0",
+    "@types/react": "^19.2.0",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "10.8.1",
     "typescript": "7.0.2",
-    "vitest": "^4.1.11",
-    "@types/react": "^19.2.0"
+    "vitest": "^4.1.11"
   }
 }

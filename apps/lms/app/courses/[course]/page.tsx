@@ -9,6 +9,9 @@ import { Suspense } from "react";
 import { formatDuration, ProgressBar } from "@/components/learning/course-card";
 import { EnrolButton } from "@/components/learning/enrol-button";
 import { LessonList } from "@/components/learning/lesson-list";
+import { DiscussionIsland } from "@/components/discussion/discussion-island";
+import { CourseReviewForm } from "@/components/feedback/course-review-form";
+import { CourseReviews } from "@/components/feedback/course-reviews";
 import { LearnerProviders } from "@/components/shell/learner-providers";
 import { Page } from "@/components/shell/site-header";
 
@@ -23,8 +26,12 @@ export default async function CoursePage({
   const caller = await api(new Headers(await headers()));
   const course = await caller.catalogue.getCourse({ slug });
   if (!course) notFound();
-  const progress = await caller.learning.myProgress({ courseSlug: slug });
-  const signedIn = !!(await auth.api.getSession({ headers: await headers() }));
+  const [progress, reviews, session] = await Promise.all([
+    caller.learning.myProgress({ courseSlug: slug }),
+    caller.reviews.list({ courseSlug: slug, limit: 20 }),
+    auth.api.getSession({ headers: await headers() }),
+  ]);
+  const signedIn = !!session;
   const status = new Map(
     progress.lessons.map((l) => [l.slug, l.progress?.status ?? null]),
   );
@@ -100,6 +107,26 @@ export default async function CoursePage({
             })),
           }))}
         />
+
+        <CourseReviews
+          reviews={reviews.items}
+          ratingAvg={course.ratingAvg}
+          ratingCount={course.ratingCount}
+          form={
+            signedIn ? (
+              <LearnerProviders>
+                <CourseReviewForm courseSlug={slug} />
+              </LearnerProviders>
+            ) : null
+          }
+        />
+
+        <LearnerProviders>
+          <DiscussionIsland
+            courseSlug={slug}
+            signInHref={`/sign-in?callbackURL=${encodeURIComponent(`/courses/${slug}`)}`}
+          />
+        </LearnerProviders>
       </div>
     </Page>
   );
