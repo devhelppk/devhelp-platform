@@ -215,7 +215,7 @@ Plan: [`specs/S10-company-bank/plan.md`](./specs/S10-company-bank/plan.md)
 
 Scope: area 2 phase 1 without salaries (F2.1 to F2.5, F2.8 to F2.14; N2.1 to N2.3). A company is an organisation (`kind = "company"`) in Postgres with its profile in `company_profiles` and its logo in R2; companies leave the content repo. Proposals, reviews, and interview experiences, all moderated by admins before they appear and anonymised by column set, with a directory, Postgres search, and indexable pages. Founder decisions 2026-09-07: split from salaries, aggregates from a plain Postgres view, thin pages indexed, admins only.
 
-Records: [`review.md`](./specs/S10-company-bank/review.md), [`test.md`](./specs/S10-company-bank/test.md)
+Commit: `f876eb5`. Records: [`review.md`](./specs/S10-company-bank/review.md), [`test.md`](./specs/S10-company-bank/test.md)
 
 Acceptance criteria
 
