@@ -183,7 +183,7 @@ Plan: [`specs/S8-badges-streaks/plan.md`](./specs/S8-badges-streaks/plan.md)
 
 Scope: F1.16, F1.17, plus streak and activity computation from `progress_events`. Badge rules defined in the content repo and evaluated against the event stream, manual admin awards, streaks and an activity graph on the dashboard and public profile.
 
-Founder decision 2026-09-06: **the MVP is self-learning with automated checks only.** Project submissions and their mentor review moved to the backlog with AI-assisted review; nothing in the MVP requires a human to accept a learner's work. Badges and streaks stay because they are computed, not judged.
+Founder decisions 2026-09-06: **the MVP is self-learning with automated checks only.** Badge rules never fail CI, and `first_project_accepted` stays earnable once project lessons run their automated tests. Retroactive awards are silent and notification emails are throttled per learner. Leaderboards are out for now, not forever. Project submissions and their mentor review moved to the backlog with AI-assisted review; nothing in the MVP requires a human to accept a learner's work. Badges and streaks stay because they are computed, not judged.
 
 Acceptance criteria
 
@@ -191,6 +191,7 @@ Acceptance criteria
 - [ ] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
 - [ ] Admins can award and revoke a badge manually, with a reason, recorded on the award row and shown in `/admin/badges` (plan decision 7).
 - [ ] Streak and activity graph computed from events and shown on the dashboard and the public profile.
+- [ ] Retroactive awards are silent, and `notify()` throttles emails per learner without dropping the in-app row.
 
 Depends on: S5, S7.
 
