@@ -261,7 +261,7 @@ Depends on: S10a, S10b.
 
 ### S11. Mentor studio and dashboard — `done`
 
-Plan: [`specs/S11-mentor-studio/plan.md`](./specs/S11-mentor-studio/plan.md). Records: [`review.md`](./specs/S11-mentor-studio/review.md), [`test.md`](./specs/S11-mentor-studio/test.md)
+Commit: `eb3fbe1`. Plan: [`specs/S11-mentor-studio/plan.md`](./specs/S11-mentor-studio/plan.md). Records: [`review.md`](./specs/S11-mentor-studio/review.md), [`test.md`](./specs/S11-mentor-studio/test.md)
 
 Scope: F3.3 (reshaped), F3.8, F3.9. Founder decisions 2026-09-07 turned this from "mount Keystatic" into a change of the S2 contract: **the content repo stops owning metadata**. Mentors edit course and lesson metadata in the app; prose, quizzes, and exercises stay a pull request. Credits become rows pointing at users. The dashboard starts with the signals S6 already collects. No Keystatic, no lesson-body editing, no GitHub issues yet.
 
