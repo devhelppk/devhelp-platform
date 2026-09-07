@@ -259,17 +259,23 @@ Acceptance criteria
 
 Depends on: S10a, S10b.
 
-### S11. Mentor studio and dashboard — `todo`
+### S11. Mentor studio and dashboard — `planned`
 
-Scope: area 3 phase 2 (F3.3, F3.7, F3.8, F3.9). Keystatic at `/studio` in GitHub mode for mentors; mentor application and role flip; dashboard with revision signals and the moderation queue; attribution on lessons. (The project review queue left with the S8 scope change.)
+Plan: [`specs/S11-mentor-studio/plan.md`](./specs/S11-mentor-studio/plan.md)
+
+Scope: F3.3 (reshaped), F3.8, F3.9. Founder decisions 2026-09-07 turned this from "mount Keystatic" into a change of the S2 contract: **the content repo stops owning metadata**. Mentors edit course and lesson metadata in the app; prose, quizzes, and exercises stay a pull request. Credits become rows pointing at users. The dashboard starts with the signals S6 already collects. No Keystatic, no lesson-body editing, no GitHub issues yet.
 
 Acceptance criteria
 
-- [ ] A mentor with no git knowledge edits a lesson in Studio and a PR appears on `devhelp-content`.
-- [ ] Dashboard lists lessons below rating threshold or above unclear-tag rate (from S6).
-- [ ] Contributors page and lesson attribution render from frontmatter.
+- [ ] A mentor edits a course and a lesson's metadata in the app, and a later `content:sync` does not undo it.
+- [ ] A metadata key left in the content repo fails `content:check` with a message naming where that field lives now.
+- [ ] A newly synced course is unpublished, listed as needing metadata, and cannot reach the catalogue until someone completes it.
+- [ ] Every metadata change is attributable: who, what, before, after.
+- [ ] Credits are users; a lesson byline and `/contributors` render from them.
+- [ ] The dashboard lists lessons below the rating threshold or above the unclear-tag rate.
+- [ ] Browser loop passed; at least two fix-and-reload iterations recorded in `test.md`.
 
-Depends on: S2, S6.
+Depends on: S2, S6. May split into S11a (dashboard and attribution) and S11b (the ownership cut) if the cut proves hairy.
 
 ### S12. Comments and Q&A — `merged into S6`
 
