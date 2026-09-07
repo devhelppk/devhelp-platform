@@ -31,13 +31,15 @@ export default async function ContributionsPage() {
   const session = await auth.api.getSession({ headers: h });
   if (!session) redirect("/sign-in?callbackURL=%2Faccount%2Fcontributions");
   const caller = await api(new Headers(h));
-  const { reviews, interviews, proposals, salaries } =
-    await caller.contributions.mine();
+  const [{ reviews, interviews, proposals, salaries }, claims] =
+    await Promise.all([caller.contributions.mine(), caller.claims.mine()]);
   const empty =
     reviews.length === 0 &&
     interviews.length === 0 &&
     proposals.length === 0 &&
-    salaries.length === 0;
+    salaries.length === 0 &&
+    claims.claims.length === 0 &&
+    claims.memberships.length === 0;
   return (
     <Page callbackURL="/account/contributions">
       <div className="flex flex-col gap-8">
@@ -46,8 +48,9 @@ export default async function ContributionsPage() {
             Your contributions
           </h1>
           <p className="max-w-prose text-sm text-muted-foreground">
-            Reviews, interview experiences, pay, and companies you proposed.
-            Nothing here shows your name to anyone else.
+            Reviews, interview experiences, pay, companies you proposed, and any
+            company you represent. Nothing you contributed shows your name to
+            anyone else.
           </p>
         </header>
         {empty ? (
@@ -59,6 +62,51 @@ export default async function ContributionsPage() {
             .
           </p>
         ) : null}
+        <Section
+          title="Companies you represent"
+          empty={claims.memberships.length === 0}
+        >
+          {claims.memberships.map((m) => (
+            <li
+              key={m.organizationId}
+              className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm"
+            >
+              <Link
+                href={`/companies/${m.slug}` as Route}
+                className="font-medium underline-offset-4 hover:underline"
+              >
+                {m.name}
+              </Link>
+              <Link
+                href={`/companies/${m.slug}/manage` as Route}
+                className="ml-auto text-xs underline underline-offset-4"
+              >
+                See what people say
+              </Link>
+            </li>
+          ))}
+        </Section>
+        <Section
+          title="Company access you asked for"
+          empty={claims.claims.length === 0}
+        >
+          {claims.claims.map((c) => (
+            <Row
+              key={c.id}
+              href={`/companies/${c.companySlug}`}
+              title={c.companyName}
+              detail=""
+              status={
+                c.status === "approved"
+                  ? "Approved"
+                  : c.status === "rejected"
+                    ? "Not approved"
+                    : "Waiting for review"
+              }
+              at={c.createdAt}
+            />
+          ))}
+        </Section>
         <Section title="Reviews" empty={reviews.length === 0}>
           {reviews.map((r) => (
             <Row

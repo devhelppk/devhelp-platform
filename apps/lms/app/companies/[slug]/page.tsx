@@ -16,6 +16,7 @@ import {
 } from "@/components/companies/bits";
 import { auth } from "@repo/auth";
 import { CompanyMark } from "@/components/companies/company-mark";
+import { CompanyReply } from "@/components/companies/company-reply";
 import { FlagForm } from "@/components/companies/flag-form";
 import { Pay } from "@/components/companies/pay";
 import { Page } from "@/components/shell/site-header";
@@ -34,12 +35,13 @@ const load = cache(async (slug: string) => {
   try {
     const caller = await api(new Headers(await headers()));
     const company = await caller.companies.bySlug({ slug });
-    const [reviews, interviews, salaries] = await Promise.all([
+    const [reviews, interviews, salaries, responses] = await Promise.all([
       caller.companies.reviews({ slug, limit: 20 }),
       caller.companies.interviews({ slug, limit: 20 }),
       caller.companies.salaries({ slug }),
+      caller.companies.responses({ slug }),
     ]);
-    return { company, reviews, interviews, salaries };
+    return { company, reviews, interviews, salaries, responses };
   } catch (e) {
     if (e instanceof TRPCError && e.code === "NOT_FOUND") notFound();
     throw e;
@@ -86,7 +88,10 @@ export default async function CompanyPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { company, reviews, interviews, salaries } = await load(slug);
+  const { company, reviews, interviews, salaries, responses } =
+    await load(slug);
+  const replyTo = (type: string, id: string) =>
+    responses.find((r) => r.subjectType === type && r.subjectId === id);
   // One session read for the whole page: the report controls need to know
   // whether there is anyone to report as.
   const signedIn = !!(await auth.api.getSession({ headers: await headers() }));
@@ -137,6 +142,11 @@ export default async function CompanyPage({
               <Button asChild size="sm">
                 <Link href={`/companies/${slug}/contribute` as Route}>
                   Share your experience
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="ghost">
+                <Link href={`/companies/${slug}/claim` as Route}>
+                  Do you work here?
                 </Link>
               </Button>
               {company.careersUrl ? (
@@ -269,6 +279,10 @@ export default async function CompanyPage({
                           </p>
                         </div>
                       ) : null}
+                      <CompanyReply
+                        reply={replyTo("company_review", r.id)}
+                        companyName={company.name}
+                      />
                       <FlagForm
                         subjectType="company_review"
                         subjectId={r.id}
@@ -363,6 +377,10 @@ export default async function CompanyPage({
                           </p>
                         </div>
                       ) : null}
+                      <CompanyReply
+                        reply={replyTo("interview_experience", i.id)}
+                        companyName={company.name}
+                      />
                       <FlagForm
                         subjectType="interview_experience"
                         subjectId={i.id}

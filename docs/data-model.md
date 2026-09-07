@@ -156,6 +156,12 @@ Nothing reads those rows directly. `salary_stats` (per company, role, currency) 
 
 `courses.needs_metadata` and `lessons.needs_metadata` mark a row the sync created but nobody has described yet. Such a course cannot be published, so the catalogue never shows a placeholder. See `AGENTS.md` for which columns the sync may still write.
 
+### Company claims and replies (implemented in S13)
+
+`company_claims` is somebody asking to represent a company, with the evidence that was checked stored on the row: their email domain, the company's, and whether they matched. Approving one inserts into Better Auth's `members`, which is what S10a's "a company is an organisation" bought — every later question is ordinary membership.
+
+`company_responses` is a company's public answer to a review or an interview experience, one per post, with `body` and a `body_html` rendered and sanitised at write time exactly as S6 does. `moderation_subject` gained `company_claim` and `company_response`.
+
 ### Planned (see `spec.md`)
 
 - S9: `cohort_courses`.

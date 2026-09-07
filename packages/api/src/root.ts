@@ -2,6 +2,7 @@ import { accountRouter } from "./routers/account";
 import { assessmentsRouter } from "./routers/assessments";
 import { badgesRouter } from "./routers/badges";
 import { catalogueRouter } from "./routers/catalogue";
+import { claimsRouter } from "./routers/claims";
 import { certificatesRouter } from "./routers/certificates";
 import { commentsRouter } from "./routers/comments";
 import { companiesRouter } from "./routers/companies";
@@ -18,6 +19,7 @@ import { createCallerFactory, router } from "./trpc";
 
 export const appRouter = router({
   catalogue: catalogueRouter,
+  claims: claimsRouter,
   assessments: assessmentsRouter,
   learning: learningRouter,
   account: accountRouter,

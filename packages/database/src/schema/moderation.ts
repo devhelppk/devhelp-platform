@@ -32,6 +32,8 @@ export const moderationSubject = pgEnum("moderation_subject", [
   "interview_experience",
   "salary_point",
   "salary_report",
+  "company_claim",
+  "company_response",
 ]);
 export const moderationStatus = pgEnum("moderation_status", [
   "pending",

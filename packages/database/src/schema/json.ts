@@ -312,6 +312,42 @@ export const metadataChangesSchema = z
   .max(40);
 export type MetadataChanges = z.infer<typeof metadataChangesSchema>;
 
+/**
+ * What was checked when somebody claimed a company (S13). Recorded rather than
+ * recomputed, so an admin re-reading a decision months later sees the evidence
+ * as it stood, not as the company's website is today.
+ */
+export const claimEvidenceSchema = z
+  .object({
+    /** The claimant's email domain. Kept: an admin has to weigh it. */
+    emailDomain: z.string().min(1),
+    companyDomain: z.string().min(1).nullable(),
+    matched: z.boolean(),
+  })
+  .strict();
+export type ClaimEvidence = z.infer<typeof claimEvidenceSchema>;
+
+/** A claim in the queue. */
+export const claimSnapshotSchema = z
+  .object({
+    companySlug: z.string().min(1),
+    companyName: z.string().min(1),
+    claimantName: z.string().min(1),
+    evidence: claimEvidenceSchema,
+    message: z.string().max(2000).optional(),
+  })
+  .strict();
+
+/** A company's reply, snapshotted for the queue. */
+export const responseSnapshotSchema = z
+  .object({
+    companySlug: z.string().min(1),
+    companyName: z.string().min(1),
+    respondingTo: z.enum(["company_review", "interview_experience"]),
+    body: z.string().min(1).max(4000),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -338,4 +374,9 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("salary_point"), data: salarySnapshotSchema }),
   z.object({ kind: z.literal("salary_report"), data: salaryReportSchema }),
+  z.object({ kind: z.literal("company_claim"), data: claimSnapshotSchema }),
+  z.object({
+    kind: z.literal("company_response"),
+    data: responseSnapshotSchema,
+  }),
 ]);

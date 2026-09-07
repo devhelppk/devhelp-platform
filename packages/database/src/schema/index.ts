@@ -19,3 +19,5 @@ export * from "./badges";
 export * from "./companies";
 // Studio (S11): credits and the metadata edit trail.
 export * from "./studio";
+// Company claims and public responses (S13).
+export * from "./claims";

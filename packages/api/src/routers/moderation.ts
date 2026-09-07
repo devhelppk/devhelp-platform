@@ -34,6 +34,8 @@ export const COMPANY_SUBJECTS: string[] = [
   "interview_experience",
   "salary_point",
   "salary_report",
+  "company_claim",
+  "company_response",
 ];
 
 type Tx = Parameters<
@@ -76,6 +78,67 @@ async function applySubjectStatus(
         updatedAt: now,
       })
       .where(eq(schema.companyProfiles.organizationId, item.subjectId));
+    return {};
+  }
+  /**
+   * Approving a claim is what makes somebody a representative (S13): they
+   * become an organisation member, and from then on membership is the only
+   * thing the rest of the platform asks about. The claim row is history.
+   */
+  if (item.subjectType === "company_claim") {
+    const [claim] = await tx
+      .update(schema.companyClaims)
+      .set({
+        status: visible ? "approved" : "rejected",
+        decidedBy: actorId,
+        decidedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(schema.companyClaims.id, item.subjectId))
+      .returning({
+        organizationId: schema.companyClaims.organizationId,
+        userId: schema.companyClaims.userId,
+      });
+    if (claim && visible)
+      await tx
+        .insert(schema.members)
+        .values({
+          organizationId: claim.organizationId,
+          userId: claim.userId,
+          // `member`, never `owner`. Better Auth's owner role can rename the
+          // organisation, invite anyone, and delete it — and deleting cascades
+          // away every review, interview, and salary point about that company.
+          // Replying is all this feature needs.
+          role: "member",
+          createdAt: now,
+        })
+        .onConflictDoNothing();
+    // Hiding or rejecting an approved claim takes the representation back.
+    // Without this there is no way to undo a wrong approval, and somebody who
+    // has left the company keeps replying on its behalf for ever.
+    if (claim && !visible)
+      await tx
+        .delete(schema.members)
+        .where(
+          and(
+            eq(schema.members.organizationId, claim.organizationId),
+            eq(schema.members.userId, claim.userId),
+          ),
+        );
+    return {};
+  }
+  if (item.subjectType === "company_response") {
+    await tx
+      .update(schema.companyResponses)
+      .set({
+        status: visible
+          ? "published"
+          : action === "reject"
+            ? "rejected"
+            : "hidden",
+        updatedAt: now,
+      })
+      .where(eq(schema.companyResponses.id, item.subjectId));
     return {};
   }
   // A salary point is already public when it reaches the queue (S10b), so
@@ -223,7 +286,11 @@ async function decidedNotification(
                 ? "Your salary point"
                 : item.subjectType === "salary_report"
                   ? "The figures you reported"
-                  : "Your review request";
+                  : item.subjectType === "company_claim"
+                    ? "Your request to represent a company"
+                    : item.subjectType === "company_response"
+                      ? "Your reply"
+                      : "Your review request";
   const href =
     payload?.kind === "comment"
       ? payload.data.subjectType === "lesson"
@@ -233,7 +300,9 @@ async function decidedNotification(
         ? `/courses/${payload.data.courseSlug}`
         : payload?.kind === "company_contribution" ||
             payload?.kind === "salary_point" ||
-            payload?.kind === "salary_report"
+            payload?.kind === "salary_report" ||
+            payload?.kind === "company_claim" ||
+            payload?.kind === "company_response"
           ? `/companies/${payload.data.companySlug}`
           : "/notifications";
   // A report is not content: "is published" would be both ungrammatical and

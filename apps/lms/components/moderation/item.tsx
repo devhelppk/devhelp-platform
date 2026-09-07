@@ -51,6 +51,8 @@ export function ModerationItem({
     "interview_experience",
     "salary_point",
     "salary_report",
+    "company_claim",
+    "company_response",
   ];
   const canDecide = !adminOnly.includes(it.subjectType) || isAdmin;
 
@@ -244,6 +246,54 @@ export function ModerationItem({
                   <dd className="whitespace-pre-wrap">{payload.data.why}</dd>
                 </>
               ) : null}
+            </>
+          ) : payload.kind === "company_claim" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.companyName}</dd>
+              <dt className="text-muted-foreground">Claimant</dt>
+              <dd>{payload.data.claimantName}</dd>
+              <dt className="text-muted-foreground">Work email</dt>
+              <dd>
+                {payload.data.evidence.matched ? (
+                  <>
+                    Matches the company domain (
+                    {payload.data.evidence.companyDomain})
+                  </>
+                ) : (
+                  <>
+                    {payload.data.evidence.emailDomain}, which does not match{" "}
+                    {payload.data.evidence.companyDomain ??
+                      "any website on file"}
+                  </>
+                )}
+              </dd>
+              {payload.data.message ? (
+                <>
+                  <dt className="text-muted-foreground">Message</dt>
+                  <dd className="whitespace-pre-wrap">
+                    {payload.data.message}
+                  </dd>
+                </>
+              ) : null}
+              <dt className="text-muted-foreground">Note</dt>
+              <dd>
+                Approving makes this person a member of the company, which is
+                what lets them reply publicly.
+              </dd>
+            </>
+          ) : payload.kind === "company_response" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.companyName}</dd>
+              <dt className="text-muted-foreground">Answering</dt>
+              <dd>
+                {payload.data.respondingTo === "company_review"
+                  ? "a review"
+                  : "an interview experience"}
+              </dd>
+              <dt className="text-muted-foreground">Reply</dt>
+              <dd className="whitespace-pre-wrap">{payload.data.body}</dd>
             </>
           ) : payload.kind === "salary_report" ? (
             <>

@@ -285,6 +285,25 @@ export const companiesRouter = router({
       };
     }),
 
+  /**
+   * A company's published replies, keyed by the post they answer, so the page
+   * can render each under its review or interview in one round trip.
+   */
+  responses: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const org = await companyIdBySlug(ctx.db, input.slug);
+      return ctx.db
+        .select(schema.responsePublicColumns)
+        .from(schema.companyResponses)
+        .where(
+          and(
+            eq(schema.companyResponses.organizationId, org),
+            eq(schema.companyResponses.status, "published"),
+          ),
+        );
+    }),
+
   /** Published interview experiences for a company. */
   interviews: publicProcedure
     .input(
