@@ -283,7 +283,7 @@ Folded into S6 on 2026-09-06 (founder decision: discussions ship with ratings). 
 
 ### S13. Company claims and public responses — `done`
 
-Plan: [`specs/S13-company-claims/plan.md`](./specs/S13-company-claims/plan.md). Records: [`review.md`](./specs/S13-company-claims/review.md), [`test.md`](./specs/S13-company-claims/test.md)
+Commit: `d6a8883`. Plan: [`specs/S13-company-claims/plan.md`](./specs/S13-company-claims/plan.md). Records: [`review.md`](./specs/S13-company-claims/review.md), [`test.md`](./specs/S13-company-claims/test.md)
 
 Scope: F2.12's public half — a company representative claims the profile and can answer publicly what is written about them. Founder decisions 2026-09-07: a claim needs a work-email domain match plus admin approval; a response is queued like every other contribution; **F2.15, the company-to-course cross-links, is deferred.**
 
