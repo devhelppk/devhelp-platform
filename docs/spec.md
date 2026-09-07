@@ -297,19 +297,19 @@ Acceptance criteria
 
 Depends on: S10a, S6 (the Markdown pipeline).
 
-### S14. Search, and getting to a launch — `planned`
+### S14. Search, and getting to a launch — `done`
 
-Plan: [`specs/S14-search-launch/plan.md`](./specs/S14-search-launch/plan.md)
+Plan: [`specs/S14-search-launch/plan.md`](./specs/S14-search-launch/plan.md). Records: [`review.md`](./specs/S14-search-launch/review.md), [`test.md`](./specs/S14-search-launch/test.md)
 
 Scope: X3 (Postgres full-text search across courses, lessons, and companies), X8 (performance audit), X9 (MIT licence, contribution guide, security policy, and a timed fresh-clone run), and the security review. Founder decision 2026-09-07: **X6, analytics, is deferred post-MVP** — X9 requires the platform to run on a laptop with no paid keys, and a self-hosted analytics service is one more thing to run before there is anyone to measure.
 
 Acceptance criteria
 
-- [ ] Search returns courses, lessons, and companies for a plain query, and never returns something unpublished.
-- [ ] Fresh clone to running app in under 10 minutes following the README only, timed and recorded.
-- [ ] Lighthouse mobile ≥ 90 on catalogue, lesson, and company page, recorded before and after.
-- [ ] `/security-review` findings addressed or written down with a reason.
-- [ ] MIT licence, contribution guide, and security policy present and accurate.
+- [x] Search returns courses, lessons, and companies for a plain query, and never returns something unpublished.
+- [x] Fresh clone to running app in under 10 minutes following the README only: **3 minutes 5 seconds**, timed on a real clone. The run found the README's quick start in the wrong order.
+- [~] Lighthouse mobile ≥ 90 on the catalogue (90) and a company page (90); **a lesson page scores 88–90 and does not reliably meet it**. Its own metrics are excellent and its observed LCP is 872 ms; the score is Lighthouse's simulated LCP over the route's 230 KB of JavaScript. One attempted fix did not work and was reverted. See `review.md`.
+- [x] `/security-review` ran over S13 and S14 and found nothing meeting its reporting bar; two notes below the bar are written down in `review.md`.
+- [x] MIT licence, contribution guide, and security policy present, and the contribution guide's setup path is the one that was actually timed.
 
 Depends on: everything above.
 
@@ -323,6 +323,7 @@ Founder actions
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
 - Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
+- Decide whether the lesson route's 230 KB of first-load JavaScript is worth reducing (S14). It is the one page that does not reliably reach Lighthouse 90 on mobile, though its measured load is fast; the score is a model of the payload, not a wait.
 - Schedule `pnpm fx:refresh` daily in production (S10b). Without it the salary tables still work and still show what people were paid; they simply do not offer the converted PKR figure beside a USD one.
 
 Technical

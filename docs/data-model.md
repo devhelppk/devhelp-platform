@@ -162,6 +162,10 @@ Nothing reads those rows directly. `salary_stats` (per company, role, currency) 
 
 `company_responses` is a company's public answer to a review or an interview experience, one per post, with `body` and a `body_html` rendered and sanitised at write time exactly as S6 does. `moderation_subject` gained `company_claim` and `company_response`.
 
+### Search (implemented in S14)
+
+`courses.search_vector` and `lessons.search_vector` are generated `tsvector` columns with GIN indexes; companies already had one from S10a. The course vector weights the title above the summary and description so a course outranks a lesson that merely mentions it. A lesson's body is not in Postgres, so its vector is the title alone.
+
 ### Planned (see `spec.md`)
 
 - S9: `cohort_courses`.
