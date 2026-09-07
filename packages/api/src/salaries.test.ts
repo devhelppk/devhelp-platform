@@ -84,16 +84,22 @@ beforeAll(async () => {
   });
   // The test owns its rate: `fx:refresh` needs the network and never runs in
   // CI, so relying on a row being there would fail there and pass locally.
+  // Dated today, because `latestUsdToPkr` treats anything older than a
+  // fortnight as stale (S10c) — a fixed past date passed locally only because
+  // a real refresh had left a fresher row in the developer's database.
   await db
     .insert(schema.fxRates)
     .values({
       base: "USD",
       quote: "PKR",
       rate: "280.0000",
-      asOf: "2026-01-01",
+      asOf: new Date().toISOString().slice(0, 10),
       source: "test",
     })
-    .onConflictDoNothing();
+    .onConflictDoUpdate({
+      target: [schema.fxRates.base, schema.fxRates.quote, schema.fxRates.asOf],
+      set: { rate: "280.0000", source: "test" },
+    });
   const roles = await db.query.jobRoles.findMany({ limit: 2 });
   roleId = roles[0]!.id;
   otherRoleId = roles[1]!.id;

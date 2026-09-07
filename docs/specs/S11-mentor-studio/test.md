@@ -55,3 +55,12 @@ Round 4, after the code review added a path editor and made module titles editab
 Round 5, after trimming the overview's trail from twenty entries to ten: clean. Screenshots in `screenshots/` are from this round.
 
 The dev database's `content_edits` were cleared of rows left by test users before the final screenshots. They show as "Someone" because `actor_id` is `on delete set null` and the suites delete their users — correct behaviour, meaningless in a picture.
+
+## Found after pushing
+
+Two things only a from-empty environment shows, and my dev database was not one:
+
+- **A test leaned on state CI does not have.** `salaries.test.ts` seeded its own exchange rate — dated `2026-01-01`, which S10c's fourteen-day staleness rule then made invalid. It passed locally only because a real `fx:refresh` had left a fresher row in my database. CI caught it. The fixture is now dated today, and I proved it by emptying `fx_rates` before running.
+- **A fresh sync leaves the catalogue empty.** That is the clean cut working as intended: a course arrives unpublished with its slug as a placeholder. But it means CI's bundle check hits three lesson pages that 404, and a developer who runs `pnpm db:seed` gets a site with no courses. `db:seed` now does what a mentor would do on their first visit — titles the synced content and publishes it — and refuses in production like the rest of the seed.
+
+Both were verified by dropping the database, migrating, syncing, seeding, and running the whole pipeline the way CI does, before pushing again.
