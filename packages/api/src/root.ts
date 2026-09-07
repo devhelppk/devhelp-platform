@@ -14,6 +14,7 @@ import { moderationRouter } from "./routers/moderation";
 import { notificationsRouter } from "./routers/notifications";
 import { profilesRouter } from "./routers/profiles";
 import { reviewsRouter } from "./routers/reviews";
+import { searchRouter } from "./routers/search";
 import { contributorsRouter, studioRouter } from "./routers/studio";
 import { createCallerFactory, router } from "./trpc";
 
@@ -28,6 +29,7 @@ export const appRouter = router({
   notifications: notificationsRouter,
   feedback: feedbackRouter,
   reviews: reviewsRouter,
+  search: searchRouter,
   studio: studioRouter,
   contributors: contributorsRouter,
   comments: commentsRouter,

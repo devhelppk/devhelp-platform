@@ -1,0 +1,4 @@
+ALTER TABLE "courses" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(summary, '') || ' ' || coalesce(description, '')), 'B')) STORED;--> statement-breakpoint
+ALTER TABLE "lessons" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, ''))) STORED;--> statement-breakpoint
+CREATE INDEX "courses_search_idx" ON "courses" USING gin ("search_vector");--> statement-breakpoint
+CREATE INDEX "lessons_search_idx" ON "lessons" USING gin ("search_vector");

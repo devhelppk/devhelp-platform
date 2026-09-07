@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
@@ -15,6 +15,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth";
+import { tsvector } from "./companies";
 import { contentRevisions } from "./content";
 import type { CompletionCriteria } from "./json";
 
@@ -82,13 +83,24 @@ export const courses = pgTable(
       .notNull()
       .default({ requireAllRequiredLessons: true }),
     // Aggregates: reviews (S6, recomputed on write) and the enrolment reducer.
+    /**
+     * Free-text search (S14). Title first: somebody typing a course name
+     * should find that course above a lesson that merely mentions it, which
+     * is what the `A`/`B` weights buy.
+     */
+    searchVector: tsvector().generatedAlwaysAs(
+      sql`setweight(to_tsvector('english', coalesce(title, '')), 'A') || setweight(to_tsvector('english', coalesce(summary, '') || ' ' || coalesce(description, '')), 'B')`,
+    ),
     ratingAvg: numeric({ precision: 3, scale: 2 }),
     ratingCount: integer().notNull().default(0),
     reviewCount: integer().notNull().default(0),
     enrollmentCount: integer().notNull().default(0),
     ...timestamps,
   },
-  (t) => [index("courses_is_published_idx").on(t.isPublished)],
+  (t) => [
+    index("courses_is_published_idx").on(t.isPublished),
+    index("courses_search_idx").using("gin", t.searchVector),
+  ],
 );
 
 export const coursePrerequisites = pgTable(
@@ -152,6 +164,14 @@ export const lessons = pgTable(
     videoId: text(),
     /** As on courses: created by the sync, cleared by a person. */
     needsMetadata: boolean().notNull().default(false),
+    /**
+     * A lesson's body is compiled from the content repo and never stored here,
+     * so this covers the title alone. Searching lesson prose would mean
+     * putting bodies in Postgres, which is a different decision.
+     */
+    searchVector: tsvector().generatedAlwaysAs(
+      sql`to_tsvector('english', coalesce(title, ''))`,
+    ),
     contentPath: text(),
     contentHash: text(),
     contentRevisionId: uuid().references(() => contentRevisions.id, {
@@ -166,6 +186,7 @@ export const lessons = pgTable(
     ...timestamps,
   },
   (t) => [
+    index("lessons_search_idx").using("gin", t.searchVector),
     uniqueIndex("lessons_course_slug_uidx").on(t.courseId, t.slug),
     index("lessons_module_id_idx").on(t.moduleId),
     index("lessons_course_id_idx").on(t.courseId),

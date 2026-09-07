@@ -141,6 +141,13 @@
       "when": 1788761305719,
       "tag": "0019_company_claims",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788764336107,
+      "tag": "0020_search_vectors",
+      "breakpoints": true
     }
   ]
 }

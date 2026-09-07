@@ -27,7 +27,7 @@ import type { InterviewRounds } from "./json";
  * Postgres `tsvector`. Drizzle has no built-in for it, and the column is
  * generated and never written from TypeScript, so the driver type is `never`.
  */
-const tsvector = customType<{ data: string; driverData: string }>({
+export const tsvector = customType<{ data: string; driverData: string }>({
   dataType: () => "tsvector",
 });
 

@@ -26,13 +26,25 @@ Monorepo for [devhelp.pk](https://devhelp.pk): a free, open-source learning plat
 
 ## Quick start
 
+You need [Docker](https://docs.docker.com/get-docker/), Node 24, and pnpm 11.
+Nothing else: no paid keys, no accounts, no third-party services.
+
 ```sh
 pnpm install
 cp .env.example .env
-pnpm db:up && pnpm db:migrate && pnpm db:seed
+pnpm db:up             # Postgres, Mailpit (:8025), MinIO (:9000)
+pnpm db:migrate
 pnpm content:refresh   # curriculum from github.com/devhelppk/devhelp-content
-pnpm dev
+pnpm db:seed           # an admin, reference data, a company, readable titles
+pnpm dev               # web :3000, lms :3001
 ```
+
+`content:refresh` comes **before** `db:seed`: the seed describes whatever
+content is already there, and course titles live in the database rather than
+the content repo (see [CONTRIBUTING.md](./CONTRIBUTING.md)).
+
+Sign in as `team@devhelp.pk`. Mail — sign-in links included — goes to Mailpit
+at [localhost:8025](http://localhost:8025), so nothing leaves your machine.
 
 ## Scripts
 

@@ -1,6 +1,7 @@
 import { BrandLogo } from "@repo/ui/components/brand-logo";
 import { Button } from "@repo/ui/components/button";
 import { ThemeToggle } from "@repo/ui/components/theme-toggle";
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/bell";
 import { AccountMenu } from "./account-menu";
@@ -32,6 +33,12 @@ export function SiteHeader({ callbackURL = "/" }: { callbackURL?: string }) {
             className="hidden sm:inline-flex"
           >
             <Link href="/companies">Companies</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild aria-label="Search">
+            <Link href="/search">
+              <Search aria-hidden="true" className="size-4" />
+              <span className="sr-only sm:not-sr-only">Search</span>
+            </Link>
           </Button>
           {/* Below `sm` the bell and avatar need the room; the theme follows the system there. */}
           <div className="hidden sm:block">
