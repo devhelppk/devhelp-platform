@@ -237,6 +237,82 @@ describe("syncContent", () => {
     expect(r.courseCompleted).toBe(true);
   });
 
+  it("leaves studio-owned metadata alone on every later sync", async () => {
+    // The S11 cut: the repo owns what a lesson is, the studio owns how it is
+    // described. A sync that overwrote a mentor's title would make the studio
+    // pointless, and the failure would be silent.
+    const course = await db.query.courses.findFirst({
+      where: eq(schema.courses.slug, slug),
+    });
+    await db
+      .update(schema.courses)
+      .set({
+        title: "A title a mentor typed",
+        summary: "A summary a mentor wrote, which the sync must not touch.",
+        level: "advanced",
+        isPublished: true,
+        needsMetadata: false,
+      })
+      .where(eq(schema.courses.id, course!.id));
+    // The intro lesson: a later test removes `02-check.mdx`, so that one is
+    // not a stable target.
+    const introFile = join(dir, "courses", slug, "01-m1", "01-intro.mdx");
+    const lesson = await db.query.lessons.findFirst({
+      where: and(
+        eq(schema.lessons.courseId, course!.id),
+        eq(schema.lessons.slug, "intro"),
+      ),
+    });
+    await db
+      .update(schema.lessons)
+      .set({ title: "A lesson title a mentor typed", durationMinutes: 42 })
+      .where(eq(schema.lessons.id, lesson!.id));
+
+    // Change the content itself, so the sync has a real reason to update rows.
+    writeFileSync(
+      introFile,
+      readFileSync(introFile, "utf8") + "\n\nA new paragraph.\n",
+    );
+    await syncContent({ dir, repo, sha: `meta-${run}` });
+
+    const afterCourse = await db.query.courses.findFirst({
+      where: eq(schema.courses.id, course!.id),
+    });
+    expect(afterCourse!.title).toBe("A title a mentor typed");
+    expect(afterCourse!.summary).toBe(
+      "A summary a mentor wrote, which the sync must not touch.",
+    );
+    expect(afterCourse!.level).toBe("advanced");
+    expect(afterCourse!.isPublished).toBe(true);
+    const afterLesson = await db.query.lessons.findFirst({
+      where: eq(schema.lessons.id, lesson!.id),
+    });
+    expect(afterLesson!.title).toBe("A lesson title a mentor typed");
+    expect(afterLesson!.durationMinutes).toBe(42);
+    // What the repo still owns did move.
+    expect(afterLesson!.contentHash).not.toBe(lesson!.contentHash);
+  });
+
+  it("marks a brand-new course as needing metadata and refuses to publish it", async () => {
+    const fresh = `${slug}-fresh`;
+    cpSync(join(dir, "courses", slug), join(dir, "courses", fresh), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(dir, "courses", fresh, "course.yaml"),
+      `slug: ${fresh}\n`,
+    );
+    await syncContent({ dir, repo, sha: `fresh-${run}` });
+    const row = await db.query.courses.findFirst({
+      where: eq(schema.courses.slug, fresh),
+    });
+    expect(row!.needsMetadata).toBe(true);
+    expect(row!.isPublished).toBe(false);
+    // The placeholder is the slug, so nothing renders as an empty title.
+    expect(row!.title).toBe(fresh);
+    rmSync(join(dir, "courses", fresh), { recursive: true });
+  });
+
   it("never archives content that belongs to another repo", async () => {
     // A sync from an unrelated tree (like this test's) must leave the real content alone.
     const other = mkdtempSync(join(tmpdir(), "devhelp-sync-other-"));

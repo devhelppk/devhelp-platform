@@ -10,6 +10,7 @@ import {
   exerciseMeta,
   lessonFrontmatter,
   moduleMeta,
+  movedFieldMessage,
   pathFile,
   quizFile,
   type BadgeFile,
@@ -88,6 +89,36 @@ export function loadContentTree(root: string): ContentTree {
     const result = schema.safeParse(raw);
     if (result.success) return result.data;
     for (const issue of result.error.issues) {
+      // A field that moved to the studio (S11) fails as "unrecognized key",
+      // which tells a contributor nothing. Say where it went instead.
+      const moved =
+        issue.code === "unrecognized_keys"
+          ? issue.keys.map(movedFieldMessage).filter(Boolean)
+          : [];
+      for (const message of moved)
+        diagnostics.push({
+          level: "error",
+          file: rel(file),
+          rule: "moved-field",
+          message: message!,
+        });
+      // Only the moved keys are explained away; anything else in the same
+      // issue is still reported, or a genuine typo alongside a moved field
+      // would go unmentioned until the next run.
+      const remaining =
+        issue.code === "unrecognized_keys"
+          ? issue.keys.filter((k) => !movedFieldMessage(k))
+          : null;
+      if (remaining && !remaining.length) continue;
+      if (remaining) {
+        diagnostics.push({
+          level: "error",
+          file: rel(file),
+          rule: "schema",
+          message: `unrecognized keys: ${remaining.map((k) => `"${k}"`).join(", ")}`,
+        });
+        continue;
+      }
       diagnostics.push({
         level: "error",
         file: rel(file),

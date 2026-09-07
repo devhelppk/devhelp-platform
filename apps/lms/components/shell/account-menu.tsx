@@ -91,12 +91,20 @@ export async function AccountMenu({
           Account
         </Link>
         {session.user.role === "mentor" || session.user.role === "admin" ? (
-          <Link
-            href="/moderate"
-            className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
-          >
-            Moderation
-          </Link>
+          <>
+            <Link
+              href="/studio"
+              className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+            >
+              Studio
+            </Link>
+            <Link
+              href="/moderate"
+              className="block rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+            >
+              Moderation
+            </Link>
+          </>
         ) : null}
         {session.user.role === "admin" ? (
           <Link

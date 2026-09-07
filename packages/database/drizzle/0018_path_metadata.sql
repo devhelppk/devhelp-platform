@@ -1,0 +1,1 @@
+ALTER TABLE "paths" ADD COLUMN "needs_metadata" boolean DEFAULT false NOT NULL;

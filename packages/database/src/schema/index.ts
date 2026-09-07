@@ -17,3 +17,5 @@ export * from "./certificates";
 export * from "./badges";
 // Company bank (S10a): companies are organisations; this is everything else.
 export * from "./companies";
+// Studio (S11): credits and the metadata edit trail.
+export * from "./studio";

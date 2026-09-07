@@ -60,28 +60,77 @@ export function isIpLiteral(host: string) {
  */
 export function isPublicAddress(address: string): boolean {
   const host = address.toLowerCase().replace(/^\[|\]$/g, "");
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
-    const p = host.split(".").map(Number);
-    if (p.some((n) => Number.isNaN(n) || n > 255)) return false;
-    const [a, b] = p as [number, number, number, number];
-    if (a === 0 || a === 10 || a === 127) return false;
-    if (a === 169 && b === 254) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && b === 168) return false;
-    if (a === 100 && b >= 64 && b <= 127) return false;
-    if (a >= 224) return false;
-    return true;
-  }
-  if (host.includes(":")) {
-    if (host === "::1" || host === "::") return false;
-    // Unique-local (fc00::/7) and link-local (fe80::/10).
-    if (/^f[cd]/.test(host) || /^fe[89ab]/.test(host)) return false;
-    // An IPv4-mapped address is only as safe as the address it maps.
-    const mapped = /::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/.exec(host);
-    if (mapped) return isPublicAddress(mapped[1]!);
-    return true;
-  }
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return isPublicIpv4(host);
+  if (host.includes(":")) return isPublicIpv6(host);
   return false;
+}
+
+function isPublicIpv4(host: string) {
+  const p = host.split(".").map(Number);
+  if (p.length !== 4 || p.some((n) => Number.isNaN(n) || n < 0 || n > 255))
+    return false;
+  const [a, b] = p as [number, number, number, number];
+  if (a === 0 || a === 10 || a === 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && b === 168) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  if (a >= 224) return false;
+  return true;
+}
+
+/**
+ * Expand an IPv6 address to its eight 16-bit groups, or null if it is not one.
+ * Doing this properly matters: `new URL()` rewrites
+ * `http://[::ffff:169.254.169.254]/` to the hex form `[::ffff:a9fe:a9fe]`, so
+ * a check that only looks for the dotted spelling never sees the address the
+ * server would actually connect to.
+ */
+export function expandIpv6(host: string): number[] | null {
+  if (!host.includes(":")) return null;
+  // A trailing dotted quad (`::ffff:1.2.3.4`) becomes two hex groups.
+  const dotted = /^(.*:)(\d{1,3}(?:\.\d{1,3}){3})$/.exec(host);
+  let text = host;
+  if (dotted) {
+    const q = dotted[2]!.split(".").map(Number);
+    if (q.some((n) => Number.isNaN(n) || n > 255)) return null;
+    text = `${dotted[1]}${((q[0]! << 8) | q[1]!).toString(16)}:${(
+      (q[2]! << 8) |
+      q[3]!
+    ).toString(16)}`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const parse = (part: string) =>
+    part === "" ? [] : part.split(":").map((g) => Number.parseInt(g, 16));
+  const head = parse(halves[0] ?? "");
+  const tail = halves.length === 2 ? parse(halves[1] ?? "") : [];
+  const groups =
+    halves.length === 2
+      ? [...head, ...Array(8 - head.length - tail.length).fill(0), ...tail]
+      : head;
+  if (groups.length !== 8 || groups.some((g) => Number.isNaN(g) || g > 0xffff))
+    return null;
+  return groups;
+}
+
+function isPublicIpv6(host: string) {
+  const g = expandIpv6(host);
+  if (!g) return false;
+  const [a, b] = g as number[] & { 0: number; 1: number };
+  // Unspecified (::) and loopback (::1).
+  if (g.every((x, i) => (i === 7 ? x === 1 || x === 0 : x === 0))) return false;
+  // IPv4-mapped (::ffff:0:0/96): only as safe as the address it carries.
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) {
+    const v4 = `${g[6]! >> 8}.${g[6]! & 0xff}.${g[7]! >> 8}.${g[7]! & 0xff}`;
+    return isPublicIpv4(v4);
+  }
+  // IPv4-compatible (::a.b.c.d), deprecated but still routable to loopback.
+  if (g.slice(0, 6).every((x) => x === 0)) return false;
+  if ((a! & 0xfe00) === 0xfc00) return false; // fc00::/7, unique-local
+  if ((a! & 0xffc0) === 0xfe80) return false; // fe80::/10, link-local
+  void b;
+  return true;
 }
 
 /**
@@ -129,7 +178,16 @@ export function monogramSvg(name: string) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="${initials}"><rect width="64" height="64" rx="10" fill="hsl(${hash} 45% 92%)"/><text x="32" y="41" font-family="system-ui, sans-serif" font-size="26" font-weight="600" text-anchor="middle" fill="hsl(${hash} 40% 35%)">${initials}</text></svg>`;
 }
 
-export type Hop = { status: number; location?: string | null };
+export type Hop = {
+  status: number;
+  location?: string | null;
+  contentLength?: number | null;
+};
+
+/** Refuse an oversized body before reading it, when the server declares one. */
+export function tooBig(contentLength: number | null | undefined, max: number) {
+  return typeof contentLength === "number" && contentLength > max;
+}
 
 /**
  * Walk a redirect chain, deciding at every hop whether we are willing to make

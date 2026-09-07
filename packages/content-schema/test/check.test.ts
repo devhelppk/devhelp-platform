@@ -33,11 +33,9 @@ describe("loadContentTree", () => {
     expect(tree.diagnostics.map((d) => d.rule)).toContain("order-prefix");
   });
 
-  it("keeps an unquoted YAML date in frontmatter as a string", () => {
-    const tree = loadContentTree(fixture("valid"));
-    const intro = tree.courses[0]!.modules[0]!.lessons[0]!;
-    expect(intro.meta.updated).toBe("2026-09-01");
-  });
+  // The frontmatter field that used to carry a date (`updated`) moved to the
+  // database in S11, so the "unquoted YAML date becomes a Date object" gotcha
+  // has nothing left to bite. Re-add a test here if a date field ever returns.
 
   it("hashes are stable regardless of key order", () => {
     expect(stableHash({ a: 1, b: [1, 2] })).toBe(

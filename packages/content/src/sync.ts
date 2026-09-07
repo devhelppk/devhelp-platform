@@ -34,6 +34,51 @@ const counts = (): Counts => ({
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
+ * Metadata the content repo no longer owns (S11). The sync seeds these when it
+ * creates a row and never touches them again: after that they belong to
+ * whoever edits them in the studio. Keeping the list here, rather than by
+ * omission at each call site, is what makes the cut readable.
+ */
+const COURSE_OWNED_BY_STUDIO = [
+  "title",
+  "summary",
+  "description",
+  "level",
+  "track",
+  "coverImageUrl",
+  "estimatedHours",
+  "isPublished",
+] as const;
+// `videoProvider` / `videoId` are deliberately absent: a video lesson *is* its
+// video, the same way a quiz lesson is its quiz file, so that stays with the
+// content where `content:check` can validate it.
+const LESSON_OWNED_BY_STUDIO = [
+  "title",
+  "mode",
+  "isRequired",
+  "isFree",
+  "durationMinutes",
+] as const;
+const MODULE_OWNED_BY_STUDIO = ["title", "summary"] as const;
+const PATH_OWNED_BY_STUDIO = [
+  "title",
+  "summary",
+  "description",
+  "isPublished",
+] as const;
+
+/** The half of a value object the sync may still write on an update. */
+function repoOwned<T extends Record<string, unknown>>(
+  values: T,
+  studioOwned: readonly string[],
+): Partial<T> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(values))
+    if (!studioOwned.includes(k)) out[k] = v;
+  return out as Partial<T>;
+}
+
+/**
  * Upsert content metadata into Postgres by slug. Idempotent: unchanged
  * hashes are skipped, missing items are archived (never deleted) so learner
  * progress keeps its foreign keys. Lesson bodies are not stored here.
@@ -188,14 +233,10 @@ async function syncCourse(
   });
   const values = {
     slug: m.slug,
-    title: m.title,
-    summary: m.summary,
-    description: m.description ?? null,
-    track: m.track,
-    level: m.level,
-    coverImageUrl: m.cover ?? null,
-    estimatedHours: m.estimatedHours ?? null,
-    isPublished: m.published,
+    // Seeded from the slug so a new row is never null, then never touched
+    // again: these belong to whoever describes the course in the studio.
+    title: m.slug,
+    summary: "",
     completionCriteria: m.completionCriteria,
     contentPath: course.dir,
     contentHash: course.hash,
@@ -206,14 +247,21 @@ async function syncCourse(
   if (!existing) {
     const [row] = await tx
       .insert(schema.courses)
-      .values({ ...values, publishedAt: m.published ? new Date() : null })
+      .values({
+        ...values,
+        publishedAt: null,
+        // A brand-new course has no description yet: the repo does not carry
+        // one any more. It stays unpublished and listed in the studio until a
+        // person writes it, so it can never reach the catalogue half-formed.
+        isPublished: false,
+        needsMetadata: true,
+      })
       .returning({ id: schema.courses.id });
     courseId = row!.id;
     summary.courses.created++;
   } else if (
     existing.contentHash === course.hash &&
     existing.archivedAt === null &&
-    existing.isPublished === m.published &&
     existing.contentPath === course.dir
   ) {
     // Unchanged rows are left alone (updated_at and content_revision_id stay honest);
@@ -222,12 +270,11 @@ async function syncCourse(
     summary.courses.unchanged++;
   } else {
     courseId = existing.id;
+    // Only what the repo still owns. Publishing and the words a learner reads
+    // are the studio's now, and a sync must not walk over them.
     await tx
       .update(schema.courses)
-      .set({
-        ...values,
-        publishedAt: sql`case when ${schema.courses.publishedAt} is null and ${m.published} then now() else ${schema.courses.publishedAt} end`,
-      })
+      .set(repoOwned(values, COURSE_OWNED_BY_STUDIO))
       .where(eq(schema.courses.id, courseId));
     summary.courses.updated++;
   }
@@ -238,8 +285,7 @@ async function syncCourse(
     const values = {
       courseId,
       slug: mod.meta.slug,
-      title: mod.meta.title,
-      summary: mod.meta.summary ?? null,
+      title: mod.meta.slug,
       position: mod.order,
       archivedAt: null,
     };
@@ -258,16 +304,14 @@ async function syncCourse(
       summary.modules.created++;
     } else {
       moduleIdBySlug.set(mod.meta.slug, prev.id);
+      // A module's title is the studio's; only its place in the course is ours.
       const same =
-        prev.title === values.title &&
-        prev.summary === values.summary &&
-        prev.position === values.position &&
-        prev.archivedAt === null;
+        prev.position === values.position && prev.archivedAt === null;
       if (same) summary.modules.unchanged++;
       else {
         await tx
           .update(schema.modules)
-          .set(values)
+          .set(repoOwned(values, MODULE_OWNED_BY_STUDIO))
           .where(eq(schema.modules.id, prev.id));
         summary.modules.updated++;
       }
@@ -300,13 +344,9 @@ async function syncCourse(
         moduleId,
         courseId,
         slug: fm.slug,
-        title: fm.title,
+        title: fm.slug,
         type: fm.type,
         completionRule: fm.completionRule,
-        mode: fm.mode,
-        isRequired: fm.isRequired,
-        isFree: fm.isFree,
-        durationMinutes: fm.durationMinutes ?? null,
         position: mod.order * 1000 + lesson.order,
         videoProvider: fm.type === "video" ? fm.video.provider : null,
         videoId: fm.type === "video" ? fm.video.id : null,
@@ -333,7 +373,7 @@ async function syncCourse(
       if (!prev) {
         const [row] = await tx
           .insert(schema.lessons)
-          .values(values)
+          .values({ ...values, needsMetadata: true })
           .returning({ id: schema.lessons.id });
         lessonId = row!.id;
         summary.lessons.created++;
@@ -350,7 +390,7 @@ async function syncCourse(
         } else {
           await tx
             .update(schema.lessons)
-            .set(values)
+            .set(repoOwned(values, LESSON_OWNED_BY_STUDIO))
             .where(eq(schema.lessons.id, lessonId));
           summary.lessons.updated++;
         }
@@ -506,10 +546,9 @@ async function syncPaths(
     const d = path.data;
     const values = {
       slug: d.slug,
-      title: d.title,
-      summary: d.summary,
-      description: d.description ?? null,
-      isPublished: d.published,
+      // Seeded once, then the studio's, like a course.
+      title: d.slug,
+      summary: "",
       position: d.position,
       contentRevisionId: revisionId,
       archivedAt: null,
@@ -521,7 +560,7 @@ async function syncPaths(
     if (!prev) {
       const [row] = await tx
         .insert(schema.paths)
-        .values(values)
+        .values({ ...values, isPublished: false, needsMetadata: true })
         .returning({ id: schema.paths.id });
       pathId = row!.id;
       summary.paths.created++;
@@ -537,12 +576,7 @@ async function syncPaths(
           (pc, i) => pc.courseId === courseIdBySlug.get(d.courses[i]!),
         );
       const sameMeta =
-        prev.title === values.title &&
-        prev.summary === values.summary &&
-        prev.description === values.description &&
-        prev.isPublished === values.isPublished &&
-        prev.position === values.position &&
-        prev.archivedAt === null;
+        prev.position === values.position && prev.archivedAt === null;
       if (sameCourses && sameMeta) {
         summary.paths.unchanged++;
         live.push(pathId);
@@ -550,7 +584,7 @@ async function syncPaths(
       }
       await tx
         .update(schema.paths)
-        .set(values)
+        .set(repoOwned(values, PATH_OWNED_BY_STUDIO))
         .where(eq(schema.paths.id, pathId));
       summary.paths.updated++;
     }

@@ -259,23 +259,23 @@ Acceptance criteria
 
 Depends on: S10a, S10b.
 
-### S11. Mentor studio and dashboard — `planned`
+### S11. Mentor studio and dashboard — `done`
 
-Plan: [`specs/S11-mentor-studio/plan.md`](./specs/S11-mentor-studio/plan.md)
+Plan: [`specs/S11-mentor-studio/plan.md`](./specs/S11-mentor-studio/plan.md). Records: [`review.md`](./specs/S11-mentor-studio/review.md), [`test.md`](./specs/S11-mentor-studio/test.md)
 
 Scope: F3.3 (reshaped), F3.8, F3.9. Founder decisions 2026-09-07 turned this from "mount Keystatic" into a change of the S2 contract: **the content repo stops owning metadata**. Mentors edit course and lesson metadata in the app; prose, quizzes, and exercises stay a pull request. Credits become rows pointing at users. The dashboard starts with the signals S6 already collects. No Keystatic, no lesson-body editing, no GitHub issues yet.
 
 Acceptance criteria
 
-- [ ] A mentor edits a course and a lesson's metadata in the app, and a later `content:sync` does not undo it.
-- [ ] A metadata key left in the content repo fails `content:check` with a message naming where that field lives now.
-- [ ] A newly synced course is unpublished, listed as needing metadata, and cannot reach the catalogue until someone completes it.
-- [ ] Every metadata change is attributable: who, what, before, after.
-- [ ] Credits are users; a lesson byline and `/contributors` render from them.
-- [ ] The dashboard lists lessons below the rating threshold or above the unclear-tag rate.
-- [ ] Browser loop passed; at least two fix-and-reload iterations recorded in `test.md`.
+- [x] A mentor edits a course and a lesson's metadata in the app, and a later `content:sync` does not undo it — checked against the real content, not only a fixture.
+- [x] A metadata key left in the content repo fails `content:check` with `[moved-field]` naming where that field lives now.
+- [x] A newly synced course is unpublished, listed as needing metadata, and cannot reach the catalogue until someone completes it.
+- [x] Every metadata change is attributable: who, what, before, after.
+- [x] Credits are users; a lesson byline and `/contributors` render from them.
+- [x] The dashboard lists lessons below the rating threshold, above the unclear-tag rate, or with unresolved questions.
+- [x] Browser loop passed; three fix-and-reload iterations recorded in `test.md`.
 
-Depends on: S2, S6. May split into S11a (dashboard and attribution) and S11b (the ownership cut) if the cut proves hairy.
+Depends on: S2, S6. Shipped as one spec; the cut did not need splitting. Paths follow the same rule as courses. **Blocked on a founder action:** the `devhelp-content` commits that strip metadata must be pushed and `content.lock.json` bumped, or CI still pulls the pinned commit with the old frontmatter.
 
 ### S12. Comments and Q&A — `merged into S6`
 
@@ -309,6 +309,7 @@ Founder actions
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
 - Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
+- **Push the `devhelp-content` commits that strip metadata (`1783f63`, `6bf0e95`) and bump `content.lock.json` to the new sha (S11).** Until then `content:pull` fetches the pinned commit, whose frontmatter still carries titles the schema now rejects, so CI fails at `content:check`. Everything works locally against the sibling checkout.
 - Schedule `pnpm fx:refresh` daily in production (S10b). Without it the salary tables still work and still show what people were paid; they simply do not offer the converted PKR figure beside a USD one.
 
 Technical

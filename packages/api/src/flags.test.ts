@@ -305,6 +305,31 @@ describe("reporting salary figures", () => {
     expect(after!.decidedAt).toBeNull();
   });
 
+  it("does not let one reporter reopen a report an admin closed", async () => {
+    const item = await db.query.moderationItems.findFirst({
+      where: and(
+        eq(schema.moderationItems.subjectType, "salary_report"),
+        eq(schema.moderationItems.subjectId, orgId),
+      ),
+    });
+    await as(admin).moderation.decide({
+      id: item!.id,
+      action: "reject",
+      reason: "Checked; the figures are right.",
+    });
+    // `reader` already reported this company earlier in the file.
+    const again = await as(reader).companies.reportSalaries({
+      slug,
+      roleId,
+      currency: "PKR",
+    });
+    expect(again.duplicate).toBe(true);
+    const after = await db.query.moderationItems.findFirst({
+      where: eq(schema.moderationItems.id, item!.id),
+    });
+    expect(after!.status).toBe("rejected");
+  });
+
   it("refuses a role with no published figures", async () => {
     const other = await db.query.jobRoles.findMany({ limit: 2 });
     await expect(

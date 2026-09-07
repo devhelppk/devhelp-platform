@@ -64,6 +64,12 @@ export const courses = pgTable(
     estimatedHours: integer(),
     isPublished: boolean().notNull().default(false),
     publishedAt: timestamp({ withTimezone: true }),
+    /**
+     * True from the moment the sync creates the row until a person fills in
+     * the metadata the content repo no longer carries (S11). Such a course
+     * cannot be published, so it never reaches the catalogue half-formed.
+     */
+    needsMetadata: boolean().notNull().default(false),
     archivedAt: timestamp({ withTimezone: true }),
     authorId: uuid().references(() => users.id, { onDelete: "set null" }),
     contentPath: text(),
@@ -144,6 +150,8 @@ export const lessons = pgTable(
     position: integer().notNull().default(0),
     videoProvider: videoProvider(),
     videoId: text(),
+    /** As on courses: created by the sync, cleared by a person. */
+    needsMetadata: boolean().notNull().default(false),
     contentPath: text(),
     contentHash: text(),
     contentRevisionId: uuid().references(() => contentRevisions.id, {
@@ -176,6 +184,8 @@ export const paths = pgTable("paths", {
   summary: text().notNull(),
   description: text(),
   isPublished: boolean().notNull().default(false),
+  /** As on courses (S11): seeded by the sync, cleared by a person. */
+  needsMetadata: boolean().notNull().default(false),
   position: integer().notNull().default(0),
   contentRevisionId: uuid().references(() => contentRevisions.id, {
     onDelete: "set null",

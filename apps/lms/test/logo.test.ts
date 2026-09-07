@@ -79,6 +79,24 @@ describe("isSafeIconUrl", () => {
       expect(isSafeIconUrl(u)).toBe(true);
   });
 
+  it("refuses an IPv4 address smuggled inside an IPv6 literal", () => {
+    // `new URL()` rewrites these to the hex form (`[::ffff:a9fe:a9fe]`), which
+    // is what the server would actually connect to — and what a check looking
+    // for the dotted spelling never sees.
+    for (const u of [
+      "http://[::ffff:169.254.169.254]/latest/meta-data/",
+      "http://[::ffff:a9fe:a9fe]/",
+      "http://[::ffff:127.0.0.1]/",
+      "http://[::ffff:7f00:1]/",
+      "http://[::ffff:10.0.0.5]/",
+      "http://[::ffff:a00:5]/",
+      "http://[::127.0.0.1]/",
+    ]) {
+      expect(new URL(u).hostname).toBeTruthy();
+      expect(isSafeIconUrl(u)).toBe(false);
+    }
+  });
+
   it("refuses anything that could reach our own network", () => {
     for (const u of [
       "http://localhost/",
@@ -141,7 +159,13 @@ describe("monogramSvg", () => {
 
 describe("isPublicAddress", () => {
   it("accepts public addresses", () => {
-    for (const a of ["8.8.8.8", "1.1.1.1", "203.0.113.9", "2606:4700::1111"])
+    for (const a of [
+      "8.8.8.8",
+      "1.1.1.1",
+      "203.0.113.9",
+      "2606:4700::1111",
+      "2001:4860:4860::8888",
+    ])
       expect(isPublicAddress(a)).toBe(true);
   });
 
@@ -163,6 +187,12 @@ describe("isPublicAddress", () => {
       "fe80::1",
       "::ffff:127.0.0.1",
       "::ffff:10.0.0.1",
+      "::ffff:a9fe:a9fe",
+      "::ffff:7f00:1",
+      "::ffff:a00:1",
+      "::127.0.0.1",
+      "fdff:ffff::1",
+      "febf:ffff::1",
       "not-an-address",
     ])
       expect(isPublicAddress(a)).toBe(false);

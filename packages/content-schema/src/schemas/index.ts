@@ -5,3 +5,4 @@ export * from "./quiz.ts";
 export * from "./exercise.ts";
 export * from "./path.ts";
 export * from "./badge.ts";
+export * from "./moved.ts";

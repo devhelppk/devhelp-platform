@@ -6,7 +6,7 @@ Scope: F3.3 (reshaped), F3.8, F3.9. The founder's answers on 2026-09-07 turned t
 
 Four settled with the founder on 2026-09-07.
 
-1. **No Keystatic, and no lesson-body editing in the app.** Mentors edit course and lesson *metadata* in the platform; the prose, quizzes, and exercises stay a pull request on `devhelp-content`. This drops a pre-1.0 CMS, a GitHub OAuth app, and a second copy of the content schema that would have had to be kept in step by hand.
+1. **No Keystatic, and no lesson-body editing in the app.** Mentors edit course and lesson _metadata_ in the platform; the prose, quizzes, and exercises stay a pull request on `devhelp-content`. This drops a pre-1.0 CMS, a GitHub OAuth app, and a second copy of the content schema that would have had to be kept in step by hand.
 
 2. **A clean cut: metadata leaves the repo.** Lesson frontmatter and `course.yaml` keep only what identifies and structures the content. Title, summary, description, level, duration, cover image, and publish state exist only in Postgres. The founder chose this over "seed on create" knowing the cost: a newly synced course arrives unlabelled and stays invisible until someone fills it in.
 
@@ -18,13 +18,13 @@ Four settled with the founder on 2026-09-07.
 
 The repo owns **what the content is**. Postgres owns **how it is described**.
 
-| Stays in `devhelp-content`                                                                 | Moves to Postgres                                                              |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| The MDX body; quiz and exercise files; the solution and test files                          | `title`, `summary`, `description`                                                |
-| Slug (the directory name) and structure: which lessons, in which module, in what order      | `level`, `track`, `coverImageUrl`, `estimatedHours`                              |
-| `type` and `completionRule` — what kind of lesson this is, which the files have to match     | `durationMinutes`, `isRequired`, `isFree`, `mode`, `videoProvider`, `videoId`     |
-| Quiz answers, exercise tests, `minQuizScore` and the rest of `completionCriteria`            | `isPublished` / `publishedAt`                                                     |
-|                                                                                             | Module and course titles; `authors` and `reviewers` as `content_credits`          |
+| Stays in `devhelp-content`                                                               | Moves to Postgres                                                             |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| The MDX body; quiz and exercise files; the solution and test files                       | `title`, `summary`, `description`                                             |
+| Slug (the directory name) and structure: which lessons, in which module, in what order   | `level`, `track`, `coverImageUrl`, `estimatedHours`                           |
+| `type` and `completionRule` — what kind of lesson this is, which the files have to match | `durationMinutes`, `isRequired`, `isFree`, `mode`, `videoProvider`, `videoId` |
+| Quiz answers, exercise tests, `minQuizScore` and the rest of `completionCriteria`        | `isPublished` / `publishedAt`                                                 |
+|                                                                                          | Module and course titles; `authors` and `reviewers` as `content_credits`      |
 
 `type` and `completionRule` stay because they are claims about the files: a quiz lesson without a quiz file is a broken checkout, and `content:check` already enforces that. Titles are not.
 

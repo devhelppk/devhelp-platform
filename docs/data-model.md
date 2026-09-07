@@ -150,6 +150,12 @@ Nothing reads those rows directly. `salary_stats` (per company, role, currency) 
 
 `company_profiles.favicon_key` and `favicon_checked_at` cache the icon from a company's own website (S10c), fetched server-side at most once a month so a reader's browser never talks to a third party. `moderation_subject` also carries `salary_report`: a reader saying a role's published figures look wrong, whose subject is the company, because an individual salary is never shown and so cannot be pointed at.
 
+### Studio and attribution (implemented in S11)
+
+`content_credits` names who wrote and who reviewed a course or lesson, pointing at `users` — a byline always resolves to a real profile, and nobody is credited by a typed string. `content_edits` is the append-only trail of metadata changes: field, before, after, and who, written in the same transaction as the change.
+
+`courses.needs_metadata` and `lessons.needs_metadata` mark a row the sync created but nobody has described yet. Such a course cannot be published, so the catalogue never shows a placeholder. See `AGENTS.md` for which columns the sync may still write.
+
 ### Planned (see `spec.md`)
 
 - S9: `cohort_courses`.

@@ -50,6 +50,13 @@ export default async function CataloguePage({
           title="Courses"
           description="Every course is free and open source. Pick a track, or follow a path in order."
         />
+        <p className="text-sm text-muted-foreground">
+          Written and reviewed by{" "}
+          <Link href="/contributors" className="underline underline-offset-4">
+            people who work here
+          </Link>
+          .
+        </p>
 
         {paths.length ? (
           <section className="flex flex-col gap-3">

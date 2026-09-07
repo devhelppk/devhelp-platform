@@ -438,11 +438,32 @@ export const companiesRouter = router({
             n: stats.n,
           },
         };
+        // Whether this reporter has already spoken decides everything below:
+        // a repeat must not reopen a report an admin has closed, or one person
+        // could bounce it back into the queue as often as the rate limit lets
+        // them while being told it was a duplicate.
+        const already = await tx.query.contentFlags.findFirst({
+          where: and(
+            eq(schema.contentFlags.subjectType, "salary_report"),
+            eq(schema.contentFlags.subjectId, org),
+            eq(schema.contentFlags.reporterId, ctx.user.id),
+          ),
+          columns: { id: true },
+        });
+        if (already) {
+          const open = await tx.query.moderationItems.findFirst({
+            where: and(
+              eq(schema.moderationItems.subjectType, "salary_report"),
+              eq(schema.moderationItems.subjectId, org),
+            ),
+            columns: { id: true },
+          });
+          return { id: open!.id, duplicate: true };
+        }
         // `moderation_items` is unique on (subject type, subject id), and the
         // subject here is the company, so there is one standing task per
-        // company rather than one per report. A later report reopens it; the
-        // reporters themselves are the `content_flags` rows below, which is
-        // what stops one person filing the same thing twice.
+        // company rather than one per report. A new reporter reopens it; the
+        // reporters themselves are the `content_flags` rows below.
         const [item] = await tx
           .insert(schema.moderationItems)
           .values({
@@ -633,13 +654,25 @@ export const companiesRouter = router({
           await tx
             .delete(companyAliases)
             .where(eq(companyAliases.organizationId, org.id));
-          if (aliases.length)
-            await tx
+          if (aliases.length) {
+            const inserted = await tx
               .insert(companyAliases)
               .values(
                 aliases.map((alias) => ({ organizationId: org.id, alias })),
               )
-              .onConflictDoNothing();
+              .onConflictDoNothing()
+              .returning({ alias: companyAliases.alias });
+            // Aliases are unique across the bank. Silently dropping one an
+            // admin typed leaves them staring at a saved form missing a value.
+            if (inserted.length !== aliases.length) {
+              const kept = new Set(inserted.map((a) => a.alias.toLowerCase()));
+              const taken = aliases.filter((a) => !kept.has(a.toLowerCase()));
+              throw new TRPCError({
+                code: "CONFLICT",
+                message: `Another company already goes by ${taken.join(", ")}.`,
+              });
+            }
+          }
         }
         return { ok: true };
       });

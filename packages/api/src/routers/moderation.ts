@@ -56,6 +56,16 @@ async function applySubjectStatus(
   // a review or an interview is its own row. Rejected and hidden are kept
   // apart so a contributor can tell "we said no" from "a moderator pulled it".
   if (item.subjectType === "company_proposal") {
+    // A rejected proposal is deleted, not hidden. The organisation row exists
+    // only because somebody proposed it, and leaving it holds the company's
+    // name in the unique index for ever — so the next person to propose that
+    // employer is told it is "already in the bank" at a URL that 404s.
+    if (action === "reject") {
+      await tx
+        .delete(schema.organizations)
+        .where(eq(schema.organizations.id, item.subjectId));
+      return {};
+    }
     await tx
       .update(schema.companyProfiles)
       .set({
@@ -179,7 +189,9 @@ async function decidedNotification(
       href,
       subjectType: item.subjectType,
       subjectId: item.id,
-      dedupeKey: `decided:${item.id}`,
+      // The item id alone is not unique over time: an item can be re-opened
+      // and decided again, and `notify` drops a repeated dedupe key for ever.
+      dedupeKey: `decided:${item.id}:${item.decidedAt?.getTime() ?? 0}`,
       email: {
         to: submitter.email,
         subject: approved
@@ -246,7 +258,7 @@ async function decidedNotification(
     href,
     subjectType: item.subjectType,
     subjectId: item.id,
-    dedupeKey: `decided:${item.id}`,
+    dedupeKey: `decided:${item.id}:${item.decidedAt?.getTime() ?? 0}`,
     email: {
       to: submitter.email,
       subject: `${subjectLabel} ${verb} on devhelp`,

@@ -1,3 +1,4 @@
+import { Byline } from "@/components/studio/byline";
 import { api } from "@repo/api/server";
 import { auth } from "@repo/auth";
 import {
@@ -125,6 +126,7 @@ export default async function LessonPage({
           <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             {lesson.title}
           </h1>
+          <Byline lessonId={lesson.id} />
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="capitalize">
               {lesson.type}

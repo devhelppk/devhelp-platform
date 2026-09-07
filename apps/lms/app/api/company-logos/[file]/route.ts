@@ -5,6 +5,7 @@ import { lookup } from "node:dns/promises";
 import {
   ICON_MAX_BYTES,
   ICON_TYPES,
+  tooBig,
   monogramSvg,
   pickIconUrl,
   RECHECK_AFTER_DAYS,
@@ -26,7 +27,11 @@ export async function GET(
 ) {
   const { file } = await ctx.params;
   const id = file.replace(/\.[a-z0-9]+$/i, "");
-  if (!/^[0-9a-f-]{36}$/.test(id))
+  // A real uuid, not "36 characters from that alphabet": a malformed id
+  // otherwise reaches Postgres and comes back as a 500 with a stack trace.
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)
+  )
     return new NextResponse("Not found", { status: 404 });
   const row = await db.query.companyProfiles.findFirst({
     where: eq(schema.companyProfiles.organizationId, id),
@@ -146,6 +151,11 @@ async function fetchIcon(website: string) {
       .toLowerCase();
     const ext = ICON_TYPES[contentType];
     if (!ext) return null;
+    // Refuse before buffering when the server says how big it is; the check
+    // after `arrayBuffer()` still stands for servers that do not.
+    const declared = Number(icon.res.headers.get("content-length"));
+    if (tooBig(Number.isFinite(declared) ? declared : null, ICON_MAX_BYTES))
+      return null;
     const buf = new Uint8Array(await icon.res.arrayBuffer());
     if (buf.byteLength === 0 || buf.byteLength > ICON_MAX_BYTES) return null;
     return { bytes: buf, contentType, ext };

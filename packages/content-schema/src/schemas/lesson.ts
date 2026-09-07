@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { author, isoDate, slug } from "./common.ts";
+import { slug } from "./common.ts";
 
-export const lessonMode = z.enum(["foundation", "industry"]);
 export const completionRule = z.enum([
   "view",
   "quiz_pass",
@@ -9,17 +8,13 @@ export const completionRule = z.enum([
   "submit",
 ]);
 
-const base = {
-  slug,
-  title: z.string().min(3).max(100),
-  mode: lessonMode.default("foundation"),
-  isRequired: z.boolean().default(true),
-  isFree: z.boolean().default(true),
-  durationMinutes: z.number().int().positive().optional(),
-  authors: z.array(author).default([]),
-  reviewers: z.array(author).default([]),
-  updated: isoDate.optional(),
-};
+/**
+ * What every lesson declares about itself: which lesson it is, and what kind.
+ * The title, how long it takes, who wrote it, and whether it is free are the
+ * studio's (S11); a `video`, `quiz`, or `exercise` reference stays here,
+ * because that is what the lesson *is* and `content:check` validates it.
+ */
+const base = { slug };
 
 /** Lesson MDX frontmatter, discriminated on `type`. */
 export const lessonFrontmatter = z.discriminatedUnion("type", [

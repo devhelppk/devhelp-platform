@@ -426,6 +426,45 @@ describe("proposals", () => {
       .where(eq(schema.organizations.id, org!.id));
   });
 
+  it("frees the name when a proposal is rejected", async () => {
+    // A rejected proposal used to keep its organisation row, holding the name
+    // in the unique index: the next person was told the company was already
+    // in the bank, at a URL that 404s.
+    const name = `Rejected ${run}`;
+    const { slug: rejectedSlug } = await as(learner).companies.propose({
+      name,
+      cities: [],
+    });
+    const org = await db.query.organizations.findFirst({
+      where: eq(schema.organizations.slug, rejectedSlug),
+    });
+    const item = await db.query.moderationItems.findFirst({
+      where: and(
+        eq(schema.moderationItems.subjectType, "company_proposal"),
+        eq(schema.moderationItems.subjectId, org!.id),
+      ),
+    });
+    await as(admin).moderation.decide({
+      id: item!.id,
+      action: "reject",
+      reason: "Not a software employer.",
+    });
+    expect(
+      await db.query.organizations.findFirst({
+        where: eq(schema.organizations.id, org!.id),
+      }),
+    ).toBeUndefined();
+    // Somebody else can now propose the same company.
+    const second = await as(other).companies.propose({ name, cities: [] });
+    expect(second.slug).toBeTruthy();
+    const created = await db.query.organizations.findFirst({
+      where: eq(schema.organizations.slug, second.slug),
+    });
+    await db
+      .delete(schema.organizations)
+      .where(eq(schema.organizations.id, created!.id));
+  });
+
   it("refuses a duplicate, by name or by alias, whatever the case", async () => {
     await expect(
       as(other).companies.propose({ name: `Acme ${run}`, cities: [] }),
@@ -512,6 +551,30 @@ describe("admin facts", () => {
     });
     expect(restored!.status).toBe("published");
     expect(restored!.verifiedBy).toBe(admin.id);
+  });
+
+  it("says so when an alias belongs to another company", async () => {
+    const [other2] = await db
+      .insert(schema.organizations)
+      .values({
+        name: `Rival ${run}`,
+        slug: `rival-${run}`,
+        kind: "company",
+        createdAt: new Date(),
+      })
+      .returning();
+    await db
+      .insert(schema.companyProfiles)
+      .values({ organizationId: other2!.id, status: "published" });
+    await db
+      .insert(schema.companyAliases)
+      .values({ organizationId: other2!.id, alias: `Taken ${run}` });
+    await expect(
+      as(admin).companies.adminUpdate({ slug, aliases: [`Taken ${run}`] }),
+    ).rejects.toThrow(/already goes by/);
+    await db
+      .delete(schema.organizations)
+      .where(eq(schema.organizations.id, other2!.id));
   });
 
   it("is closed to everyone but admins", async () => {

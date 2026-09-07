@@ -56,9 +56,6 @@ export function checkContent(
       if (p === meta.slug)
         err(course.file, "ref", "a course cannot be its own prerequisite");
     }
-    if (/lorem ipsum/i.test(meta.summary))
-      warn(course.file, "style", "placeholder text in summary");
-
     const quizIds = new Map(course.quizzes.map((q) => [q.data.id, q]));
     const exerciseIds = new Map(course.exercises.map((e) => [e.meta.id, e]));
     const moduleSlugs = new Set<string>();
@@ -81,7 +78,10 @@ export function checkContent(
             `lesson slug "${m.slug}" repeated in course`,
           );
         lessonSlugs.add(m.slug);
-        if (m.isRequired) requiredCount++;
+        // Whether a lesson is optional is the studio's call now, so this
+        // counts lessons rather than required ones: what is still worth
+        // saying is that a course with no lessons cannot be completed.
+        requiredCount++;
 
         const expectedRule: Record<string, string> = {
           article: "view",
@@ -116,9 +116,6 @@ export function checkContent(
         }
         if (/lorem ipsum/i.test(lesson.body))
           warn(lesson.file, "style", "placeholder text in body");
-        if (!m.durationMinutes)
-          warn(lesson.file, "meta", "durationMinutes missing");
-
         // Internal links: /courses/<course>/<lesson> must resolve inside this content tree.
         for (const match of lesson.body.matchAll(
           /\]\(\/courses\/([a-z0-9-]+)\/([a-z0-9-]+)\)/g,
@@ -148,7 +145,7 @@ export function checkContent(
       err(
         course.file,
         "structure",
-        "course has no required lessons; it could never be completed",
+        "course has no lessons; it could never be completed",
       );
 
     for (const quiz of course.quizzes) {

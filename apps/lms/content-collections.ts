@@ -36,10 +36,9 @@ const lessons = defineCollection({
   directory: `${contentDir}/courses`,
   // <course>/<module>/<lesson>.mdx only; exercise READMEs live two levels deeper.
   include: "*/*/*.mdx",
-  // Loose here; the strict discriminated union runs in `transform` (extra keys are the point).
-  schema: z
-    .object({ slug: z.string(), title: z.string(), type: z.string() })
-    .loose(),
+  // Loose here; the strict discriminated union runs in `transform` (extra keys
+  // are the point). No `title`: that lives in the database now (S11).
+  schema: z.object({ slug: z.string(), type: z.string() }).loose(),
   transform: async (doc, ctx) => {
     // Strict validation against the shared schema so a bad lesson fails the build (X10).
     const { content, _meta, ...frontmatter } = doc;

@@ -293,6 +293,25 @@ export const salaryReportSchema = z
   })
   .strict();
 
+/**
+ * One metadata edit, field by field (S11). Values are stored as text because
+ * the trail is for a person to read, not for replaying: "level: beginner to
+ * intermediate" is what an admin needs months later.
+ */
+export const metadataChangesSchema = z
+  .array(
+    z
+      .object({
+        field: z.string().min(1).max(64),
+        before: z.string().max(2000).nullable(),
+        after: z.string().max(2000).nullable(),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(40);
+export type MetadataChanges = z.infer<typeof metadataChangesSchema>;
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({

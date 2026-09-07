@@ -120,6 +120,20 @@
       "when": 1788745778853,
       "tag": "0016_company_favicons",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788751111255,
+      "tag": "0017_content_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788753792931,
+      "tag": "0018_path_metadata",
+      "breakpoints": true
     }
   ]
 }
