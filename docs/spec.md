@@ -245,7 +245,7 @@ Depends on: S10a.
 
 ### S10c. Company bank: flags and logos — `done`
 
-Plan: [`specs/S10c-flags-logos/plan.md`](./specs/S10c-flags-logos/plan.md). Records: [`review.md`](./specs/S10c-flags-logos/review.md), [`test.md`](./specs/S10c-flags-logos/test.md)
+Commit: `3a98b32`. Plan: [`specs/S10c-flags-logos/plan.md`](./specs/S10c-flags-logos/plan.md). Records: [`review.md`](./specs/S10c-flags-logos/review.md), [`test.md`](./specs/S10c-flags-logos/test.md)
 
 Scope: the two gaps S10a recorded for later, plus what planning them turned up. Readers can flag a company review, an interview experience, a salary point, and a role's published figures, choosing a reason that is what gets stored. Company marks fall back from an uploaded logo to the icon on the company's own website (fetched server-side and cached in R2) to a generated monogram. Founder decisions 2026-09-07: salary points are flaggable; logos are uploaded by admins; the website icon is the default fallback.
 
