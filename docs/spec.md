@@ -299,7 +299,7 @@ Depends on: S10a, S6 (the Markdown pipeline).
 
 ### S14. Search, and getting to a launch — `done`
 
-Plan: [`specs/S14-search-launch/plan.md`](./specs/S14-search-launch/plan.md). Records: [`review.md`](./specs/S14-search-launch/review.md), [`test.md`](./specs/S14-search-launch/test.md)
+Commit: `a38d021`. Plan: [`specs/S14-search-launch/plan.md`](./specs/S14-search-launch/plan.md). Records: [`review.md`](./specs/S14-search-launch/review.md), [`test.md`](./specs/S14-search-launch/test.md)
 
 Scope: X3 (Postgres full-text search across courses, lessons, and companies), X8 (performance audit), X9 (MIT licence, contribution guide, security policy, and a timed fresh-clone run), and the security review. Founder decision 2026-09-07: **X6, analytics, is deferred post-MVP** — X9 requires the platform to run on a laptop with no paid keys, and a self-hosted analytics service is one more thing to run before there is anyone to measure.
 
