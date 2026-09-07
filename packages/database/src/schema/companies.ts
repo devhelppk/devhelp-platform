@@ -124,6 +124,14 @@ export const companyProfiles = pgTable(
     /** Storage key in R2; the organisation's `logo` column holds the URL. */
     logoKey: text(),
     /**
+     * A logo fetched from the company's own website when nobody has uploaded
+     * one. Cached in R2 rather than hot-linked, so a reader's browser never
+     * talks to a third party. `faviconCheckedAt` records the attempt, failure
+     * included, so a site without an icon is not re-fetched on every request.
+     */
+    faviconKey: text(),
+    faviconCheckedAt: timestamp({ withTimezone: true }),
+    /**
      * Free-text search over the prose only. `cities` and `stack` are left out
      * on purpose: `array_to_string` is stable rather than immutable, so
      * Postgres rejects it in a generated column, and both are filtered with

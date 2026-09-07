@@ -106,6 +106,20 @@
       "when": 1788734860885,
       "tag": "0014_salaries",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788741192583,
+      "tag": "0015_salary_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788745778853,
+      "tag": "0016_company_favicons",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."moderation_subject" ADD VALUE 'salary_report';

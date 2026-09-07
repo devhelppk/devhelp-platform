@@ -8,6 +8,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Page } from "@/components/shell/site-header";
 import { Rating } from "@/components/companies/bits";
+import { CompanyMark } from "@/components/companies/company-mark";
 
 export const metadata: Metadata = {
   title: "Companies",
@@ -137,13 +138,16 @@ export default async function CompaniesPage({
                   href={`/companies/${c.slug}` as Route}
                   className="flex h-full flex-col gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  <div className="flex flex-col gap-1">
-                    <h2 className="font-medium">{c.name}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      {[c.industry, c.cities.join(", ") || c.city]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
+                  <div className="flex items-start gap-3">
+                    <CompanyMark id={c.id} version={c.markVersion} />
+                    <div className="flex flex-col gap-1">
+                      <h2 className="font-medium">{c.name}</h2>
+                      <p className="text-xs text-muted-foreground">
+                        {[c.industry, c.cities.join(", ") || c.city]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   </div>
                   {c.description ? (
                     <p className="line-clamp-3 text-sm text-muted-foreground">

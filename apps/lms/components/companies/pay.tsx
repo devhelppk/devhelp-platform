@@ -1,4 +1,5 @@
 import { Badge } from "@repo/ui/components/badge";
+import { ReportSalaries } from "./report-salaries";
 
 type Row = {
   roleId: string | null;
@@ -40,11 +41,15 @@ export function Pay({
   detail,
   fx,
   companyName,
+  slug,
+  signedIn,
 }: {
   roles: RoleRow[];
   detail: DetailRow[];
   fx: { rate: number; asOf: string } | null;
   companyName: string;
+  slug: string;
+  signedIn: boolean;
 }) {
   if (roles.length === 0)
     return (
@@ -118,6 +123,13 @@ export function Pay({
                 ))}
               </ul>
             ) : null}
+            <ReportSalaries
+              slug={slug}
+              roleId={r.roleId}
+              roleName={r.roleName ?? "this role"}
+              currency={r.currency}
+              signedIn={signedIn}
+            />
           </li>
         ))}
       </ul>
@@ -139,7 +151,7 @@ export function Pay({
                 Middle half
               </th>
               <th scope="col" className="border-b px-3 py-2 font-medium">
-                Reports
+                Based on
               </th>
             </tr>
           </thead>
@@ -182,8 +194,15 @@ export function Pay({
                 </td>
                 <td className="border-b px-3 py-3">
                   <Badge variant="outline" className="text-xs">
-                    {r.n}
+                    {r.n} reports
                   </Badge>
+                  <ReportSalaries
+                    slug={slug}
+                    roleId={r.roleId}
+                    roleName={r.roleName ?? "this role"}
+                    currency={r.currency}
+                    signedIn={signedIn}
+                  />
                 </td>
               </tr>
             ))}

@@ -8,6 +8,7 @@ export const subjectLabels = {
   company_review: "Company review",
   interview_experience: "Interview experience",
   salary_point: "Salary point",
+  salary_report: "Reported salary figures",
 } as const;
 
 export const statusLabels = {

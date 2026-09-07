@@ -243,6 +243,22 @@ Acceptance criteria
 
 Depends on: S10a.
 
+### S10c. Company bank: flags and logos — `done`
+
+Plan: [`specs/S10c-flags-logos/plan.md`](./specs/S10c-flags-logos/plan.md). Records: [`review.md`](./specs/S10c-flags-logos/review.md), [`test.md`](./specs/S10c-flags-logos/test.md)
+
+Scope: the two gaps S10a recorded for later, plus what planning them turned up. Readers can flag a company review, an interview experience, a salary point, and a role's published figures, choosing a reason that is what gets stored. Company marks fall back from an uploaded logo to the icon on the company's own website (fetched server-side and cached in R2) to a generated monogram. Founder decisions 2026-09-07: salary points are flaggable; logos are uploaded by admins; the website icon is the default fallback.
+
+Acceptance criteria
+
+- [x] A reader can flag a company review, an interview experience, and a role's salary figures, choosing a reason that is what gets stored — S6's flag button had hard-coded "off topic" for everything.
+- [x] Upholding a flag hides the subject, including a salary point whose item is still pending.
+- [x] A mark always renders: uploaded logo, then the site's own icon, then a monogram. The route never 404s for a company, so there is no broken image to guard against.
+- [x] Uploads refuse anything but a small image, and a fetched icon can never reach a private address (`isSafeIconUrl`).
+- [x] Browser loop passed; three fix-and-reload iterations recorded in `test.md`.
+
+Depends on: S10a, S10b.
+
 ### S11. Mentor studio and dashboard — `todo`
 
 Scope: area 3 phase 2 (F3.3, F3.7, F3.8, F3.9). Keystatic at `/studio` in GitHub mode for mentors; mentor application and role flip; dashboard with revision signals and the moderation queue; attribution on lessons. (The project review queue left with the S8 scope change.)

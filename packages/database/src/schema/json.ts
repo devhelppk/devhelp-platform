@@ -277,6 +277,22 @@ export const salarySnapshotSchema = z
   })
   .strict();
 
+/**
+ * A reader reporting that a role's published salary figures look wrong (S10c).
+ * The subject is the company, because an individual salary is never shown and
+ * so cannot be pointed at; the payload says which role and currency.
+ */
+export const salaryReportSchema = z
+  .object({
+    companySlug: z.string().min(1),
+    companyName: z.string().min(1),
+    role: z.string().min(1),
+    currency: z.enum(["PKR", "USD"]),
+    median: z.number().int().optional(),
+    n: z.number().int(),
+  })
+  .strict();
+
 /** `moderation_items.payload`, discriminated by the item's subject type. */
 export const moderationPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -302,4 +318,5 @@ export const moderationPayloadSchema = z.discriminatedUnion("kind", [
     data: companyContributionSnapshotSchema,
   }),
   z.object({ kind: z.literal("salary_point"), data: salarySnapshotSchema }),
+  z.object({ kind: z.literal("salary_report"), data: salaryReportSchema }),
 ]);

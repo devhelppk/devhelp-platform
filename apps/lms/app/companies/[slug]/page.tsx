@@ -14,6 +14,9 @@ import {
   Rating,
   ScoreBar,
 } from "@/components/companies/bits";
+import { auth } from "@repo/auth";
+import { CompanyMark } from "@/components/companies/company-mark";
+import { FlagForm } from "@/components/companies/flag-form";
 import { Pay } from "@/components/companies/pay";
 import { Page } from "@/components/shell/site-header";
 
@@ -84,6 +87,9 @@ export default async function CompanyPage({
 }) {
   const { slug } = await params;
   const { company, reviews, interviews, salaries } = await load(slug);
+  // One session read for the whole page: the report controls need to know
+  // whether there is anyone to report as.
+  const signedIn = !!(await auth.api.getSession({ headers: await headers() }));
   const facts: [string, string][] = [
     ["Industry", company.industry ?? ""],
     ["Size", company.size ?? ""],
@@ -109,16 +115,23 @@ export default async function CompanyPage({
             ← All companies
           </Link>
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h1 className="font-display text-3xl font-semibold tracking-tight">
-                {company.name}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {[company.industry, company.cities.join(", ")]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              <Rating value={company.ratingAvg} count={company.reviewCount} />
+            <div className="flex items-start gap-4">
+              <CompanyMark
+                id={company.id}
+                version={company.markVersion}
+                size={56}
+              />
+              <div className="flex flex-col gap-2">
+                <h1 className="font-display text-3xl font-semibold tracking-tight">
+                  {company.name}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {[company.industry, company.cities.join(", ")]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <Rating value={company.ratingAvg} count={company.reviewCount} />
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm">
@@ -256,6 +269,12 @@ export default async function CompanyPage({
                           </p>
                         </div>
                       ) : null}
+                      <FlagForm
+                        subjectType="company_review"
+                        subjectId={r.id}
+                        slug={slug}
+                        signedIn={signedIn}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -269,6 +288,8 @@ export default async function CompanyPage({
                 detail={salaries.detail}
                 fx={salaries.fx}
                 companyName={company.name}
+                slug={slug}
+                signedIn={signedIn}
               />
             </section>
 
@@ -342,6 +363,12 @@ export default async function CompanyPage({
                           </p>
                         </div>
                       ) : null}
+                      <FlagForm
+                        subjectType="interview_experience"
+                        subjectId={i.id}
+                        slug={slug}
+                        signedIn={signedIn}
+                      />
                     </li>
                   ))}
                 </ul>

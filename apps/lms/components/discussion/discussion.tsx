@@ -6,10 +6,11 @@ import { Button } from "@repo/ui/components/button";
 import { Textarea } from "@repo/ui/components/textarea";
 import { cn } from "@repo/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Flag, ThumbsUp } from "lucide-react";
+import { Check, ThumbsUp } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { FlagControl } from "@/components/moderation/flag-control";
 import { useTRPC } from "@/lib/trpc/client";
 import { ago } from "@/components/moderation/labels";
 
@@ -351,7 +352,6 @@ function CommentBody({
   const trpc = useTRPC();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
-  const [flagged, setFlagged] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const vote = useMutation(
     trpc.comments.vote.mutationOptions({
@@ -374,12 +374,6 @@ function CommentBody({
         setEditing(false);
         onChange();
       },
-      onError: (e) => setErr(e.message),
-    }),
-  );
-  const flag = useMutation(
-    trpc.moderation.flag.mutationOptions({
-      onSuccess: () => setFlagged(true),
       onError: (e) => setErr(e.message),
     }),
   );
@@ -510,23 +504,7 @@ function CommentBody({
             </>
           ) : null}
           {signedIn && !c.mine ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 px-2 text-muted-foreground"
-              disabled={flagged || flag.isPending}
-              onClick={() =>
-                flag.mutate({
-                  subjectType: "comment",
-                  subjectId: c.id,
-                  reason: "off_topic",
-                })
-              }
-              aria-label="Flag for a moderator"
-            >
-              <Flag aria-hidden="true" className="size-3.5" />{" "}
-              {flagged ? "Flagged" : "Flag"}
-            </Button>
+            <FlagControl subjectType="comment" subjectId={c.id} />
           ) : null}
           {err ? <span className="text-destructive">{err}</span> : null}
         </div>

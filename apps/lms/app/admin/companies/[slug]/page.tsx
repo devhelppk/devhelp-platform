@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminCompanyForm } from "@/components/companies/admin-company-form";
+import { LogoUpload } from "@/components/companies/logo-upload";
 import { LearnerProviders } from "@/components/shell/learner-providers";
 import { Page } from "@/components/shell/site-header";
 
@@ -48,6 +49,12 @@ export default async function AdminCompanyPage({
             decided in the moderation queue, never here.
           </p>
         </header>
+        <LogoUpload
+          slug={slug}
+          organizationId={company.id}
+          hasLogo={!!(company.profile.logoKey || company.profile.faviconKey)}
+          version={company.profile.updatedAt}
+        />
         <LearnerProviders>
           <AdminCompanyForm slug={slug} />
         </LearnerProviders>

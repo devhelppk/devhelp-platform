@@ -148,6 +148,8 @@ Nothing reads those rows directly. `salary_stats` (per company, role, currency) 
 
 `fx_rates` is one row per day per pair, written by `pnpm fx:refresh` from an exchange-rate API and read by everything else; the platform never calls that API on a request path.
 
+`company_profiles.favicon_key` and `favicon_checked_at` cache the icon from a company's own website (S10c), fetched server-side at most once a month so a reader's browser never talks to a third party. `moderation_subject` also carries `salary_report`: a reader saying a role's published figures look wrong, whose subject is the company, because an individual salary is never shown and so cannot be pointed at.
+
 ### Planned (see `spec.md`)
 
 - S9: `cohort_courses`.

@@ -6,6 +6,7 @@ import {
   eq,
   ilike,
   isNotNull,
+  isNull,
   or,
   schema,
   sql,
@@ -109,6 +110,7 @@ export const companiesRouter = router({
           name: organizations.name,
           slug: organizations.slug,
           logo: organizations.logo,
+          markVersion: companyProfiles.updatedAt,
           city: organizations.city,
           industry: companyProfiles.industry,
           size: companyProfiles.size,
@@ -220,6 +222,7 @@ export const companiesRouter = router({
           name: organizations.name,
           slug: organizations.slug,
           logo: organizations.logo,
+          markVersion: companyProfiles.updatedAt,
           website: organizations.website,
           city: organizations.city,
           description: companyProfiles.description,
@@ -365,6 +368,120 @@ export const companiesRouter = router({
         latestUsdToPkr(ctx.db),
       ]);
       return { roles, detail, fx };
+    }),
+
+  /**
+   * Report that a role's published salary figures look wrong (S10c). The
+   * subject is the company, not a salary point: an individual figure is never
+   * shown, so a reader cannot point at one. The payload names the role, and an
+   * admin — who can see every point — decides which ones to act on. Upholding
+   * this hides nothing by itself; there is no single row it refers to.
+   */
+  reportSalaries: verifiedProcedure
+    .input(
+      z.object({
+        slug: z.string().min(1),
+        roleId: z.uuid().nullable(),
+        currency: z.enum(schema.salaryCurrency.enumValues),
+        details: z.string().trim().max(1000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const org = await companyIdBySlug(ctx.db, input.slug);
+      const [company, role, row] = await Promise.all([
+        ctx.db.query.organizations.findFirst({
+          where: eq(organizations.id, org),
+          columns: { name: true, slug: true },
+        }),
+        input.roleId
+          ? ctx.db.query.jobRoles.findFirst({
+              where: eq(schema.jobRoles.id, input.roleId),
+              columns: { name: true },
+            })
+          : null,
+        ctx.db
+          .select({ n: salaryStats.n, median: salaryStats.median })
+          .from(salaryStats)
+          .where(
+            and(
+              eq(salaryStats.organizationId, org),
+              eq(salaryStats.currency, input.currency),
+              input.roleId
+                ? eq(salaryStats.roleId, input.roleId)
+                : isNull(salaryStats.roleId),
+            ),
+          )
+          .limit(1),
+      ]);
+      const stats = row[0];
+      if (!stats)
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "There are no published figures for that role.",
+        });
+      return ctx.db.transaction(async (tx) => {
+        await rateLimit(
+          tx,
+          `company:salary-report:${ctx.user.id}`,
+          10,
+          24 * 60 * 60,
+          "You have reported a lot of figures today. Try again tomorrow.",
+        );
+        const payload = {
+          kind: "salary_report" as const,
+          data: {
+            companySlug: company?.slug ?? input.slug,
+            companyName: company?.name ?? input.slug,
+            role: role?.name ?? "Other",
+            currency: input.currency,
+            median: stats.median ?? undefined,
+            n: stats.n,
+          },
+        };
+        // `moderation_items` is unique on (subject type, subject id), and the
+        // subject here is the company, so there is one standing task per
+        // company rather than one per report. A later report reopens it; the
+        // reporters themselves are the `content_flags` rows below, which is
+        // what stops one person filing the same thing twice.
+        const [item] = await tx
+          .insert(schema.moderationItems)
+          .values({
+            subjectType: "salary_report",
+            subjectId: org,
+            submittedBy: ctx.user.id,
+            status: "pending",
+            reason: input.details ?? null,
+            payload,
+          })
+          .onConflictDoUpdate({
+            target: [
+              schema.moderationItems.subjectType,
+              schema.moderationItems.subjectId,
+            ],
+            set: {
+              status: "pending",
+              payload,
+              reason: input.details ?? null,
+              decidedAt: null,
+              decidedBy: null,
+              updatedAt: new Date(),
+            },
+          })
+          .returning({ id: schema.moderationItems.id });
+        const [flag] = await tx
+          .insert(schema.contentFlags)
+          .values({
+            subjectType: "salary_report",
+            subjectId: org,
+            reporterId: ctx.user.id,
+            reason: "unverifiable",
+            details: input.details ?? null,
+            itemId: item!.id,
+          })
+          .onConflictDoNothing()
+          .returning({ id: schema.contentFlags.id });
+        return { id: item!.id, duplicate: !flag };
+      });
     }),
 
   /**

@@ -50,6 +50,7 @@ export function ModerationItem({
     "company_review",
     "interview_experience",
     "salary_point",
+    "salary_report",
   ];
   const canDecide = !adminOnly.includes(it.subjectType) || isAdmin;
 
@@ -243,6 +244,29 @@ export function ModerationItem({
                   <dd className="whitespace-pre-wrap">{payload.data.why}</dd>
                 </>
               ) : null}
+            </>
+          ) : payload.kind === "salary_report" ? (
+            <>
+              <dt className="text-muted-foreground">Company</dt>
+              <dd>{payload.data.companyName}</dd>
+              <dt className="text-muted-foreground">Role</dt>
+              <dd>
+                {payload.data.role} ({payload.data.currency})
+              </dd>
+              <dt className="text-muted-foreground">Published figure</dt>
+              <dd>
+                {payload.data.median !== undefined
+                  ? `${payload.data.currency} ${Math.round(payload.data.median / 100).toLocaleString("en-GB")} a month`
+                  : "—"}{" "}
+                over {payload.data.n} reports
+              </dd>
+              <dt className="text-muted-foreground">Note</dt>
+              <dd>
+                A reader says these figures look wrong. Individual salaries are
+                never shown, so this points at the role, not one point. Deciding
+                it resolves the report; hide the offending points from their own
+                queue items.
+              </dd>
             </>
           ) : payload.kind === "salary_point" ? (
             <>

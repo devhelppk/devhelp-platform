@@ -33,6 +33,7 @@ export const COMPANY_SUBJECTS: string[] = [
   "company_review",
   "interview_experience",
   "salary_point",
+  "salary_report",
 ];
 
 type Tx = Parameters<
@@ -208,7 +209,9 @@ async function decidedNotification(
               ? "Your interview experience"
               : item.subjectType === "salary_point"
                 ? "Your salary point"
-                : "Your review request";
+                : item.subjectType === "salary_report"
+                  ? "The figures you reported"
+                  : "Your review request";
   const href =
     payload?.kind === "comment"
       ? payload.data.subjectType === "lesson"
@@ -217,16 +220,24 @@ async function decidedNotification(
       : payload?.kind === "course_review"
         ? `/courses/${payload.data.courseSlug}`
         : payload?.kind === "company_contribution" ||
-            payload?.kind === "salary_point"
+            payload?.kind === "salary_point" ||
+            payload?.kind === "salary_report"
           ? `/companies/${payload.data.companySlug}`
           : "/notifications";
-  const verb = approved
-    ? item.subjectType === "company_review_request"
-      ? "was accepted"
-      : "is published"
-    : approved === false && item.subjectType === "company_review_request"
-      ? "was declined"
-      : "was not published";
+  // A report is not content: "is published" would be both ungrammatical and
+  // the opposite of what happened to it.
+  const verb =
+    item.subjectType === "salary_report"
+      ? approved
+        ? "was acted on"
+        : "was reviewed, and the figures stand"
+      : approved
+        ? item.subjectType === "company_review_request"
+          ? "was accepted"
+          : "is published"
+        : approved === false && item.subjectType === "company_review_request"
+          ? "was declined"
+          : "was not published";
   return notify({
     userId: submitter.id,
     kind: "moderation_decided",
@@ -739,7 +750,14 @@ export const moderationRouter = router({
           .set({ status: input.outcome, resolvedAt: now })
           .where(eq(schema.contentFlags.id, flag.id));
         if (!item) return { ok: true, hidden: false };
-        const hides = input.outcome === "upheld" && item.status === "approved";
+        // A salary point is public while its item is still pending (S10b), so
+        // "already approved" is the wrong test: what matters is whether the
+        // subject is visible to readers right now.
+        const publicWhilePending = item.subjectType === "salary_point";
+        const hides =
+          input.outcome === "upheld" &&
+          (item.status === "approved" ||
+            (publicWhilePending && item.status === "pending"));
         if (hides)
           await tx
             .update(schema.moderationItems)
