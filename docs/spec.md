@@ -281,21 +281,35 @@ Depends on: S2, S6. Shipped as one spec; the cut did not need splitting. Paths f
 
 Folded into S6 on 2026-09-06 (founder decision: discussions ship with ratings). Number kept so later references stay valid.
 
-### S13. Company claims and cross-links — `todo`
+### S13. Company claims and public responses — `planned`
 
-Scope: area 2 phase 2 (F2.12, F2.15). Company representative claims, public responses, links between company pages and courses.
+Plan: [`specs/S13-company-claims/plan.md`](./specs/S13-company-claims/plan.md)
 
-Depends on: S10a, S3.
-
-### S14. Search, analytics, launch hardening — `todo`
-
-Scope: X3 (Postgres full-text search across courses, lessons, companies), X6 (Plausible/Umami), X8 (performance budget audit), X9 (fresh-clone run-through), security review of auth and moderation, CI including Postgres integration tests.
+Scope: F2.12's public half — a company representative claims the profile and can answer publicly what is written about them. Founder decisions 2026-09-07: a claim needs a work-email domain match plus admin approval; a response is queued like every other contribution; **F2.15, the company-to-course cross-links, is deferred.**
 
 Acceptance criteria
 
-- [ ] Fresh clone to running app in under 10 minutes following README only.
-- [ ] `/security-review` findings addressed.
-- [ ] Lighthouse mobile ≥ 90 on catalogue, lesson, company page.
+- [ ] A claim records what evidence was checked, and approving one makes the claimant an organisation member.
+- [ ] Only a member of that company can write a response, and it is invisible until an admin approves it.
+- [ ] A response renders under the post it answers, attributed to the company rather than a person.
+- [ ] An edited response returns to the queue and cannot republish something an admin hid.
+- [ ] Browser loop passed; at least two fix-and-reload iterations recorded in `test.md`.
+
+Depends on: S10a, S6 (the Markdown pipeline).
+
+### S14. Search, and getting to a launch — `planned`
+
+Plan: [`specs/S14-search-launch/plan.md`](./specs/S14-search-launch/plan.md)
+
+Scope: X3 (Postgres full-text search across courses, lessons, and companies), X8 (performance audit), X9 (MIT licence, contribution guide, security policy, and a timed fresh-clone run), and the security review. Founder decision 2026-09-07: **X6, analytics, is deferred post-MVP** — X9 requires the platform to run on a laptop with no paid keys, and a self-hosted analytics service is one more thing to run before there is anyone to measure.
+
+Acceptance criteria
+
+- [ ] Search returns courses, lessons, and companies for a plain query, and never returns something unpublished.
+- [ ] Fresh clone to running app in under 10 minutes following the README only, timed and recorded.
+- [ ] Lighthouse mobile ≥ 90 on catalogue, lesson, and company page, recorded before and after.
+- [ ] `/security-review` findings addressed or written down with a reason.
+- [ ] MIT licence, contribution guide, and security policy present and accurate.
 
 Depends on: everything above.
 
