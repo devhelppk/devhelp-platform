@@ -320,7 +320,7 @@ Depends on: everything above.
 Founder actions
 
 - ~~Push the `devhelp-content` metadata commits and bump `content.lock.json` (S11).~~ Done before this was written; verified 2026-09-12.
-- Create the Resend account and verify the `devhelp.pk` sending domain, then set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` in production; create the `policy@devhelp.pk` mailbox named on `/policy` (S5).
+- ~~Create the Resend account and verify the `devhelp.pk` sending domain~~ — done; `devhelp.pk` is verified in Resend (region `ap-northeast-1`), and a real send through `sendEmail` was delivered end to end on 2026-09-12, so `EMAIL_FROM="devhelp <no-reply@devhelp.pk>"` works as it stands. Still to do: set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` **in production** (local dev stays on Mailpit), and create the `policy@devhelp.pk` mailbox named on `/policy` (S5).
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
 - Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
