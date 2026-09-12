@@ -45,37 +45,48 @@
 }
 
 .dark {
-  --background: oklch(0.19 0.04 275);
-  --foreground: oklch(0.96 0.01 90);
-  --card: oklch(0.23 0.04 275);
-  --card-foreground: oklch(0.96 0.01 90);
-  --popover: oklch(0.23 0.04 275);
-  --popover-foreground: oklch(0.96 0.01 90);
-  --primary: oklch(0.8 0.09 272);
+  /* Surfaces are neutral (chroma 0), the register shadcn, Vercel and Resend use:
+     #0a0a0a page, #171717 cards, #262626 raised. They used to carry chroma 0.04
+     at the indigo hue, which tinted every surface navy (#0f1225) — the brand
+     leaking into the paper rather than sitting on it. Hue now survives only in
+     the roles that mean something: primary, ring, destructive and the charts.
+     Contrast was computed, not eyeballed: foreground 18.9:1 on the page and
+     17.2:1 on a card, muted-foreground 7.6:1 / 6.9:1 / 5.8:1 on page, card and
+     muted, primary 9.8:1, its foreground 9.0:1 on it, ring 4.9:1. */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.78 0.1 272);
   --primary-foreground: oklch(0.2 0.05 272);
-  --secondary: oklch(0.28 0.04 275);
-  --secondary-foreground: oklch(0.96 0.01 90);
-  --muted: oklch(0.28 0.04 275);
-  --muted-foreground: oklch(0.72 0.03 275);
-  --accent: oklch(0.3 0.06 272);
-  --accent-foreground: oklch(0.94 0.03 272);
-  --destructive: oklch(0.68 0.16 25);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  /* Neutral, so a hovered row or the current nav item reads as a change in
+     level rather than a wash of brand colour. */
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.7 0.17 25);
   --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.66 0.13 272);
-  --chart-1: oklch(0.8 0.09 272);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.6 0.12 272);
+  /* Charts keep their hues: here colour carries the data, not the chrome. */
+  --chart-1: oklch(0.78 0.1 272);
   --chart-2: oklch(0.8 0.11 25);
   --chart-3: oklch(0.66 0.13 272);
   --chart-4: oklch(0.68 0.16 25);
-  --chart-5: oklch(0.72 0.03 275);
-  --sidebar: oklch(0.21 0.04 275);
-  --sidebar-foreground: oklch(0.96 0.01 90);
-  --sidebar-primary: oklch(0.8 0.09 272);
+  --chart-5: oklch(0.708 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.78 0.1 272);
   --sidebar-primary-foreground: oklch(0.2 0.05 272);
-  --sidebar-accent: oklch(0.3 0.06 272);
-  --sidebar-accent-foreground: oklch(0.94 0.03 272);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.66 0.13 272);
+  --sidebar-ring: oklch(0.6 0.12 272);
 }
 
 @theme inline {
