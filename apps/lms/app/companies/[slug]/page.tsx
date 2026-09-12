@@ -10,6 +10,7 @@ import { cache } from "react";
 import { api } from "@repo/api/server";
 import {
   Affiliation,
+  AtAGlance,
   Month,
   Rating,
   ScoreBar,
@@ -62,6 +63,14 @@ export async function generateMetadata({
       `What it is like to work at ${company.name}, from the people who work there.`,
   };
 }
+
+/**
+ * Sub-scores are withheld below this many reviews. Five averages printed to one
+ * decimal off two reviews claim a precision the sample cannot support — one more
+ * review moves a bar by a whole point. Same reasoning as the salary floor in
+ * S10b, applied to opinion rather than pay.
+ */
+const SCORE_BREAKDOWN_MIN = 5;
 
 const outcomeLabels = {
   offer: "Offer",
@@ -164,36 +173,90 @@ export default async function CompanyPage({
           </div>
         </header>
 
+        {/* At a glance: the numbers a reader decides on, above the sections
+            that explain them, with jump links because the page is long. The
+            recommend rate used to sit as muted text under five score bars; it
+            is the one figure most people act on. */}
+        <AtAGlance
+          recommendPct={company.recommendPct}
+          reviewCount={company.reviewCount}
+          interviewCount={company.interviewCount}
+          payRoleCount={salaries.roles.length}
+        />
+
+        {company.description || company.stack.length ? (
+          <div className="flex flex-col gap-3">
+            {company.description ? (
+              <p className="max-w-prose text-sm">{company.description}</p>
+            ) : null}
+            <div className="flex flex-wrap gap-1.5">
+              {company.hiresJuniors ? (
+                <Badge variant="secondary">Hires juniors</Badge>
+              ) : null}
+              {company.stack.map((t) => (
+                <Badge key={t} variant="outline">
+                  {t}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {/* `Facts` is first in the DOM and placed into the right column from
+            `lg` up. It used to be last, which read fine as a desktop sidebar but
+            put who-the-company-is below every review, pay table and interview on
+            anything under 1024px — every phone, every tablet, and a laptop in a
+            split window. */}
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
           {/* `min-w-0`: a grid item will not shrink below its content by
               default, so without it the pay table's min-width pushes the whole
               page into a horizontal scroll on a phone. */}
-          <div className="flex min-w-0 flex-col gap-10">
-            {company.description || company.stack.length ? (
-              <div className="flex flex-col gap-3">
-                {company.description ? (
-                  <p className="max-w-prose text-sm">{company.description}</p>
-                ) : null}
-                <div className="flex flex-wrap gap-1.5">
-                  {company.hiresJuniors ? (
-                    <Badge variant="secondary">Hires juniors</Badge>
-                  ) : null}
-                  {company.stack.map((t) => (
-                    <Badge key={t} variant="outline">
-                      {t}
-                    </Badge>
-                  ))}
+          <aside className="flex h-fit flex-col gap-4 rounded-lg border p-4 text-sm lg:col-start-2 lg:row-start-1">
+            <h2 className="font-medium">Facts</h2>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+              {facts.map(([k, v]) => (
+                <div key={k} className="contents">
+                  <dt className="text-muted-foreground">{k}</dt>
+                  <dd>{v}</dd>
                 </div>
-              </div>
+              ))}
+            </dl>
+            {company.website ? (
+              <a
+                href={company.website}
+                rel="nofollow noopener"
+                target="_blank"
+                className="break-all underline underline-offset-4"
+              >
+                {company.website.replace(/^https?:\/\//, "")}
+              </a>
             ) : null}
-            <section className="flex flex-col gap-4">
+            <p className="text-xs text-muted-foreground">
+              Facts are checked by the devhelp team against public sources.
+              Reviews and interviews are contributed by learners and published
+              after review. Nothing here identifies its author.
+            </p>
+          </aside>
+          <div className="flex min-w-0 flex-col gap-10 lg:col-start-1 lg:row-start-1">
+            <section id="pay" className="flex scroll-mt-6 flex-col gap-4">
+              <h2 className="font-display text-xl font-semibold">Pay</h2>
+              <Pay
+                roles={salaries.roles}
+                detail={salaries.detail}
+                fx={salaries.fx}
+                companyName={company.name}
+                slug={slug}
+                signedIn={signedIn}
+              />
+            </section>
+
+            <section id="reviews" className="flex scroll-mt-6 flex-col gap-4">
               <h2 className="font-display text-xl font-semibold">
                 Reviews{" "}
                 <span className="text-sm font-normal text-muted-foreground">
                   ({company.reviewCount})
                 </span>
               </h2>
-              {company.reviewCount > 0 ? (
+              {company.reviewCount >= SCORE_BREAKDOWN_MIN ? (
                 <div className="flex flex-col gap-2 rounded-lg border p-4">
                   <ScoreBar label="Learning" value={company.learningAvg} />
                   <ScoreBar label="Management" value={company.managementAvg} />
@@ -203,12 +266,14 @@ export default async function CompanyPage({
                     value={company.compensationAvg}
                   />
                   <ScoreBar label="Growth" value={company.growthAvg} />
-                  {company.recommendPct !== null ? (
-                    <p className="pt-1 text-sm text-muted-foreground">
-                      {company.recommendPct}% would recommend working here.
-                    </p>
-                  ) : null}
                 </div>
+              ) : company.reviewCount > 0 ? (
+                <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                  Scores for learning, management, work/life, pay and growth
+                  appear once {SCORE_BREAKDOWN_MIN} people have reviewed{" "}
+                  {company.name}. With {company.reviewCount}, a single review
+                  would move each one too far to mean anything.
+                </p>
               ) : null}
               {reviews.items.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
@@ -253,17 +318,17 @@ export default async function CompanyPage({
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                          <h3 className="text-xs font-medium text-muted-foreground">
+                          <p className="text-xs font-medium text-muted-foreground">
                             Pros
-                          </h3>
+                          </p>
                           <p className="text-sm whitespace-pre-wrap">
                             {r.pros}
                           </p>
                         </div>
                         <div>
-                          <h3 className="text-xs font-medium text-muted-foreground">
+                          <p className="text-xs font-medium text-muted-foreground">
                             Cons
-                          </h3>
+                          </p>
                           <p className="text-sm whitespace-pre-wrap">
                             {r.cons}
                           </p>
@@ -271,9 +336,9 @@ export default async function CompanyPage({
                       </div>
                       {r.advice ? (
                         <div>
-                          <h3 className="text-xs font-medium text-muted-foreground">
+                          <p className="text-xs font-medium text-muted-foreground">
                             Advice
-                          </h3>
+                          </p>
                           <p className="text-sm whitespace-pre-wrap">
                             {r.advice}
                           </p>
@@ -295,19 +360,10 @@ export default async function CompanyPage({
               )}
             </section>
 
-            <section className="flex flex-col gap-4">
-              <h2 className="font-display text-xl font-semibold">Pay</h2>
-              <Pay
-                roles={salaries.roles}
-                detail={salaries.detail}
-                fx={salaries.fx}
-                companyName={company.name}
-                slug={slug}
-                signedIn={signedIn}
-              />
-            </section>
-
-            <section className="flex flex-col gap-4">
+            <section
+              id="interviews"
+              className="flex scroll-mt-6 flex-col gap-4"
+            >
               <h2 className="font-display text-xl font-semibold">
                 Interviews{" "}
                 <span className="text-sm font-normal text-muted-foreground">
@@ -359,9 +415,9 @@ export default async function CompanyPage({
                       </ol>
                       {i.questions ? (
                         <div>
-                          <h3 className="text-xs font-medium text-muted-foreground">
+                          <p className="text-xs font-medium text-muted-foreground">
                             Questions asked
-                          </h3>
+                          </p>
                           <p className="text-sm whitespace-pre-wrap">
                             {i.questions}
                           </p>
@@ -369,9 +425,9 @@ export default async function CompanyPage({
                       ) : null}
                       {i.advice ? (
                         <div>
-                          <h3 className="text-xs font-medium text-muted-foreground">
+                          <p className="text-xs font-medium text-muted-foreground">
                             Advice
-                          </h3>
+                          </p>
                           <p className="text-sm whitespace-pre-wrap">
                             {i.advice}
                           </p>
@@ -393,33 +449,6 @@ export default async function CompanyPage({
               )}
             </section>
           </div>
-
-          <aside className="flex h-fit flex-col gap-4 rounded-lg border p-4 text-sm">
-            <h2 className="font-medium">Facts</h2>
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
-              {facts.map(([k, v]) => (
-                <div key={k} className="contents">
-                  <dt className="text-muted-foreground">{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
-            </dl>
-            {company.website ? (
-              <a
-                href={company.website}
-                rel="nofollow noopener"
-                target="_blank"
-                className="break-all underline underline-offset-4"
-              >
-                {company.website.replace(/^https?:\/\//, "")}
-              </a>
-            ) : null}
-            <p className="text-xs text-muted-foreground">
-              Facts are checked by the devhelp team against public sources.
-              Reviews and interviews are contributed by learners and published
-              after review. Nothing here identifies its author.
-            </p>
-          </aside>
         </div>
       </div>
     </Page>

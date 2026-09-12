@@ -99,3 +99,74 @@ export function Month({ value }: { value: string | null }) {
     </span>
   );
 }
+
+/**
+ * The numbers a reader decides on, in one strip above the sections that explain
+ * them, doubling as the page's jump navigation.
+ *
+ * Before this, the recommend rate was muted text at the foot of the score-bar
+ * card, below five bars that merely break it down, and a long page offered no
+ * way to reach pay or interviews except scrolling past every review.
+ */
+export function AtAGlance({
+  recommendPct,
+  reviewCount,
+  interviewCount,
+  payRoleCount,
+}: {
+  recommendPct: number | null;
+  reviewCount: number;
+  interviewCount: number;
+  payRoleCount: number;
+}) {
+  const stats: { value: string; label: string; href?: string }[] = [];
+  if (recommendPct !== null)
+    stats.push({
+      value: `${recommendPct}%`,
+      label: "would recommend",
+      href: "#reviews",
+    });
+  if (payRoleCount > 0)
+    stats.push({
+      value: String(payRoleCount),
+      label: payRoleCount === 1 ? "role with pay" : "roles with pay",
+      href: "#pay",
+    });
+  stats.push({
+    value: String(reviewCount),
+    label: reviewCount === 1 ? "review" : "reviews",
+    href: reviewCount > 0 ? "#reviews" : undefined,
+  });
+  stats.push({
+    value: String(interviewCount),
+    label: interviewCount === 1 ? "interview" : "interviews",
+    href: interviewCount > 0 ? "#interviews" : undefined,
+  });
+  if (stats.every((s) => s.value === "0")) return null;
+  return (
+    <ul className="flex flex-wrap gap-x-8 gap-y-3 rounded-lg border p-4">
+      {stats.map((s) => (
+        <li key={s.label}>
+          {s.href ? (
+            <a
+              href={s.href}
+              className="group flex flex-col rounded-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              <span className="font-display text-2xl font-semibold tracking-tight group-hover:underline group-hover:underline-offset-4">
+                {s.value}
+              </span>
+              <span className="text-xs text-muted-foreground">{s.label}</span>
+            </a>
+          ) : (
+            <span className="flex flex-col">
+              <span className="font-display text-2xl font-semibold tracking-tight text-muted-foreground">
+                {s.value}
+              </span>
+              <span className="text-xs text-muted-foreground">{s.label}</span>
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}

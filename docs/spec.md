@@ -313,9 +313,11 @@ Acceptance criteria
 
 Depends on: everything above.
 
-### S15. Company page: information hierarchy, and a give-to-get gate — `todo`
+### S15. Company page: information hierarchy, and a give-to-get gate — `in-progress`
 
-Plan (awaiting approval): [`specs/S15-company-gate/plan.md`](./specs/S15-company-gate/plan.md)
+Plan: [`specs/S15-company-gate/plan.md`](./specs/S15-company-gate/plan.md). Part A records: [`test.md`](./specs/S15-company-gate/test.md)
+
+**Part A (the design pass) is done and verified in the browser.** Part B (the gate) is not started and still blocked on the three decisions below.
 
 Scope: two halves of one page. (a) A design pass on `/companies/[slug]` — orientation facts currently land last on mobile, the recommend-rate sits below the sub-scores that explain it, five sub-scores are printed to one decimal off two reviews, and `h3` does duty at three different levels. (b) A give-to-get gate: company detail is for viewers with a verified email who have contributed to any company in the last 365 days; everyone else sees a synthetic mockup, with the real rows never fetched, never in the RSC payload, and never reachable by a hand-made API call.
 
@@ -325,7 +327,9 @@ Scope: two halves of one page. (a) A design pass on `/companies/[slug]` — orie
 - **D2.** Cold start. Taken literally the rule is circular — nobody may read without contributing, nobody contributes to a bank they cannot read, and there are no users. Recommended: verified email alone is the gate until the bank holds 250 published contributions, then the contribution rule switches itself on.
 - **D3.** Recommended: a `pending` contribution counts, a `rejected` or `hidden` one does not.
 
-Acceptance criteria: in the plan. The one that matters most is a test — not a browser observation — that an ineligible viewer's response body carries no contributed content.
+Part A, shipped: at-a-glance strip (recommend rate, roles with pay, review and interview counts) doubling as jump navigation; `Facts` moved ahead of the content on anything under 1024px, where it used to sit below every review, pay table and interview; sections reordered to Pay → Reviews → Interviews; sub-scores withheld below five reviews rather than printing five one-decimal averages off two; card field labels demoted from `h3` so the heading outline is one level per level. Deviation from the plan: the order is Pay → Reviews → Interviews rather than the planned Pay → Interviews → Reviews, because splitting the two experience sections around pay read worse than keeping "what it is like" next to "how to get in".
+
+Part B acceptance criteria: in the plan. The one that matters most is a test — not a browser observation — that an ineligible viewer's response body carries no contributed content.
 
 Depends on: S10a, S10b, S10c, S13, S14.
 
