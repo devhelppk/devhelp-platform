@@ -8,6 +8,15 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useTRPC } from "@/lib/trpc/client";
+import { Checkbox } from "@repo/ui/components/checkbox";
+import { Label } from "@repo/ui/components/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
 import { Credits } from "./credits";
 import { Area, Choice, EditTrail, SaveRow, Text } from "./fields";
 
@@ -136,134 +145,162 @@ export function CourseForm({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-10">
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        {course.needsMetadata ? (
-          <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
-            This course arrived from the content repo with only its slug. Give
-            it a title and a summary, and it can be published.
-          </p>
-        ) : null}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Text
-            name="title"
-            label="Title"
-            defaultValue={course.title}
-            required
-          />
-          <Text
-            name="estimatedHours"
-            label="Estimated hours"
-            type="number"
-            defaultValue={
-              course.estimatedHours ? String(course.estimatedHours) : ""
-            }
-          />
-          <Choice
-            name="track"
-            label="Track"
-            defaultValue={course.track}
-            options={[
-              ["technical", "Technical"],
-              ["career", "Career"],
-            ]}
-          />
-          <Choice
-            name="level"
-            label="Level"
-            defaultValue={course.level}
-            options={[
-              ["beginner", "Beginner"],
-              ["intermediate", "Intermediate"],
-              ["advanced", "Advanced"],
-            ]}
-          />
-        </div>
-        <Area
-          name="summary"
-          label="Summary"
-          defaultValue={course.summary}
-          hint="One or two sentences. This is what the catalogue shows."
-        />
-        <Area
-          name="description"
-          label="Description"
-          rows={5}
-          defaultValue={course.description ?? ""}
-        />
-        <Text
-          name="coverImageUrl"
-          label="Cover image URL"
-          defaultValue={course.coverImageUrl ?? ""}
-        />
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="isPublished"
-            value="1"
-            defaultChecked={course.isPublished}
-            className="size-4 rounded border-input accent-brand-600"
-          />
-          Published — visible in the catalogue
-        </label>
-        <SaveRow pending={save.isPending} error={error} saved={saved} />
-      </form>
+    /* The form is what a mentor came to fill in, so it leads; credits, the
+       lesson list and the edit trail are reference and sit beside it rather
+       than under it, where they pushed the page to twice the height. */
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+      <Card className="min-w-0">
+        <CardHeader>
+          <CardTitle>Metadata</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="flex flex-col gap-4">
+            {course.needsMetadata ? (
+              <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+                This course arrived from the content repo with only its slug.
+                Give it a title and a summary, and it can be published.
+              </p>
+            ) : null}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Text
+                name="title"
+                label="Title"
+                defaultValue={course.title}
+                required
+              />
+              <Text
+                name="estimatedHours"
+                label="Estimated hours"
+                type="number"
+                defaultValue={
+                  course.estimatedHours ? String(course.estimatedHours) : ""
+                }
+              />
+              <Choice
+                name="track"
+                label="Track"
+                defaultValue={course.track}
+                options={[
+                  ["technical", "Technical"],
+                  ["career", "Career"],
+                ]}
+              />
+              <Choice
+                name="level"
+                label="Level"
+                defaultValue={course.level}
+                options={[
+                  ["beginner", "Beginner"],
+                  ["intermediate", "Intermediate"],
+                  ["advanced", "Advanced"],
+                ]}
+              />
+            </div>
+            <Area
+              name="summary"
+              label="Summary"
+              defaultValue={course.summary}
+              hint="One or two sentences. This is what the catalogue shows."
+            />
+            <Area
+              name="description"
+              label="Description"
+              rows={5}
+              defaultValue={course.description ?? ""}
+            />
+            <Text
+              name="coverImageUrl"
+              label="Cover image URL"
+              defaultValue={course.coverImageUrl ?? ""}
+            />
+            {/* The design system's Checkbox rather than a styled native input;
+            it carries the focus ring and the disabled and invalid states. */}
+            <Label className="flex items-center gap-2 text-sm font-normal">
+              <Checkbox
+                name="isPublished"
+                value="1"
+                defaultChecked={course.isPublished}
+              />
+              Published — visible in the catalogue
+            </Label>
+            <SaveRow pending={save.isPending} error={error} saved={saved} />
+          </form>
+        </CardContent>
+      </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold">Credits</h2>
-        <Credits subjectType="course" subjectId={course.id} credits={credits} />
-      </section>
+      <div className="flex min-w-0 flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Credits</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Credits
+              subjectType="course"
+              subjectId={course.id}
+              credits={credits}
+            />
+          </CardContent>
+        </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold">
-          Lessons{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({lessons.length})
-          </span>
-        </h2>
-        <p className="max-w-prose text-xs text-muted-foreground">
-          Which lessons exist, and their order, come from the content repo.
-          Their titles are yours.
-        </p>
-        <ul className="divide-y rounded-lg border">
-          {modules.map((m) => (
-            <li key={m.id} className="flex flex-col">
-              <ModuleTitle id={m.id} title={m.title} slug={m.slug} />
-              {lessons
-                .filter((l) => l.moduleId === m.id)
-                .map((l) => (
-                  <div
-                    key={l.id}
-                    className="flex flex-wrap items-center gap-3 border-t px-4 py-3 text-sm"
-                  >
-                    <Link
-                      href={`/studio/lessons/${l.id}` as Route}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
-                      {l.title}
-                    </Link>
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {l.type}
-                    </Badge>
-                    {l.needsMetadata ? (
-                      <Badge variant="secondary" className="text-xs">
-                        No title yet
-                      </Badge>
-                    ) : null}
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {l.durationMinutes ? `${l.durationMinutes} min` : "—"}
-                    </span>
-                  </div>
-                ))}
-            </li>
-          ))}
-        </ul>
-      </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Lessons{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({lessons.length})
+              </span>
+            </CardTitle>
+            <CardDescription>
+              Which lessons exist, and their order, come from the content repo.
+              Their titles are yours.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y rounded-lg border">
+              {modules.map((m) => (
+                <li key={m.id} className="flex flex-col">
+                  <ModuleTitle id={m.id} title={m.title} slug={m.slug} />
+                  {lessons
+                    .filter((l) => l.moduleId === m.id)
+                    .map((l) => (
+                      <div
+                        key={l.id}
+                        className="flex flex-wrap items-center gap-3 border-t px-4 py-3 text-sm"
+                      >
+                        <Link
+                          href={`/studio/lessons/${l.id}` as Route}
+                          className="font-medium underline-offset-4 hover:underline"
+                        >
+                          {l.title}
+                        </Link>
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {l.type}
+                        </Badge>
+                        {l.needsMetadata ? (
+                          <Badge variant="secondary" className="text-xs">
+                            No title yet
+                          </Badge>
+                        ) : null}
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {l.durationMinutes ? `${l.durationMinutes} min` : "—"}
+                        </span>
+                      </div>
+                    ))}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold">Recent changes</h2>
-        <EditTrail edits={edits} />
-      </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent changes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EditTrail edits={edits} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

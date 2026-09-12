@@ -1,6 +1,9 @@
 import { auth } from "@repo/auth";
+import { Button } from "@repo/ui/components/button";
+import { PageHeader } from "@repo/ui/components/page-header";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import type { Route } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LearnerProviders } from "@/components/shell/learner-providers";
@@ -27,19 +30,23 @@ export default async function StudioCoursePage({
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Shell callbackURL={`/studio/courses/${slug}`}>
+    <Shell wide callbackURL={`/studio/courses/${slug}`}>
       <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <Link
-            href="/studio"
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            ← Studio
-          </Link>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Course metadata
-          </h1>
-        </header>
+        <Link
+          href="/studio"
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          ← Studio
+        </Link>
+        <PageHeader
+          title="Course metadata"
+          description="The title, summary and publish state the catalogue shows. What the course teaches is a pull request on the content repo; what it is called is yours."
+          actions={
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/courses/${slug}` as Route}>View in catalogue</Link>
+            </Button>
+          }
+        />
         <LearnerProviders>
           <CourseForm slug={slug} />
         </LearnerProviders>

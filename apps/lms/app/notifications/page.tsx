@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <Shell callbackURL="/notifications">
+    <Shell wide callbackURL="/notifications">
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Notifications"

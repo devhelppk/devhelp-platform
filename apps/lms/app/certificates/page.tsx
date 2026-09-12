@@ -18,7 +18,7 @@ export default async function CertificatesPage() {
   const caller = await api(await headers());
   const certs = await caller.certificates.mine();
   return (
-    <Shell callbackURL="/certificates">
+    <Shell wide callbackURL="/certificates">
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Certificates"

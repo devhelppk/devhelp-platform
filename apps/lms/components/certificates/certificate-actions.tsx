@@ -30,7 +30,10 @@ export function CertificateActions({
   linkedin.searchParams.set("certUrl", verifyUrl);
   linkedin.searchParams.set("certId", id);
   return (
-    <div className="flex flex-wrap gap-2">
+    /* Verify, PDF and Copy act on the certificate here; Add to LinkedIn sends
+       the reader somewhere else, so it is pushed to the far end rather than
+       sitting fourth in a row of four identical-looking buttons. */
+    <div className="flex w-full flex-wrap items-center gap-2">
       {/* The verify page had no button of its own: the only way to it was the
           course title, which does not read as a link. It is the thing a
           certificate is *for*, so it gets a control. */}
@@ -65,7 +68,7 @@ export function CertificateActions({
       >
         <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy verify link"}
       </Button>
-      <Button size="sm" variant="ghost" asChild>
+      <Button size="sm" variant="ghost" asChild className="sm:ml-auto">
         <a href={linkedin.toString()} target="_blank" rel="noreferrer noopener">
           <ExternalLink aria-hidden="true" /> Add to LinkedIn
         </a>

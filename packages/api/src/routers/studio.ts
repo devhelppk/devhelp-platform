@@ -105,11 +105,16 @@ export const studioRouter = router({
   overview: mentorProcedure.query(async ({ ctx }) => {
     const [needsMetadata, paths, flagged, recent] = await Promise.all([
       ctx.db
+        // Track and arrival time so the list can say something about a row: a
+        // course waiting to be described has its slug as a placeholder title,
+        // so without these every row reads the same.
         .select({
           id: courses.id,
           slug: courses.slug,
           title: courses.title,
           isPublished: courses.isPublished,
+          track: courses.track,
+          createdAt: courses.createdAt,
         })
         .from(courses)
         .where(and(eq(courses.needsMetadata, true), isNull(courses.archivedAt)))

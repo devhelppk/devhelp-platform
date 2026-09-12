@@ -37,3 +37,34 @@ Driven in Chrome as an admin at 1440×900, dark. Actions were **performed**, not
 - `/admin/companies` and `/studio` were only looked at, not exercised.
 - No 390px pass on any admin page.
 - The queue has no bulk action. Approving 800 seeded salary points one at a time is not viable; whether that matters depends on whether real volume ever looks like this.
+
+---
+
+# Follow-up: notifications, certificates, and the studio
+
+## Width
+
+`/notifications` and `/certificates` were on the narrow measure — a 768px column in a ~1250px inset, so half the width sat empty while the certificate cards wrapped their action row. Both are lists of records, which is what `wide` is for. **The rule these kept breaking is now in `CLAUDE.md`:** a page that stacks records asks for `wide`, not a taller page.
+
+On the certificate card, `Add to LinkedIn` was the fourth in a row of four identical-looking buttons. Verify, PDF and Copy all act on the certificate here; LinkedIn sends the reader somewhere else, so it is pushed to the far end of the row.
+
+## The studio
+
+**`/studio` list**
+
+- **Seventeen rows that all read the same.** A course waiting to be described has its slug as a placeholder title (S11), so the list was seventeen `sync-mtxu…-fresh` rows with `Not published` and nothing else — no way to choose one. The `overview` procedure selected only id, slug, title and publish state, so the fix was partly in the API: it now also returns `track` and `createdAt`, and the table shows Placeholder / Track / Arrived.
+- **Four sections in one column**, the first of them seventeen rows long, so paths, flagged lessons and the edit trail were all below the fold. Now two columns: the work queues (waiting, flagged) on the left, the reference panels (paths, recent changes) on the right, each a `Card`.
+- **Badges pushed right individually with `ml-auto`**, so nothing lined up between rows — the flagged-lessons list had four badges per row and no columns. Now a table with Rating / Unclear / Open, which is scannable because the numbers share a column.
+- **The edit trail could not be acted on.** "Someone changed authors on a lesson", with a date and no link. Lesson edits now link to the lesson and every entry shows a relative time. Course and path edits still do not link, and that is a real limit rather than an oversight: the studio routes for those are keyed by slug and `content_edits` records a subject id.
+
+**`/studio/courses/[slug]`**
+
+- Hand-rolled `<header><h1>`, so no actions slot — now `PageHeader` with `View in catalogue`, which was previously not reachable from the studio at all.
+- The form, credits, the lesson list and the edit trail were four stacked sections at the narrow measure, roughly twice the necessary height. Now two columns on a wide shell: the form a mentor came to fill in on the left, the reference panels on the right, each a `Card`.
+- A styled native `<input type="checkbox">` for the publish state, replaced with the design system's `Checkbox`, which carries the focus ring and the disabled and invalid states.
+
+## Still open
+
+- `/studio/paths/[slug]` and `/studio/lessons/[id]` were left alone: same shape, and worth the same pass, but not reviewed in the browser here so not changed blind.
+- `/admin/certificates` still loads 30 rows with no pagination.
+- No 390px pass on the studio or admin pages.

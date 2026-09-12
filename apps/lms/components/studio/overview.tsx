@@ -1,12 +1,35 @@
 "use client";
 
 import { Badge } from "@repo/ui/components/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@repo/ui/components/table";
 import { useQuery } from "@tanstack/react-query";
 import type { Route } from "next";
 import Link from "next/link";
 import { useTRPC } from "@/lib/trpc/client";
+import { ago } from "@/components/moderation/labels";
 
-/** The studio home: what needs describing, then what readers are struggling with. */
+/**
+ * The studio home: what needs describing, then what readers are struggling with.
+ *
+ * Two columns, and tables rather than flex rows with `ml-auto` badges. Stacked
+ * in one column the seventeen undescribed courses pushed paths, flagged lessons
+ * and the edit trail below the fold; and because the badges were pushed right
+ * individually rather than sharing a column, nothing lined up to be scanned.
+ */
 export function StudioOverview() {
   const trpc = useTRPC();
   const q = useQuery(trpc.studio.overview.queryOptions());
@@ -16,160 +39,227 @@ export function StudioOverview() {
     return <p className="text-sm text-destructive">{q.error.message}</p>;
   const { needsMetadata, paths, flagged, recent } = q.data;
   return (
-    <div className="flex flex-col gap-10">
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold">
-          Waiting to be described{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({needsMetadata.length})
-          </span>
-        </h2>
-        {needsMetadata.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nothing waiting. Every course has a title and a summary.
-          </p>
-        ) : (
-          <ul className="divide-y rounded-lg border">
-            {needsMetadata.map((c) => (
-              <li
-                key={c.id}
-                className="flex items-center gap-3 px-4 py-3 text-sm"
-              >
-                <Link
-                  href={`/studio/courses/${c.slug}` as Route}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
-                  {c.title}
-                </Link>
-                <Badge variant="outline" className="ml-auto">
-                  Not published
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="max-w-prose text-xs text-muted-foreground">
-          A course arrives from the content repo with its slug as a placeholder.
-          It cannot be published until somebody writes what it is.
-        </p>
-      </section>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+      <div className="flex min-w-0 flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Waiting to be described{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({needsMetadata.length})
+              </span>
+            </CardTitle>
+            <CardDescription>
+              A course arrives from the content repo with its slug as a
+              placeholder. It cannot be published until somebody writes what it
+              is.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {needsMetadata.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing waiting. Every course has a title and a summary.
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Placeholder</TableHead>
+                      <TableHead className="w-28">Track</TableHead>
+                      <TableHead className="w-28">Arrived</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {needsMetadata.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell>
+                          <Link
+                            href={`/studio/courses/${c.slug}` as Route}
+                            className="font-medium underline-offset-4 hover:underline"
+                          >
+                            {c.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground capitalize">
+                          {c.track}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {ago(c.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold">
-          Paths{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({paths.length})
-          </span>
-        </h2>
-        {paths.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No paths yet.</p>
-        ) : (
-          <ul className="divide-y rounded-lg border">
-            {paths.map((p) => (
-              <li
-                key={p.id}
-                className="flex items-center gap-3 px-4 py-3 text-sm"
-              >
-                <Link
-                  href={`/studio/paths/${p.slug}` as Route}
-                  className="font-medium underline-offset-4 hover:underline"
-                >
-                  {p.title}
-                </Link>
-                {p.needsMetadata ? (
-                  <Badge variant="secondary">Needs a description</Badge>
-                ) : null}
-                <Badge variant="outline" className="ml-auto">
-                  {p.isPublished ? "Published" : "Not published"}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Lessons worth a look{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({flagged.length})
+              </span>
+            </CardTitle>
+            <CardDescription>
+              Rated low, tagged unclear, or sitting on an unanswered question.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {flagged.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No lesson is rated low, tagged unclear, or sitting on an
+                unanswered question.
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Lesson</TableHead>
+                      <TableHead className="w-24">Rating</TableHead>
+                      <TableHead className="w-24">Unclear</TableHead>
+                      <TableHead className="w-24">Open</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {flagged.map((l) => (
+                      <TableRow key={l.id}>
+                        <TableCell className="whitespace-normal">
+                          <Link
+                            href={`/studio/lessons/${l.id}` as Route}
+                            className="font-medium underline-offset-4 hover:underline"
+                          >
+                            {l.title}
+                          </Link>
+                          <span className="block text-xs text-muted-foreground">
+                            {l.courseTitle}
+                            {l.needsMetadata ? " · no title yet" : ""}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">
+                          {l.ratingAvg && l.ratingCount >= 3
+                            ? `${Number(l.ratingAvg).toFixed(1)} (${l.ratingCount})`
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {l.unclearCount >= 3 ? (
+                            <Badge variant="destructive">
+                              {l.unclearCount}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {l.unclearCount || "—"}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {l.openQuestionCount > 0 ? (
+                            <Badge variant="secondary">
+                              {l.openQuestionCount}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold">
-          Lessons worth a look{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({flagged.length})
-          </span>
-        </h2>
-        {flagged.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No lesson is rated low, tagged unclear, or sitting on an unanswered
-            question.
-          </p>
-        ) : (
-          <ul className="divide-y rounded-lg border">
-            {flagged.map((l) => (
-              <li
-                key={l.id}
-                className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm"
-              >
-                <Link
-                  href={`/studio/lessons/${l.id}` as Route}
-                  className="font-medium underline-offset-4 hover:underline"
+      <div className="flex min-w-0 flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Paths{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({paths.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {paths.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No paths yet.</p>
+            ) : (
+              paths.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex flex-wrap items-center gap-2 text-sm"
                 >
-                  {l.title}
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  {l.courseTitle}
-                </span>
-                <span className="ml-auto flex flex-wrap items-center gap-2 text-xs">
-                  {l.needsMetadata ? (
-                    <Badge variant="outline">No title yet</Badge>
+                  <Link
+                    href={`/studio/paths/${p.slug}` as Route}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {p.title}
+                  </Link>
+                  {p.needsMetadata ? (
+                    <Badge variant="secondary">Needs a description</Badge>
                   ) : null}
-                  {l.ratingAvg && l.ratingCount >= 3 ? (
-                    <Badge variant="outline">
-                      {Number(l.ratingAvg).toFixed(1)} from {l.ratingCount}
-                    </Badge>
-                  ) : null}
-                  {l.unclearCount >= 3 ? (
-                    <Badge variant="destructive">
-                      {l.unclearCount} found it unclear
-                    </Badge>
-                  ) : null}
-                  {l.openQuestionCount > 0 ? (
-                    <Badge variant="secondary">
-                      {l.openQuestionCount} open{" "}
-                      {l.openQuestionCount === 1 ? "question" : "questions"}
-                    </Badge>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <Badge variant="outline" className="ml-auto">
+                    {p.isPublished ? "Published" : "Not published"}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl font-semibold">Recent changes</h2>
-        {recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing edited yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-2 text-sm">
-            {recent.map((e) => (
-              <li
-                key={e.id}
-                className="flex flex-wrap gap-2 text-muted-foreground"
-              >
-                <span className="text-foreground">
-                  {e.actorName ?? "Someone"}
-                </span>
-                changed {e.changes.map((c) => c.field).join(", ")} on a{" "}
-                {e.subjectType}
-                <span className="ml-auto text-xs">
-                  {e.createdAt.toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent changes</CardTitle>
+            <CardDescription>
+              Every studio edit is recorded with who made it and what changed.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {recent.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing edited yet.
+              </p>
+            ) : (
+              recent.map((e) => (
+                <div key={e.id} className="flex flex-col gap-0.5 text-sm">
+                  <span>
+                    <span className="font-medium">
+                      {e.actorName ?? "Someone"}
+                    </span>{" "}
+                    <span className="text-muted-foreground">
+                      changed {e.changes.map((c) => c.field).join(", ")} on
+                      a{" "}
+                    </span>
+                    {/* Only a lesson can be linked: the studio routes for a
+                        course and a path are keyed by slug, and the edit trail
+                        records a subject id. */}
+                    {e.subjectType === "lesson" ? (
+                      <Link
+                        href={`/studio/lessons/${e.subjectId}` as Route}
+                        className="underline underline-offset-4"
+                      >
+                        lesson
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {e.subjectType}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {ago(e.createdAt)}
+                  </span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
