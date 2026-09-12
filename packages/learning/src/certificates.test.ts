@@ -1,5 +1,6 @@
 import { db, eq, schema } from "@repo/database";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { insertCertificateRow } from "./certificates";
 import { enroll, recordEvent } from "./record-event";
 import { rebuildLearner } from "./rebuild";
 
@@ -100,5 +101,50 @@ describe("certificates", () => {
       where: eq(schema.notifications.userId, user.id),
     });
     expect(n.filter((x) => x.kind === "certificate_issued")).toHaveLength(1);
+  });
+  /**
+   * Regression, S8/S10b/S11 intermittent failure: the content sync can delete
+   * the `content_revisions` row between the snapshot read and the certificate
+   * insert. The FK violation must not abort the surrounding transaction — it
+   * used to, because the fallback insert ran in an already-aborted transaction
+   * and failed with "current transaction is aborted", killing course completion.
+   */
+  it("survives a content revision deleted between snapshot and insert, without aborting the transaction", async () => {
+    const [other] = (await db
+      .insert(schema.users)
+      .values({ email: `cert-fk-${run}@devhelp.test`, name: "FK Learner" })
+      .returning()) as unknown as [{ id: string }];
+    try {
+      const afterwards = await db.transaction(async (tx) => {
+        const [row] = await insertCertificateRow(tx, {
+          userId: other.id,
+          courseId,
+          enrolmentGeneration: 1,
+          learnerName: "FK Learner",
+          courseTitle: `Cert course ${run}`,
+          // A revision id that is not in the table: exactly what a concurrent
+          // sync leaves behind.
+          contentRevisionId: crypto.randomUUID(),
+          criteria: {
+            criteria: { requireAllRequiredLessons: true },
+            lessons: [],
+            quizzes: [],
+            projects: [],
+          },
+          issuedAt: new Date(),
+        });
+        expect(row?.id).toBeTruthy();
+        // The transaction is still usable: this is the assertion that fails
+        // without the savepoint.
+        const check = await tx.query.certificates.findFirst({
+          where: eq(schema.certificates.id, row!.id),
+          columns: { id: true, contentRevisionId: true },
+        });
+        return check;
+      });
+      expect(afterwards?.contentRevisionId).toBeNull();
+    } finally {
+      await db.delete(schema.users).where(eq(schema.users.id, other.id));
+    }
   });
 });

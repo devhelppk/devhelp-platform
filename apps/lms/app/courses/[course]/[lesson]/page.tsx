@@ -190,7 +190,17 @@ export default async function LessonPage({
           </div>
         ) : null}
 
-        {lesson.completionRule === "view" && lesson.type !== "video" ? (
+        {/*
+          Video lessons carry `completionRule: "view"` like articles, so they get
+          the same manual control. The player completes them automatically when
+          it reaches the end, but that event is the only signal it can offer and
+          it never arrives if YouTube is blocked, the video is unavailable, the
+          iframe API fails to load, or the learner watched it elsewhere. Without
+          a manual fallback such a learner can never complete the lesson, and so
+          never the course or its certificate. Both paths send the same
+          idempotent `lessonCompleted`, so completing twice records one event.
+        */}
+        {lesson.completionRule === "view" ? (
           <div className="flex justify-end">
             <Suspense>
               <LearnerProviders>

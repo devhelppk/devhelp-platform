@@ -102,6 +102,45 @@ export async function certificateSnapshot(
   };
 }
 
+/**
+ * Inserts the certificate row, falling back to a null `content_revision` when
+ * the revision disappeared between the snapshot read and this write (the
+ * content sync prunes revisions). The commit itself lives in `criteria`, which
+ * is immutable, so nothing is lost.
+ *
+ * The first insert runs inside a savepoint (a nested drizzle transaction). A
+ * foreign key violation aborts the whole Postgres transaction, so without a
+ * savepoint the fallback fails with "current transaction is aborted" and takes
+ * the caller's course-completion transaction with it. That was the intermittent
+ * failure recorded against S8, S10b and S11: it needed a concurrent
+ * `content_revisions` delete, so it only appeared under parallel runs and never
+ * on a rerun.
+ */
+export async function insertCertificateRow(
+  tx: Tx,
+  values: typeof schema.certificates.$inferInsert,
+) {
+  return tx
+    .transaction(async (sp) =>
+      sp
+        .insert(schema.certificates)
+        .values(values)
+        .onConflictDoNothing()
+        .returning({ id: schema.certificates.id }),
+    )
+    .catch(async (e: unknown) => {
+      const code =
+        (e as { code?: string }).code ??
+        (e as { cause?: { code?: string } }).cause?.code;
+      if (code !== "23503") throw e;
+      return tx
+        .insert(schema.certificates)
+        .values({ ...values, contentRevisionId: null })
+        .onConflictDoNothing()
+        .returning({ id: schema.certificates.id });
+    });
+}
+
 /** Issues the certificate if the learner has none for the course. Idempotent; never overwrites. */
 export async function issueCertificate(
   tx: Tx,
@@ -140,24 +179,7 @@ export async function issueCertificate(
     criteria,
     issuedAt: input.issuedAt,
   };
-  // The commit lives in `criteria` (immutable); the revision row is only a
-  // convenience and the content sync may prune it between read and write.
-  const [row] = await tx
-    .insert(schema.certificates)
-    .values(values)
-    .onConflictDoNothing()
-    .returning({ id: schema.certificates.id })
-    .catch(async (e: unknown) => {
-      const code =
-        (e as { code?: string }).code ??
-        (e as { cause?: { code?: string } }).cause?.code;
-      if (code !== "23503") throw e;
-      return tx
-        .insert(schema.certificates)
-        .values({ ...values, contentRevisionId: null })
-        .onConflictDoNothing()
-        .returning({ id: schema.certificates.id });
-    });
+  const [row] = await insertCertificateRow(tx, values);
   if (!row) {
     const again = await tx.query.certificates.findFirst({
       where: and(

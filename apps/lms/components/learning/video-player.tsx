@@ -146,7 +146,7 @@ export function VideoPlayer({
         {done
           ? "Completed."
           : signedIn
-            ? "Watch to the end to complete this lesson."
+            ? "Completes when the video reaches the end — or mark it done below if you watched it elsewhere."
             : "Sign in to track your progress."}
       </p>
     </div>
