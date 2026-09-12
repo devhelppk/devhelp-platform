@@ -124,9 +124,21 @@ characters (`max-w-prose` is set to 65ch). Use `text-balance` on headings and
 
 Everything is left-aligned. Centred text is reserved for empty states.
 
-A page opens with a `PageHeader` (title in Literata, one-line description,
-primary action to the right), then sections separated by a 1px rule with
-`py-12`. A typical page:
+**Every page opens with `PageHeader`.** Not a hand-rolled `<header><h1>` — the
+component exists, takes `title`, `description` and `actions`, and puts the
+actions to the right of the title on wide screens. This is not a preference;
+hand-rolled headers are how a page ends up with its primary action stacked
+under the title while the right half of the header is empty, which is exactly
+what happened across the admin pages (S18). If a page has a primary action, it
+goes in `actions`. If an action needs client state — a dialog trigger, a form —
+extract it into its own component and pass that: a server page can hand a client
+component to the slot.
+
+Two things that are _not_ descriptions: a status banner that appears once after
+some event (put it below the header, in the flow), and a count that belongs on
+the thing being counted rather than the page.
+
+Then sections separated by a 1px rule with `py-12`. A typical page:
 
 ```
 | [block] devhelp.pk                          Design  GitHub  [theme] |

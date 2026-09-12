@@ -1,3 +1,4 @@
+import { PageHeader } from "@repo/ui/components/page-header";
 import type { Metadata } from "next";
 import type { Route } from "next";
 import { api } from "@repo/api/server";
@@ -19,15 +20,10 @@ export default async function CertificatesPage() {
   return (
     <Shell callbackURL="/certificates">
       <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Certificates
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Issued automatically when you finish a course. Each verify link
-            shows exactly what you did.
-          </p>
-        </header>
+        <PageHeader
+          title="Certificates"
+          description="Issued automatically when you finish a course. Each verify link shows exactly what you did."
+        />
         {certs.length ? (
           <div className="flex flex-col gap-3">
             {certs.map((c) => (

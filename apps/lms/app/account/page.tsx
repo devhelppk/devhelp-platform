@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AccountForm } from "@/components/account/account-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
+import { PageHeader } from "@repo/ui/components/page-header";
 import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Account" };
@@ -21,19 +22,18 @@ export default async function AccountPage({
   return (
     <Shell wide callbackURL="/account">
       <div className="flex flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Account
-          </h1>
-          {q.verified === "1" && !q.error ? (
-            <p
-              role="status"
-              className="rounded-lg border border-primary/60 bg-primary/5 px-4 py-3 text-sm"
-            >
-              Email verified. Thank you.
-            </p>
-          ) : null}
-        </header>
+        <PageHeader title="Account" />
+        {/* A status banner, not a description: it appears once, after following
+            the verification link, and belongs in the flow rather than the
+            header's subtitle slot. */}
+        {q.verified === "1" && !q.error ? (
+          <p
+            role="status"
+            className="rounded-lg border border-primary/60 bg-primary/5 px-4 py-3 text-sm"
+          >
+            Email verified. Thank you.
+          </p>
+        ) : null}
         <LearnerProviders>
           <AccountForm lmsUrl={clientEnv.NEXT_PUBLIC_LMS_URL} />
         </LearnerProviders>

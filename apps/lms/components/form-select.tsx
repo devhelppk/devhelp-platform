@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/ui/components/select";
+import { cn } from "@repo/ui/lib/utils";
 import { useId, useState } from "react";
 
 /**
@@ -51,14 +52,21 @@ export function FormSelect({
   return (
     <>
       <Select
-        value={value || NONE}
+        // `undefined` rather than the sentinel when there is no empty choice:
+        // a value matching no item makes Radix render a blank trigger with no
+        // placeholder either, which is how the badge picker on /admin/badges
+        // became an empty stub.
+        value={value || (emptyLabel ? NONE : undefined)}
         onValueChange={(next) => setValue(next === NONE ? "" : next)}
         required={required}
       >
+        {/* The trigger is `w-fit` in the design system, which collapses to a
+            chevron when nothing is selected. A form control should fill its
+            field; call sites can still override. */}
         <SelectTrigger
           id={id ?? fallbackId}
           aria-label={ariaLabel}
-          className={className}
+          className={cn("w-full", className)}
         >
           <SelectValue placeholder={emptyLabel ?? "Choose one"} />
         </SelectTrigger>

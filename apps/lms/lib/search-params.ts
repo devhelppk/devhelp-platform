@@ -48,3 +48,24 @@ export const companyListParams = {
   ] as const).withDefault("name"),
 };
 export const loadCompanyList = createLoader(companyListParams);
+
+/** The moderation queue: which tab, which kind, and which item is open. */
+export const moderationStatuses = [
+  "pending",
+  "approved",
+  "rejected",
+  "hidden",
+] as const;
+
+export const moderationParams = {
+  status: parseAsStringLiteral(moderationStatuses).withDefault("pending"),
+  /** Subject type filter; the queue procedure already accepts one. */
+  type: parseAsString.withDefault(""),
+  /**
+   * The item whose detail dialog is open. `shallow: false` at the call site, so
+   * the server re-renders for it and the URL is a real, shareable, refreshable
+   * state rather than something only the browser knows.
+   */
+  item: parseAsString.withDefault(""),
+};
+export const loadModeration = createLoader(moderationParams);

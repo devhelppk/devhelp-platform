@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { api } from "@repo/api/server";
 import { headers } from "next/headers";
 import { BadgeGrid } from "@/components/badges/badge-grid";
+import { PageHeader } from "@repo/ui/components/page-header";
 import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Badges" };
@@ -14,15 +15,10 @@ export default async function BadgesPage() {
   return (
     <Shell wide callbackURL="/badges">
       <div className="flex flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Badges
-          </h1>
-          <p className="max-w-prose text-sm text-muted-foreground">
-            Awarded automatically from what you do on the platform.{" "}
-            {earned.length} of {badges.length} earned.
-          </p>
-        </header>
+        <PageHeader
+          title="Badges"
+          description={`Awarded automatically from what you do on the platform. ${earned.length} of ${badges.length} earned.`}
+        />
         <BadgeGrid items={badges} />
       </div>
     </Shell>

@@ -1,3 +1,4 @@
+import { PageHeader } from "@repo/ui/components/page-header";
 import { auth } from "@repo/auth";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -20,16 +21,10 @@ export default async function StudioPage() {
   return (
     <Shell wide callbackURL="/studio">
       <div className="flex flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Studio
-          </h1>
-          <p className="max-w-prose text-sm text-muted-foreground">
-            How courses and lessons are described: titles, summaries, how long
-            they take, who wrote them. What a lesson teaches is a pull request
-            on the content repo; what it is called is yours.
-          </p>
-        </header>
+        <PageHeader
+          title="Studio"
+          description="How courses and lessons are described: titles, summaries, how long they take, who wrote them. What a lesson teaches is a pull request on the content repo; what it is called is yours."
+        />
         <LearnerProviders>
           <StudioOverview />
         </LearnerProviders>

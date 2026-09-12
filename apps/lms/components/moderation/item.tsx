@@ -100,18 +100,32 @@ export function ModerationItem({
         </div>
         <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
           <dt className="text-muted-foreground">Submitted by</dt>
+          {/* The author can be gone: `author_id` is `on delete set null`, and a
+              contribution outlives the account that made it. Rendering the
+              parenthetical regardless produced "Unknown (, student, joined ?)",
+              which reads like a bug rather than a deleted account. */}
           <dd>
-            {it.submitter?.name ?? "Unknown"}{" "}
-            <span className="text-muted-foreground">
-              ({it.submitter?.email}, {it.submitter?.role ?? "student"}, joined{" "}
-              {it.submitter
-                ? new Date(it.submitter.createdAt).toLocaleDateString("en-PK", {
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "?"}
-              )
-            </span>
+            {it.submitter ? (
+              <>
+                {it.submitter.name}{" "}
+                <span className="text-muted-foreground">
+                  ({it.submitter.email}, {it.submitter.role ?? "student"},
+                  joined{" "}
+                  {new Date(it.submitter.createdAt).toLocaleDateString(
+                    "en-PK",
+                    {
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )}
+                  )
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                No longer on the platform
+              </span>
+            )}
           </dd>
           {payload.kind === "mentor_application" ? (
             <>

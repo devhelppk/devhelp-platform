@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, schema } from "@repo/database";
+import { and, asc, desc, eq, ilike, isNull, or, schema } from "@repo/database";
 import { awardBadge } from "@repo/learning";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -52,6 +52,38 @@ export const badgesRouter = router({
       with: { badge: { columns: badgeColumns } },
     }),
   ),
+
+  /**
+   * Learner lookup for the manual award form.
+   *
+   * The form used to ask an admin to paste a uuid copied from another page,
+   * which is not a thing a person can do reliably. Admin-only and capped,
+   * because it returns emails: this is the one place the platform trades a
+   * learner's address for an administrator being able to find them.
+   */
+  searchLearners: adminProcedure
+    .input(
+      z.object({
+        q: z.string().trim().max(120),
+        limit: z.number().int().min(1).max(20).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (input.q.length < 2) return [];
+      const like = `%${input.q.replace(/[%_]/g, (m) => `\\${m}`)}%`;
+      return ctx.db
+        .select({
+          id: schema.users.id,
+          name: schema.users.name,
+          email: schema.users.email,
+        })
+        .from(schema.users)
+        .where(
+          or(ilike(schema.users.name, like), ilike(schema.users.email, like)),
+        )
+        .orderBy(asc(schema.users.name))
+        .limit(input.limit);
+    }),
 
   /** Manual award: recorded on the row with who and why (plan decision 7). */
   award: adminProcedure

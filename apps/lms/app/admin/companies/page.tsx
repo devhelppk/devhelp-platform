@@ -1,3 +1,4 @@
+import { PageHeader } from "@repo/ui/components/page-header";
 import { auth } from "@repo/auth";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
@@ -19,15 +20,10 @@ export default async function AdminCompaniesPage() {
   return (
     <Shell wide callbackURL="/admin/companies">
       <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Companies
-          </h1>
-          <p className="max-w-prose text-sm text-muted-foreground">
-            Facts about each employer, checked against public sources. Proposals
-            and contributions are approved in the moderation queue.
-          </p>
-        </header>
+        <PageHeader
+          title="Companies"
+          description="Facts about each employer, checked against public sources. Proposals and contributions are approved in the moderation queue."
+        />
         <LearnerProviders>
           <AdminCompanies />
         </LearnerProviders>

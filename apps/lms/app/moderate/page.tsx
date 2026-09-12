@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { auth } from "@repo/auth";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { clientEnv } from "@repo/env/client";
+import { ModerationItemDialog } from "@/components/moderation/item-dialog";
 import { ModerationQueue } from "@/components/moderation/queue";
+import { QueryState } from "@/components/companies/query-state";
 import { statusLabels } from "@/components/moderation/labels";
 import { LearnerProviders } from "@/components/shell/learner-providers";
+import { PageHeader } from "@repo/ui/components/page-header";
 import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Moderation" };
@@ -31,18 +35,24 @@ export default async function ModeratePage({
   return (
     <Shell wide callbackURL="/moderate">
       <div className="flex flex-col gap-8">
-        <header className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Moderation
-          </h1>
-          <p className="max-w-prose text-muted-foreground">
-            {session.user.role === "admin"
+        <PageHeader
+          title="Moderation"
+          description={
+            session.user.role === "admin"
               ? "Everything submitted, across all tracks."
-              : "Submissions in your tracks. Every decision is logged with your name."}
-          </p>
-        </header>
+              : "Submissions in your tracks. Every decision is logged with your name."
+          }
+        />
         <LearnerProviders>
-          <ModerationQueue status={status} />
+          <QueryState>
+            <ModerationQueue status={status} />
+            {/* One dialog for the whole queue; `?item=<id>` decides what is in
+                it. See `item-dialog.tsx`. */}
+            <ModerationItemDialog
+              isAdmin={session.user.role === "admin"}
+              policyUrl={`${clientEnv.NEXT_PUBLIC_WEB_URL}/policy`}
+            />
+          </QueryState>
         </LearnerProviders>
       </div>
     </Shell>

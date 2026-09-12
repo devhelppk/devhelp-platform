@@ -8,6 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ago } from "@/components/moderation/labels";
+import { PageHeader } from "@repo/ui/components/page-header";
 import { Shell } from "@/components/shell/shell";
 import { safePath } from "@/lib/safe-path";
 
@@ -40,23 +41,19 @@ export default async function NotificationsPage() {
   return (
     <Shell callbackURL="/notifications">
       <div className="flex flex-col gap-6">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <h1 className="font-display text-3xl font-semibold tracking-tight">
-              Notifications
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {unread ? `${unread} unread` : "All caught up"}
-            </p>
-          </div>
-          {unread ? (
-            <form action={markAllRead}>
-              <Button type="submit" variant="outline" size="sm">
-                Mark all read
-              </Button>
-            </form>
-          ) : null}
-        </header>
+        <PageHeader
+          title="Notifications"
+          description={unread ? `${unread} unread` : "All caught up"}
+          actions={
+            unread ? (
+              <form action={markAllRead}>
+                <Button type="submit" variant="outline" size="sm">
+                  Mark all read
+                </Button>
+              </form>
+            ) : null
+          }
+        />
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             Nothing yet. Decisions on things you submit, replies, and
