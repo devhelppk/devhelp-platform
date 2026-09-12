@@ -1,8 +1,16 @@
 "use client";
 
+import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
+import {
+  Select as UiSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
+import { Search, X } from "lucide-react";
 import { debounce, useQueryState } from "nuqs";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useTransition } from "react";
 import { companyListParams } from "@/lib/search-params";
 
@@ -22,11 +30,7 @@ export function DirectoryFilters(props: {
   cityNames: string[];
   industries: string[];
 }) {
-  return (
-    <NuqsAdapter>
-      <Filters {...props} />
-    </NuqsAdapter>
-  );
+  return <Filters {...props} />;
 }
 
 function Filters({
@@ -62,6 +66,16 @@ function Filters({
     companyListParams.juniors.withOptions(opts),
   );
 
+  const active = Boolean(q || city || industry || juniors || sort !== "name");
+  const clear = () =>
+    void Promise.all([
+      setQ(null),
+      setCity(null),
+      setIndustry(null),
+      setJuniors(null),
+      setSort(null),
+    ]);
+
   return (
     <div
       // `aria-busy` rather than a spinner: the list below is still readable
@@ -74,13 +88,20 @@ function Filters({
         <label htmlFor="q" className="text-xs font-medium">
           Search
         </label>
-        <Input
-          id="q"
-          type="search"
-          defaultValue={q}
-          onChange={(e) => void setQ(e.target.value)}
-          placeholder="Name, technology, industry"
-        />
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            id="q"
+            type="search"
+            defaultValue={q}
+            onChange={(e) => void setQ(e.target.value)}
+            placeholder="Name, technology, industry"
+            className="pl-8"
+          />
+        </div>
       </div>
       <Select
         id="city"
@@ -113,6 +134,18 @@ function Filters({
         />
         Hires juniors
       </label>
+      {active ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={clear}
+          aria-label="Clear filters"
+          title="Clear filters"
+          className="sm:mb-0.5"
+        >
+          <X aria-hidden="true" />
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -132,24 +165,31 @@ function Select({
   options: string[];
   allLabel?: string | null;
 }) {
+  // shadcn/Radix rather than a native `<select>`: a native option list is drawn
+  // by the OS and does not inherit the page's theme, so in dark mode it rendered
+  // the theme's light foreground on the system's white popup.
+  const ANY = "__any";
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-xs font-medium">
         {label}
       </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-md border bg-transparent px-2 text-sm capitalize outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      <UiSelect
+        value={value || (allLabel ? ANY : value)}
+        onValueChange={(v) => onChange(v === ANY ? "" : v)}
       >
-        {allLabel ? <option value="">{allLabel}</option> : null}
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger id={id} size="sm" className="capitalize">
+          <SelectValue placeholder={allLabel ?? label} />
+        </SelectTrigger>
+        <SelectContent>
+          {allLabel ? <SelectItem value={ANY}>{allLabel}</SelectItem> : null}
+          {options.map((o) => (
+            <SelectItem key={o} value={o} className="capitalize">
+              {o}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </UiSelect>
     </div>
   );
 }

@@ -2,8 +2,16 @@
 
 import type { AppRouter, inferRouterOutputs } from "@repo/api";
 import { Badge } from "@repo/ui/components/badge";
+import { Button } from "@repo/ui/components/button";
+import {
+  Select as UiSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
+import { Search, X } from "lucide-react";
 import { debounce, parseAsString, useQueryState } from "nuqs";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { Route } from "next";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -13,6 +21,7 @@ import {
   type CompanyTab,
 } from "@/lib/search-params";
 import { Affiliation, Month, Rating, ScoreBar } from "./bits";
+import { ClaimDialog } from "./claim-dialog";
 import { CompanyReply } from "./company-reply";
 import { Distribution } from "./distribution";
 import { FlagForm } from "./flag-form";
@@ -20,6 +29,8 @@ import { Pay } from "./pay";
 
 /** Sub-scores are withheld below this many reviews (see the page comment). */
 const SCORE_BREAKDOWN_MIN = 5;
+/** Radix needs a non-empty value, so "any" gets a sentinel rather than "". */
+const ANY = "__any";
 /** Below this, a filter row is more interface than content. */
 const FILTER_MIN = 6;
 
@@ -49,6 +60,7 @@ type Interview = Outputs["interviews"]["items"][number];
 export type PanelsProps = {
   slug: string;
   signedIn: boolean;
+  emailVerified: boolean;
   company: {
     name: string;
     description: string | null;
@@ -83,16 +95,13 @@ const tabLabels: Record<CompanyTab, string> = {
 };
 
 export function CompanyPanels(props: PanelsProps) {
-  return (
-    <NuqsAdapter>
-      <Panels {...props} />
-    </NuqsAdapter>
-  );
+  return <Panels {...props} />;
 }
 
 function Panels({
   slug,
   signedIn,
+  emailVerified,
   company,
   facts,
   reviews,
@@ -238,6 +247,7 @@ function Panels({
               shown={shownReviews.length}
               total={reviews.length}
               noun="review"
+              onClear={() => void Promise.all([setRole(""), setStatus("")])}
             />
           ) : null}
           {reviews.length === 0 ? (
@@ -319,6 +329,7 @@ function Panels({
               shown={shownInterviews.length}
               total={interviews.length}
               noun="interview"
+              onClear={() => void Promise.all([setRole(""), setOutcome("")])}
             />
           ) : null}
           {interviews.length === 0 ? (
@@ -401,7 +412,13 @@ function Panels({
       ) : null}
 
       {tab === "about" ? (
-        <About company={company} facts={facts} slug={slug} />
+        <About
+          company={company}
+          facts={facts}
+          slug={slug}
+          signedIn={signedIn}
+          emailVerified={emailVerified}
+        />
       ) : null}
     </div>
   );
@@ -439,6 +456,7 @@ function Filters({
   shown,
   total,
   noun,
+  onClear,
 }: {
   role: string;
   setRole: (v: string) => void;
@@ -451,34 +469,60 @@ function Filters({
   shown: number;
   total: number;
   noun: string;
+  onClear: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
-      <input
-        type="search"
-        defaultValue={role}
-        onChange={(e) => setRole(e.target.value)}
-        placeholder="Filter by role"
-        aria-label="Filter by role"
-        className="h-9 min-w-0 flex-1 rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      />
-      <select
-        value={choice.value}
-        onChange={(e) => choice.set(e.target.value)}
-        aria-label={choice.label}
-        className="h-9 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      <div className="relative min-w-0 flex-1">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="search"
+          defaultValue={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="Filter by role"
+          aria-label="Filter by role"
+          className="h-9 w-full rounded-md border bg-transparent pr-3 pl-8 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        />
+      </div>
+      {/* Radix, not a native `<select>`: the OS draws a native option list and
+          does not theme it, which in dark mode put light text on a white popup. */}
+      <UiSelect
+        value={choice.value || ANY}
+        onValueChange={(v) => choice.set(v === ANY ? "" : v)}
       >
-        <option value="">{choice.label}: any</option>
-        {choice.options.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger aria-label={choice.label}>
+          <SelectValue placeholder={`${choice.label}: any`} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ANY}>{choice.label}: any</SelectItem>
+          {choice.options.map(([v, l]) => (
+            <SelectItem key={v} value={v}>
+              {l}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </UiSelect>
       <span className="text-xs text-muted-foreground tabular-nums">
         {shown} of {total} {noun}
         {total === 1 ? "" : "s"}
       </span>
+      {/* Icon-only, and only once there is something to clear: a permanent
+          "Clear filters" button is a word of chrome for a state most readers
+          are never in. */}
+      {role || choice.value ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClear}
+          aria-label="Clear filters"
+          title="Clear filters"
+        >
+          <X aria-hidden="true" />
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -627,10 +671,14 @@ function About({
   company,
   facts,
   slug,
+  signedIn,
+  emailVerified,
 }: {
   company: PanelsProps["company"];
   facts: [string, string][];
   slug: string;
+  signedIn: boolean;
+  emailVerified: boolean;
 }) {
   return (
     <div className="flex max-w-2xl flex-col gap-4 rounded-lg border p-4 text-sm">
@@ -667,12 +715,12 @@ function About({
           not as a third button beside the one action a learner came to take. */}
       <p className="text-xs text-muted-foreground">
         Work at {company.name}?{" "}
-        <Link
-          href={`/companies/${slug}/claim` as Route}
-          className="underline underline-offset-4"
-        >
-          Claim this profile
-        </Link>{" "}
+        <ClaimDialog
+          slug={slug}
+          companyName={company.name}
+          signedIn={signedIn}
+          emailVerified={emailVerified}
+        />{" "}
         to reply to what is written here.
       </p>
       <p className="text-xs text-muted-foreground">

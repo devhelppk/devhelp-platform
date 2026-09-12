@@ -215,7 +215,7 @@ function Choice({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
       >
         {required ? null : <option value="">Unknown</option>}
         {options.map(([v, l]) => (

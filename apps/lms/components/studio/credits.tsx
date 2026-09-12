@@ -95,7 +95,7 @@ export function Credits({
               id="credit-role"
               value={role}
               onChange={(e) => setRole(e.target.value as "author")}
-              className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs"
             >
               <option value="author">Author</option>
               <option value="reviewer">Reviewer</option>

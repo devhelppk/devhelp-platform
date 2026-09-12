@@ -30,11 +30,13 @@ export const budgets: Budget[] = [
     maxKb: CEILING_KB,
   },
   { path: "/courses", maxKb: CEILING_KB },
-  // The company bank pages render on the server and hydrate a small island for
-  // their tabs and filters (nuqs `useQueryState`). That island costs roughly
-  // 8-16 KB gzipped over the plain GET form it replaced: measured at 199.8 KB
-  // for the directory and 206.4 KB for a company page, against a 250 KB target.
-  // Worth re-measuring if the island grows.
+  // The company bank pages render on the server and hydrate an island for their
+  // tabs and filters (nuqs `useQueryState`) plus a Radix select. Measured at
+  // 230.4 KB for the directory and 227.8 KB for a company page, against a
+  // 250 KB target — thinner headroom than the rest of the app, so re-measure
+  // when either page gains a component. The contribute and claim dialogs are
+  // `next/dynamic`, shell included: mounting them eagerly cost 13 KB on every
+  // company page to support a control most readers never open.
   { path: "/companies", maxKb: CEILING_KB },
   { path: "/companies/arbisoft", maxKb: CEILING_KB },
   { path: "/", maxKb: CEILING_KB },
