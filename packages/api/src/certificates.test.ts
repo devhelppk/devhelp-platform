@@ -124,7 +124,9 @@ describe("certificates", () => {
     expect((await as(learner).notifications.list()).items[0]).toMatchObject({
       kind: "certificate_revoked",
     });
-    expect(outbox.at(-1)?.text).toContain("revoked");
+    // Notification only: no kind emails any more (founder, 2026-09-12), so the
+    // in-app row is the whole record.
+    expect(outbox).toHaveLength(0);
     await expect(
       as(admin).certificates.revoke({ id: certId, reason: "again please" }),
     ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });

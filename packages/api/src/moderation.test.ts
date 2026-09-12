@@ -118,15 +118,14 @@ describe("mentor onboarding through the queue", () => {
     await expect(
       as(admin).moderation.decide({ id: applied.id, action: "approve" }),
     ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
-    // Notification + email.
+    // Notification only: no kind emails any more (founder, 2026-09-12).
     const inbox = await as({ ...learner, role: "mentor" }).notifications.list();
     expect(inbox.items[0]).toMatchObject({
       kind: "mentor_application_decided",
       readAt: null,
     });
     expect(await as(learner).notifications.unreadCount()).toBe(1);
-    expect(outbox.at(-1)?.to).toBe(learner.email);
-    expect(outbox.at(-1)?.text).toContain("approved");
+    expect(outbox).toHaveLength(0);
     const marked = await as(learner).notifications.markAllRead();
     expect(marked.marked).toBe(1);
     expect(await as(learner).notifications.unreadCount()).toBe(0);

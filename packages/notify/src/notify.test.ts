@@ -2,7 +2,7 @@ import { db, eq, schema } from "@repo/database";
 import { outbox, resetOutbox } from "@repo/email";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createElement } from "react";
-import { notify, unreadCount } from "./index";
+import { emailingKinds, notify, tryConsume, unreadCount } from "./index";
 
 let user: { id: string };
 beforeAll(async () => {
@@ -20,7 +20,7 @@ afterAll(async () => {
 beforeEach(() => resetOutbox());
 
 describe("notify", () => {
-  it("inserts, dedupes on the key, and emails only kinds that ask for it", async () => {
+  it("inserts, dedupes on the key, and emails nothing", async () => {
     const first = await notify({
       userId: user.id,
       kind: "moderation_decided",
@@ -32,8 +32,11 @@ describe("notify", () => {
         react: createElement("p", null, "hi"),
       },
     });
-    expect(first).toMatchObject({ created: true, emailed: true });
-    expect(outbox).toHaveLength(1);
+    // No kind emails any more (founder, 2026-09-12): transactional mail only,
+    // and that goes through Better Auth, not through here. Passing `email` is
+    // still allowed and is simply ignored.
+    expect(first).toMatchObject({ created: true, emailed: false });
+    expect(outbox).toHaveLength(0);
     const again = await notify({
       userId: user.id,
       kind: "moderation_decided",
@@ -56,15 +59,30 @@ describe("notify", () => {
       },
     });
     expect(quiet.emailed).toBe(false);
-    expect(outbox).toHaveLength(1);
+    expect(outbox).toHaveLength(0);
     expect(await unreadCount(user.id)).toBe(2);
+  });
+
+  it("sends no notification email at all", () => {
+    // The guard on the decision itself: a kind added back here starts emailing
+    // every learner it touches, so it should be a deliberate edit, not a drift.
+    expect([...emailingKinds]).toEqual([]);
   });
 });
 
 describe("email throttle", () => {
-  it("keeps the in-app row and skips the email once a learner is over the cap", async () => {
-    // Its own learner: the counter is keyed by user and the tests above have
-    // already spent one of this run's emails.
+  it("caps a learner at four in an hour and twelve in a day", async () => {
+    // The throttle is still live machinery even with `emailingKinds` empty: it
+    // guards whatever is turned back on, and the digest (X4) will lean on it.
+    // Tested against `tryConsume` directly, since no kind emails now.
+    const key = `email:hour:${crypto.randomUUID()}`;
+    const allowed: boolean[] = [];
+    for (let i = 0; i < 6; i++) allowed.push(await tryConsume(key, 4, 3600));
+    expect(allowed).toEqual([true, true, true, true, false, false]);
+    await db.delete(schema.rateLimits).where(eq(schema.rateLimits.key, key));
+  });
+
+  it("keeps the in-app row and sends nothing even under the cap", async () => {
     const [fresh] = (await db
       .insert(schema.users)
       .values({
@@ -74,7 +92,6 @@ describe("email throttle", () => {
       .returning()) as unknown as [{ id: string }];
     const react = createElement("p", null, "x");
     const results: boolean[] = [];
-    // The hourly cap is 4; the fifth email is skipped, the row is not.
     for (let i = 0; i < 6; i++) {
       const r = await notify({
         userId: fresh.id,
@@ -86,9 +103,9 @@ describe("email throttle", () => {
       results.push(r.emailed);
       expect(r.created).toBe(true);
     }
-    expect(results.filter(Boolean)).toHaveLength(4);
-    expect(outbox).toHaveLength(4);
-    // Every row landed even though two emails were dropped.
+    expect(results.filter(Boolean)).toHaveLength(0);
+    expect(outbox).toHaveLength(0);
+    // Every row still lands; only the mail is gone.
     expect(await unreadCount(fresh.id)).toBe(6);
     await db.delete(schema.users).where(eq(schema.users.id, fresh.id));
   });

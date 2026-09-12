@@ -49,15 +49,22 @@ export async function tryConsume(
   return (row?.count ?? 0) <= max;
 }
 
-/** Kinds that also send an email immediately. The digest (X4 P1) will take over the rest. */
-export const emailingKinds: ReadonlySet<Kind> = new Set<Kind>([
-  "mentor_application_decided",
-  "moderation_decided",
-  "org_invitation",
-  "comment_accepted",
-  "certificate_issued",
-  "certificate_revoked",
-]);
+/**
+ * Kinds that also send an email immediately.
+ *
+ * Empty by founder decision (2026-09-12): email is for transactional mail only
+ * — address verification and password reset — to keep sending costs down.
+ * Those two never passed through here anyway; Better Auth calls `sendEmail`
+ * directly (`packages/auth/src/server.ts`), as does the organisation
+ * invitation, which has to reach someone who may have no account yet. So
+ * everything this set controls is a notification a signed-in learner can read
+ * in the app, and `notify()` still writes every in-app row exactly as before.
+ *
+ * The machinery around it is deliberately left in place: `input.email`, the
+ * per-learner throttle, and the `emailed_at` stamp all still work, so turning a
+ * kind back on is one line here, and the digest (X4) has something to build on.
+ */
+export const emailingKinds: ReadonlySet<Kind> = new Set<Kind>([]);
 
 /**
  * The only writer of `notifications`. Inserts the row (deduped on the key)

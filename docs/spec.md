@@ -191,7 +191,7 @@ Acceptance criteria
 - [x] Rules are evaluated on write (the same transaction that records the event) and are idempotent under `rebuildLearner`.
 - [x] Admins can award and revoke a badge manually, with a reason, recorded on the award row and shown in `/admin/badges` (plan decision 7).
 - [x] Streak and activity graph computed from events and shown on the dashboard and the public profile.
-- [x] `notify()` throttles emails per learner without dropping the in-app row.
+- [x] `notify()` throttles emails per learner without dropping the in-app row. Superseded 2026-09-12 (founder): **notification emails are off entirely** to save sending cost — `emailingKinds` is empty, so every notification is in-app only. The throttle, the `email` input and the `emailed_at` stamp all remain, so turning a kind back on is one line and the digest (X4) still has something to build on.
 
 Depends on: S5, S7.
 
@@ -335,7 +335,7 @@ Technical
 - The `foundations-check` quiz description in the content repo says "Two questions" but the quiz has four; fix the copy in `devhelppk/devhelp-content`.
 - `checkContentAsync` keeps a second solution/starter loop for the browser harness next to `checkContent`'s vitest loop; fold them if a third runner kind appears.
 - Better Auth's `allowUserToCreateOrganization` reads the role from the session cookie cache, so a newly promoted mentor or admin can create an organization only after the cache expires (5 minutes) or a re-sign-in; role-gated platform pages already read fresh. Revisit if organization creation moves into a platform flow (S9).
-- The email digest for notifications (X4) is a scheduler over `notifications.emailed_at`; build it when S6 discussions produce enough volume.
+- The email digest for notifications (X4) is a scheduler over `notifications.emailed_at`; build it when S6 discussions produce enough volume. Now the more likely route back to notification email: with `emailingKinds` empty (founder, 2026-09-12), a periodic digest costs one send per learner rather than one per event, which was the cost worry behind switching them off.
 - Create the Cloudflare R2 bucket and API token and set `S3_*` in production; the env check fails deliberately without them, and `pnpm certificates:backfill` should run once on the first deploy.
 - The course page fetches the learner's certificate list to find one by course; add a `byCourse` procedure with the S8 dashboard work.
 - Comment code blocks are styled but not syntax-highlighted; run Shiki at write time if mentors ask (S6 decision 4).
