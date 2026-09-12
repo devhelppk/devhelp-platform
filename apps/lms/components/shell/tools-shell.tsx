@@ -157,11 +157,16 @@ export async function ToolsShell({
             <ThemeToggle />
           </div>
         </header>
+        {/* The narrow measure is left-aligned (`mr-auto`), not centred. Centring
+            a 768px column inside the inset floated it in the middle with dead
+            space on both sides — the rail already takes the left, so centring
+            again wastes that margin twice. Reading pages keep their measure and
+            simply sit beside the rail. */}
         <main
           className={
             wide
               ? "mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10"
-              : "mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
+              : "mr-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
           }
         >
           {children}

@@ -64,7 +64,6 @@ export function ProfileForm({
   }
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <h2 className="text-lg font-semibold">Public profile</h2>
       <div className="flex items-center gap-3">
         <Switch
           id="profile-public"

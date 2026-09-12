@@ -352,6 +352,18 @@ Good news found while planning: the `--sidebar-*` CSS variables already exist in
 
 Depends on: S15 part A2.
 
+### S17. Density: vertical space and two-column organisation — `in-progress`
+
+Review and records: [`specs/S17-density/review.md`](./specs/S17-density/review.md)
+
+Reviewed the signed-in pages in Chrome and found the cause was systemic rather than per-page: every non-`wide` page rendered a 768px column **centred** in the shell's ~1250px inset, so with the rail already taking the left the content floated in the middle with ~240px dead on each side — and the wasted height followed from the wasted width.
+
+Done: the narrow measure is left-aligned in the tools shell; `/account` is a two-column card layout on a wide shell (five stacked sections and ~1700px of page became one screen, with Name and City paired as the link row below them already was); `/badges` moved to the wide shell so its grid stops wrapping every description onto three lines.
+
+Checked and dismissed: `/notifications` "missing" Mark all read (it renders only when something is unread), and the notification rows themselves (already compact).
+
+Still to review: `/studio`, `/moderate`, the admin pages and the dashboard.
+
 ---
 
 ## Follow-ups (open, not tied to a spec)

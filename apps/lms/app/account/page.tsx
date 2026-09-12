@@ -19,7 +19,7 @@ export default async function AccountPage({
   if (!session) redirect("/sign-in?callbackURL=%2Faccount");
   const q = await searchParams;
   return (
-    <Shell callbackURL="/account">
+    <Shell wide callbackURL="/account">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
