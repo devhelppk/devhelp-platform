@@ -337,7 +337,7 @@ Depends on: S10a, S10b, S10c, S13, S14.
 
 Plan: [`specs/S16-shell-and-controls/plan.md`](./specs/S16-shell-and-controls/plan.md). Records: [`test.md`](./specs/S16-shell-and-controls/test.md)
 
-**Both halves are built.** D1 and D4 were taken as recommended; **D2 was revised while testing** — the rail is chosen by session rather than by route, because scoping it to the signed-in tools meant the rail's own "Courses" link made the rail disappear. Signed-out visitors, including every crawler, still get the indexable header with no rail. **D3 is deferred** — `AppShell` and the lesson reader's own sidebar still exist, so the package has two sidebar systems until the reader is ported. Two checks are still outstanding: the converted selects have not been opened in dark mode (each sits behind a role or email verification the dev account lacks), and the shell has had no 390px pass.
+**Both halves are built.** D1 and D4 were taken as recommended; **D2 was revised while testing** — the rail is chosen by session rather than by route, because scoping it to the signed-in tools meant the rail's own "Courses" link made the rail disappear. Signed-out visitors, including every crawler, still get the indexable header with no rail. **D3 is deferred** — `AppShell` and the lesson reader's own sidebar still exist, so the package has two sidebar systems until the reader is ported. One check is closed and one is open: the converted selects **have** now been opened in dark mode as an admin (the `/admin/badges` badge picker's listbox renders readable text on a themed popup, verified 2026-09-12); the shell itself still has had no dedicated 390px pass, though the company pages and the About panel have.
 
 Scope: (a) shadcn's `Sidebar` as the shell for the signed-in tools — `/account`, `/notifications`, `/badges`, `/certificates`, `/studio`, `/moderate`, `/mentor`, `/admin` — with role-gated groups, the cookie-backed collapsed state and `cmd/ctrl+B`; public pages keep `SiteHeader`. (b) The seven remaining native `<select>` elements become shadcn selects, plus a sweep for other hand-rolled controls. Every component added through `pnpm dlx shadcn@latest add`, never written by hand.
 
@@ -362,7 +362,43 @@ Done: the narrow measure is left-aligned in the tools shell; `/account` is a two
 
 Checked and dismissed: `/notifications` "missing" Mark all read (it renders only when something is unread), and the notification rows themselves (already compact).
 
-Still to review: `/studio`, `/moderate`, the admin pages and the dashboard.
+`/studio`, `/moderate` and the admin pages were reviewed and fixed under S18. The dashboard (`/`) was checked on 2026-09-12 and needed nothing: it is already on the wide shell with two-up course and badge cards and no dead width. Nothing identified as left.
+
+### S18. Admin, moderation and studio pages: review and cleanup — `done`
+
+Commits: `5d84b15`, `3708738`, `6d2c204` (plus `55129a2`, which restored what the S16 port dropped). Records: [`specs/S18-admin-review/review.md`](./specs/S18-admin-review/review.md)
+
+Not planned as a spec — it began as "review and test the admin pages" and found
+enough to be one. Seven functional defects, the largest being a moderation queue
+that could only ever show 30 of 1015 items because the UI ignored a cursor the API
+had returned since S5, and rows that read `<kind> by someone` while the payload
+snapshot they were storing went unshown. Also: the queue item detail became a
+`shallow: false` nuqs dialog, rare forms moved behind an Add button, row actions
+moved onto their rows, the learner id field became an async search select, and the
+five pages my own S16 port had silently stripped `wide` from were restored. The
+general rule this produced — `PageHeader` with the primary action in its `actions`
+slot, never a hand-rolled header — is in `AGENTS.md` and `DESIGN.md`.
+
+Everything the review left open (`/studio/paths/[slug]`, `/studio/lessons/[id]`,
+`/admin/certificates` pagination, the static mobile audit) landed in `6d2c204`.
+Still open: the queue has no bulk action, and no admin page has had a live 390px
+pass.
+
+### S19. Platform review against the full spec — `done`
+
+Records: [`specs/S19-platform-review/review.md`](./specs/S19-platform-review/review.md)
+
+A read across all 78 requirements, the code, the running server and the dev
+database (2026-09-12). Conclusion: every requirement is built except the ones
+deliberately deferred, plus two real gaps — F2.9's "merge duplicate companies"
+(the `merged` status exists and no action can reach it) and F2.15's cross-links
+(deferred in S13) — and one wording drift, X8's "static-rendered with ISR", which
+company and catalogue pages knowingly are not. Two things found that were in
+nobody's list: the dev database has 19 published test-leftover courses that reach
+`/courses`, and no content metadata has ever been entered (both courses have no
+estimated hours, all 61 lessons no duration, `content_credits` empty), so the
+catalogue reads "0 min · written by nobody". The second is the only thing in the
+review that would embarrass a launch.
 
 ---
 
