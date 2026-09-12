@@ -333,6 +333,23 @@ Part B acceptance criteria: in the plan. The one that matters most is a test —
 
 Depends on: S10a, S10b, S10c, S13, S14.
 
+### S16. The signed-in shell, and controls that are actually shadcn — `todo`
+
+Plan (awaiting approval): [`specs/S16-shell-and-controls/plan.md`](./specs/S16-shell-and-controls/plan.md)
+
+Scope: (a) shadcn's `Sidebar` as the shell for the signed-in tools — `/account`, `/notifications`, `/badges`, `/certificates`, `/studio`, `/moderate`, `/mentor`, `/admin` — with role-gated groups, the cookie-backed collapsed state and `cmd/ctrl+B`; public pages keep `SiteHeader`. (b) The seven remaining native `<select>` elements become shadcn selects, plus a sweep for other hand-rolled controls. Every component added through `pnpm dlx shadcn@latest add`, never written by hand.
+
+**Founder decisions in the plan:**
+
+- **D1.** The linked doc is shadcn's **Base UI** sidebar; `@repo/ui` is Radix throughout. Recommended: take the Radix build rather than run two primitive libraries.
+- **D2.** Signed-in tools only — a 16rem nav rail on a public page spends the width S15 just won on navigation for a visitor who came to read one page.
+- **D3.** Whether `AppShell` / `SidebarNav` / `MobileNav` are ported onto `Sidebar` and deleted, or kept and marked reader-only.
+- **D4.** **The 250 KB target is guidance, not a gate** (founder, 2026-09-12). N1.1 already said the limit "does not drive quality trade-offs"; the 300 KB ceiling stays as a regression alarm. This spec will cross 250 on some pages, knowingly.
+
+Good news found while planning: the `--sidebar-*` CSS variables already exist in `globals.css` in both themes, on the brand hue, scaffolded with the design system and never used. The theming is done.
+
+Depends on: S15 part A2.
+
 ---
 
 ## Follow-ups (open, not tied to a spec)
@@ -343,7 +360,7 @@ Founder actions
 - ~~Create the Resend account and verify the `devhelp.pk` sending domain~~ — done; `devhelp.pk` is verified in Resend (region `ap-northeast-1`), and a real send through `sendEmail` was delivered end to end on 2026-09-12, so `EMAIL_FROM="devhelp <no-reply@devhelp.pk>"` works as it stands. Still to do: set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` **in production** (local dev stays on Mailpit), and create the `policy@devhelp.pk` mailbox named on `/policy` (S5).
 - Set the `PLATFORM_PR_TOKEN` secret on `devhelppk/devhelp-content` (fine-grained token, contents + pull requests write on the platform repo) so merged content opens lock-bump PRs automatically. Until then promote by editing `content.lock.json`.
 - Replace the placeholder video id in `courses/ai-engineering-foundations/01-getting-started/02-how-agents-work.mdx` with a real lesson video.
-- Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.
+- ~~Ratify the bundle budget numbers in `scripts/check-bundle-budget.ts` (target 250 KB, ceiling 300 KB) or tighten them.~~ **Ratified 2026-09-12 (founder): the 250 KB target is guidance, not a gate, and must not block a better product.** The 300 KB ceiling stays as a regression alarm. N1.1 already carried this sense — "the limit catches regressions; it does not drive quality trade-offs" — so nothing in the requirement changes; the decision is recorded here and in S16's D4 so it is not re-argued each time a page gains a component.
 - Decide whether the lesson route's 230 KB of first-load JavaScript is worth reducing (S14). It is the one page that does not reliably reach Lighthouse 90 on mobile, though its measured load is fast; the score is a model of the payload, not a wait.
 - Schedule `pnpm fx:refresh` daily in production (S10b). Without it the salary tables still work and still show what people were paid; they simply do not offer the converted PKR figure beside a USD one.
 
