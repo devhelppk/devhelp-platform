@@ -88,7 +88,9 @@ async function publishedReview() {
 describe("flagging company contributions", () => {
   it("stores the reason the reader chose, then hides on an upheld flag", async () => {
     const { id } = await publishedReview();
-    expect((await as(null).companies.reviews({ slug })).items).toHaveLength(1);
+    expect((await as(reader).companies.reviews({ slug })).items).toHaveLength(
+      1,
+    );
     await as(reader).moderation.flag({
       subjectType: "company_review",
       subjectId: id,
@@ -111,7 +113,9 @@ describe("flagging company contributions", () => {
       where: eq(schema.companyReviews.id, id),
     });
     expect(review!.status).toBe("hidden");
-    expect((await as(null).companies.reviews({ slug })).items).toHaveLength(0);
+    expect((await as(reader).companies.reviews({ slug })).items).toHaveLength(
+      0,
+    );
   });
 
   it("flags an interview experience the same way", async () => {
@@ -142,9 +146,9 @@ describe("flagging company contributions", () => {
     });
     expect(flag!.reason).toBe("personal_data");
     await as(admin).moderation.resolveFlag({ id: flag!.id, outcome: "upheld" });
-    expect((await as(null).companies.interviews({ slug })).items).toHaveLength(
-      0,
-    );
+    expect(
+      (await as(reader).companies.interviews({ slug })).items,
+    ).toHaveLength(0);
   });
 
   it("hides a salary point whose item is still pending", async () => {

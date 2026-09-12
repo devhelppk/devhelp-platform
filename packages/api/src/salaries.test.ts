@@ -6,7 +6,7 @@ import type { SalaryLevel } from "./levels";
 
 const run = crypto.randomUUID().slice(0, 8);
 type User = typeof schema.users.$inferSelect;
-let admin: User;
+let admin: User, reader: User;
 let orgId: string, roleId: string, otherRoleId: string, cityId: string;
 const slug = `payco-${run}`;
 const made: string[] = [];
@@ -60,6 +60,10 @@ async function point(
 }
 
 beforeAll(async () => {
+  // A verified reader, because the aggregates are behind the S15 gate: reading
+  // the bank is not a public act any more, even though the numbers are nobody's
+  // in particular.
+  reader = await user("pay-reader");
   admin = await user("pay-admin");
   await db
     .update(schema.users)
@@ -117,9 +121,11 @@ afterAll(async () => {
 describe("salary aggregates", () => {
   it("shows nothing below five reports and appears on the fifth", async () => {
     for (const n of [1, 2, 3, 4]) await point(n, 100_000 + n * 10_000);
-    expect((await as(null).companies.salaries({ slug })).roles).toHaveLength(0);
+    expect((await as(reader).companies.salaries({ slug })).roles).toHaveLength(
+      0,
+    );
     await point(5, 200_000);
-    const after = await as(null).companies.salaries({ slug });
+    const after = await as(reader).companies.salaries({ slug });
     expect(after.roles).toHaveLength(1);
     expect(after.roles[0]!.n).toBe(5);
   });
@@ -127,7 +133,7 @@ describe("salary aggregates", () => {
   it("withholds the middle half until eight reports", async () => {
     // At n = 5 `percentile_cont` lands on the 2nd, 3rd and 4th raw values, so
     // publishing all three would publish three of those five people's pay.
-    const [row] = (await as(null).companies.salaries({ slug })).roles;
+    const [row] = (await as(reader).companies.salaries({ slug })).roles;
     expect(row!.n).toBe(5);
     expect(row!.p25).toBeNull();
     expect(row!.p75).toBeNull();
@@ -163,7 +169,7 @@ describe("salary aggregates", () => {
         year: 2026,
       });
     }
-    const [row] = (await as(null).companies.salaries({ slug: odd })).roles;
+    const [row] = (await as(reader).companies.salaries({ slug: odd })).roles;
     expect(row!.n).toBe(5);
     // Not the raw middle value, and a multiple of the 5,000 rupee step.
     expect(row!.median).not.toBe(133_333 * 100);
@@ -176,7 +182,7 @@ describe("salary aggregates", () => {
 
   it("computes the quartiles in Postgres once there are eight reports", async () => {
     for (const n of [21, 22, 23] as const) await point(n, 200_000);
-    const row = (await as(null).companies.salaries({ slug })).roles.find(
+    const row = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.currency === "PKR",
     )!;
     expect(row.n).toBe(8);
@@ -187,7 +193,7 @@ describe("salary aggregates", () => {
   });
 
   it("leaves internships and old figures out of the staff aggregate", async () => {
-    const before = (await as(null).companies.salaries({ slug })).roles.find(
+    const before = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.currency === "PKR",
     )!;
     for (const n of [31, 32, 33, 34, 35] as const) {
@@ -203,7 +209,7 @@ describe("salary aggregates", () => {
         year: n < 34 ? 2026 : 2019,
       });
     }
-    const after = (await as(null).companies.salaries({ slug })).roles.find(
+    const after = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.currency === "PKR",
     )!;
     expect(after.n).toBe(before.n);
@@ -211,7 +217,9 @@ describe("salary aggregates", () => {
   });
 
   it("never exposes an individual amount or an author", async () => {
-    const payload = JSON.stringify(await as(null).companies.salaries({ slug }));
+    const payload = JSON.stringify(
+      await as(reader).companies.salaries({ slug }),
+    );
     expect(payload).not.toContain("amountMinor");
     expect(payload).not.toContain("authorId");
     for (const id of made) expect(payload).not.toContain(id);
@@ -220,12 +228,12 @@ describe("salary aggregates", () => {
   it("keeps currencies apart and converts only as an aid", async () => {
     // Captured rather than hard-coded, so this does not depend on how many
     // points the tests above happen to have added.
-    const pkrBefore = (await as(null).companies.salaries({ slug })).roles.find(
-      (r) => r.currency === "PKR",
-    )!;
+    const pkrBefore = (
+      await as(reader).companies.salaries({ slug })
+    ).roles.find((r) => r.currency === "PKR")!;
     for (const n of [6, 7, 8, 9, 10])
       await point(n, 3000 + n * 100, { currency: "USD" });
-    const { roles, fx } = await as(null).companies.salaries({ slug });
+    const { roles, fx } = await as(reader).companies.salaries({ slug });
     const byCurrency = Object.fromEntries(roles.map((r) => [r.currency, r]));
     expect(Object.keys(byCurrency).sort()).toEqual(["PKR", "USD"]);
     // 3,600 to 4,000 in hundreds: the median is 3,800, already a multiple of
@@ -242,24 +250,24 @@ describe("salary aggregates", () => {
     // Five yearly reports of 1,200,000 are five monthly 100,000s.
     for (const n of [11, 12, 13, 14, 15])
       await point(n, 1_200_000, { period: "yearly", roleId: otherRoleId });
-    const row = (await as(null).companies.salaries({ slug })).roles.find(
+    const row = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.roleId === otherRoleId,
     );
     expect(row!.median).toBe(100_000 * 100);
   });
 
   it("breaks down by level and city only once a cell clears the floor", async () => {
-    const before = await as(null).companies.salaries({ slug });
+    const before = await as(reader).companies.salaries({ slug });
     expect(before.detail.filter((d) => d.level === "Senior")).toHaveLength(0);
     for (const n of [16, 17, 18, 19])
       await point(n, 300_000, { level: "Senior", cityId });
     expect(
-      (await as(null).companies.salaries({ slug })).detail.filter(
+      (await as(reader).companies.salaries({ slug })).detail.filter(
         (d) => d.level === "Senior",
       ),
     ).toHaveLength(0);
     await point(20, 300_000, { level: "Senior", cityId });
-    const cells = (await as(null).companies.salaries({ slug })).detail.filter(
+    const cells = (await as(reader).companies.salaries({ slug })).detail.filter(
       (d) => d.level === "Senior",
     );
     expect(cells).toHaveLength(1);
@@ -310,7 +318,7 @@ describe("submitting pay", () => {
       period: "monthly",
       year: 2026,
     });
-    const before = (await as(null).companies.salaries({ slug })).roles.find(
+    const before = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.roleId === roleId && r.currency === "PKR",
     )!;
     const item = await db.query.moderationItems.findFirst({
@@ -324,7 +332,7 @@ describe("submitting pay", () => {
       action: "hide",
       reason: "Implausible figure.",
     });
-    const after = (await as(null).companies.salaries({ slug })).roles.find(
+    const after = (await as(reader).companies.salaries({ slug })).roles.find(
       (r) => r.roleId === roleId && r.currency === "PKR",
     )!;
     expect(after.n).toBe(before.n - 1);

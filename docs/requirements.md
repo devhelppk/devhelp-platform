@@ -144,7 +144,7 @@ A community-contributed, Pakistan-focused reference on employers: what it is lik
 **Discovery**
 
 - F2.13 Search and filter companies by city, industry, stack, size, rating, and "hires juniors". Sort by review count and recency.
-- F2.14 Company pages are public and indexable; they are the main SEO entry point for the platform.
+- F2.14 A company page has two tiers. **Facts** — name, industry, size, cities, founded, stack, whether it hires juniors, website, careers link, and the review/interview counts — are public and indexable, and are the platform's main SEO entry point. **What people wrote** — reviews, interview experiences, pay, and company replies — is give-to-get: a reader needs a verified email and at least one contribution to any company in the last year. An ineligible reader gets a synthetic mockup behind a blur and a way through, and the page never fetches the real rows, so nothing gated is in the response body. Admins and mentors are exempt (moderation cannot work through a wall), as is a member of the company's own organisation reading their own company. While the bank holds fewer than 250 published contributions the contribution half of the rule is off and a verified email is enough, because the rule taken literally cannot bootstrap itself.
 - F2.15 Link from a company page to relevant courses ("this company interviews on X; learn X here"), and from lessons to "companies that ask this".
 
 ### Non-functional

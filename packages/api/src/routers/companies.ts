@@ -15,6 +15,7 @@ import { companyProposalSchema } from "@repo/database/schema";
 import { latestUsdToPkr } from "@repo/database/fx";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { checkEligibility, requireBankAccess } from "../gate";
 import {
   adminProcedure,
   publicProcedure,
@@ -254,6 +255,44 @@ export const companiesRouter = router({
       return { ...row, ...stats(row) };
     }),
 
+  /**
+   * May this viewer read contributed content about this company (S15 part B)?
+   *
+   * The page asks this *before* it fetches anything gated, because a page that
+   * fetched the rows and then rendered a wall would still ship every review in
+   * its RSC payload. Returning only a verdict leaks nothing: the reasons are
+   * facts about the viewer, which the viewer already knows.
+   */
+  eligibility: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    // Written out structurally rather than as `Promise<Eligibility>`: the app's
+    // `useTRPC` infers the whole router, and a named type from a module the app
+    // cannot import by path is TS2883 ("cannot be named without a reference").
+    .query(
+      async ({
+        ctx,
+        input,
+      }): Promise<
+        | {
+            allowed: true;
+            reason: "role" | "member" | "contributor" | "bank_cold";
+          }
+        | {
+            allowed: false;
+            reason: "signed_out" | "needs_verification" | "needs_contribution";
+          }
+      > => {
+        const org = await companyIdBySlug(ctx.db, input.slug);
+        const viewer = ctx.session
+          ? ((await ctx.db.query.users.findFirst({
+              where: eq(schema.users.id, ctx.session.user.id),
+              columns: { id: true, role: true, emailVerified: true },
+            })) ?? null)
+          : null;
+        return checkEligibility(ctx.db, viewer, org);
+      },
+    ),
+
   /** Published reviews for a company. The author column is never selected. */
   reviews: publicProcedure
     .input(
@@ -265,6 +304,7 @@ export const companiesRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const org = await companyIdBySlug(ctx.db, input.slug);
+      await requireBankAccess(ctx.db, ctx.session, org);
       const rows = await ctx.db
         .select(schema.reviewPublicColumns)
         .from(companyReviews)
@@ -293,6 +333,7 @@ export const companiesRouter = router({
     .input(z.object({ slug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       const org = await companyIdBySlug(ctx.db, input.slug);
+      await requireBankAccess(ctx.db, ctx.session, org);
       return ctx.db
         .select(schema.responsePublicColumns)
         .from(schema.companyResponses)
@@ -315,6 +356,7 @@ export const companiesRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const org = await companyIdBySlug(ctx.db, input.slug);
+      await requireBankAccess(ctx.db, ctx.session, org);
       const rows = await ctx.db
         .select(schema.interviewPublicColumns)
         .from(interviewExperiences)
@@ -346,6 +388,7 @@ export const companiesRouter = router({
     .input(z.object({ slug: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       const org = await companyIdBySlug(ctx.db, input.slug);
+      await requireBankAccess(ctx.db, ctx.session, org);
       const [roles, detail, fx] = await Promise.all([
         ctx.db
           .select({

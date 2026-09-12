@@ -9,6 +9,7 @@ import { AtAGlance, Rating } from "@/components/companies/bits";
 import { auth } from "@repo/auth";
 import { CompanyMark } from "@/components/companies/company-mark";
 import { ContributeDialog } from "@/components/companies/contribute-dialog";
+import { GateWall } from "@/components/companies/gate-wall";
 import { CompanyPanels } from "@/components/companies/panels";
 import { QueryState } from "@/components/companies/query-state";
 import { Shell } from "@/components/shell/shell";
@@ -27,13 +28,30 @@ const load = cache(async (slug: string) => {
   try {
     const caller = await api(new Headers(await headers()));
     const company = await caller.companies.bySlug({ slug });
+    // The gate decides *before* anything is fetched. This is the whole point:
+    // a page that fetched the rows and rendered a different panel would still
+    // have every review in its RSC payload, and passing them to the panels
+    // island would put them there whether or not a tab renders them (the trap
+    // recorded in S15 part A2). Nothing gated is read, so nothing gated can
+    // leak — and the wall below is synthetic text that never touched the
+    // database.
+    const gate = await caller.companies.eligibility({ slug });
+    if (!gate.allowed)
+      return {
+        company,
+        gate,
+        reviews: null,
+        interviews: null,
+        salaries: null,
+        responses: null,
+      };
     const [reviews, interviews, salaries, responses] = await Promise.all([
       caller.companies.reviews({ slug, limit: 20 }),
       caller.companies.interviews({ slug, limit: 20 }),
       caller.companies.salaries({ slug }),
       caller.companies.responses({ slug }),
     ]);
-    return { company, reviews, interviews, salaries, responses };
+    return { company, gate, reviews, interviews, salaries, responses };
   } catch (e) {
     if (e instanceof TRPCError && e.code === "NOT_FOUND") notFound();
     throw e;
@@ -61,7 +79,7 @@ export default async function CompanyPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { company, reviews, interviews, salaries, responses } =
+  const { company, gate, reviews, interviews, salaries, responses } =
     await load(slug);
   // One session read for the whole page: the report controls need to know
   // whether there is anyone to report as.
@@ -131,45 +149,86 @@ export default async function CompanyPage({
             </div>
           </header>
 
-          {/* At a glance: the numbers a reader decides on, above the sections
-            that explain them, with jump links because the page is long. The
-            recommend rate used to sit as muted text under five score bars; it
-            is the one figure most people act on. */}
-          <AtAGlance
-            recommendPct={company.recommendPct}
-            reviewCount={company.reviewCount}
-            interviewCount={company.interviewCount}
-            payRoleCount={salaries.roles.length}
-          />
+          {gate.allowed ? (
+            <>
+              {/* At a glance: the numbers a reader decides on, above the
+                sections that explain them, with jump links because the page is
+                long. The recommend rate used to sit as muted text under five
+                score bars; it is the one figure most people act on. */}
+              <AtAGlance
+                recommendPct={company.recommendPct}
+                reviewCount={company.reviewCount}
+                interviewCount={company.interviewCount}
+                payRoleCount={salaries!.roles.length}
+              />
 
-          <CompanyPanels
-            slug={slug}
-            signedIn={signedIn}
-            emailVerified={emailVerified}
-            company={{
-              name: company.name,
-              description: company.description,
-              website: company.website,
-              stack: company.stack,
-              hiresJuniors: company.hiresJuniors,
-              careersUrl: company.careersUrl,
-              reviewCount: company.reviewCount,
-              interviewCount: company.interviewCount,
-              ratingAvg: company.ratingAvg,
-              recommendPct: company.recommendPct,
-              difficultyAvg: company.difficultyAvg,
-              learningAvg: company.learningAvg,
-              managementAvg: company.managementAvg,
-              workLifeAvg: company.workLifeAvg,
-              compensationAvg: company.compensationAvg,
-              growthAvg: company.growthAvg,
-            }}
-            facts={facts}
-            reviews={reviews.items}
-            interviews={interviews.items}
-            salaries={salaries}
-            responses={responses}
-          />
+              <CompanyPanels
+                slug={slug}
+                signedIn={signedIn}
+                emailVerified={emailVerified}
+                company={{
+                  name: company.name,
+                  description: company.description,
+                  website: company.website,
+                  stack: company.stack,
+                  hiresJuniors: company.hiresJuniors,
+                  careersUrl: company.careersUrl,
+                  reviewCount: company.reviewCount,
+                  interviewCount: company.interviewCount,
+                  ratingAvg: company.ratingAvg,
+                  recommendPct: company.recommendPct,
+                  difficultyAvg: company.difficultyAvg,
+                  learningAvg: company.learningAvg,
+                  managementAvg: company.managementAvg,
+                  workLifeAvg: company.workLifeAvg,
+                  compensationAvg: company.compensationAvg,
+                  growthAvg: company.growthAvg,
+                }}
+                facts={facts}
+                reviews={reviews!.items}
+                interviews={interviews!.items}
+                salaries={salaries!}
+                responses={responses!}
+              />
+            </>
+          ) : (
+            /* Tier one stays public (D1): what the company is, checked by us
+               against public sources, is not somebody's contribution and
+               nothing is gained by hiding it. What people wrote is tier two,
+               and below this the page has not read a word of it. */
+            <>
+              <section className="flex max-w-2xl flex-col gap-4 rounded-lg border p-4 text-sm">
+                <h2 className="font-medium">About {company.name}</h2>
+                {company.description ? <p>{company.description}</p> : null}
+                <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
+                  {facts.map(([k, v]) => (
+                    <div key={k} className="contents">
+                      <dt className="text-muted-foreground">{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {company.website ? (
+                  <a
+                    href={company.website}
+                    rel="nofollow noopener"
+                    target="_blank"
+                    className="break-all underline underline-offset-4"
+                  >
+                    {company.website.replace(/^https?:\/\//, "")}
+                  </a>
+                ) : null}
+              </section>
+
+              <GateWall
+                kind={gate.reason}
+                slug={slug}
+                companyName={company.name}
+                signedIn={signedIn}
+                emailVerified={emailVerified}
+              />
+            </>
+          )}
         </div>
       </QueryState>
     </Shell>

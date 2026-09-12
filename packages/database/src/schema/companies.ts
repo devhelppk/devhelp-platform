@@ -220,6 +220,13 @@ export const companyReviews = pgTable(
   },
   (t) => [
     uniqueIndex("company_reviews_author_uidx").on(t.organizationId, t.authorId),
+    // The gate asks "has this person contributed lately?" — an author-only
+    // lookup, which the unique index above cannot serve because it leads with
+    // the organisation.
+    index("company_reviews_author_recent_idx").on(
+      t.authorId,
+      t.createdAt.desc(),
+    ),
     index("company_reviews_public_idx").on(
       t.organizationId,
       t.status,
@@ -254,6 +261,11 @@ export const interviewExperiences = pgTable(
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    // Same author-only lookup as the other two contribution tables.
+    index("interview_experiences_author_recent_idx").on(
+      t.authorId,
+      t.createdAt.desc(),
+    ),
     index("interview_experiences_public_idx").on(
       t.organizationId,
       t.status,
@@ -314,6 +326,10 @@ export const salaryPoints = pgTable(
   },
   (t) => [
     uniqueIndex("salary_points_author_uidx").on(t.organizationId, t.authorId),
+    // The gate asks "has this person contributed lately?" — an author-only
+    // lookup, which the unique index above cannot serve because it leads with
+    // the organisation.
+    index("salary_points_author_recent_idx").on(t.authorId, t.createdAt.desc()),
     index("salary_points_agg_idx").on(t.organizationId, t.status, t.roleId),
   ],
 );

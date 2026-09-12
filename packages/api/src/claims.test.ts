@@ -328,7 +328,7 @@ describe("public responses", () => {
       subjectId: reviewId,
       body: "Thank you for this. **Deadlines** now come from the team that writes the code.",
     });
-    expect(await as(null).companies.responses({ slug })).toHaveLength(0);
+    expect(await as(outsider).companies.responses({ slug })).toHaveLength(0);
     const item = await db.query.moderationItems.findFirst({
       where: and(
         eq(schema.moderationItems.subjectType, "company_response"),
@@ -336,7 +336,7 @@ describe("public responses", () => {
       ),
     });
     await as(admin).moderation.decide({ id: item!.id, action: "approve" });
-    const published = await as(null).companies.responses({ slug });
+    const published = await as(outsider).companies.responses({ slug });
     expect(published).toHaveLength(1);
     expect(published[0]!.subjectId).toBe(reviewId);
     // Markdown is rendered on the server, as it is everywhere else.
@@ -370,7 +370,7 @@ describe("public responses", () => {
       where: eq(schema.companyResponses.id, response!.id),
     });
     expect(row!.status).toBe("hidden");
-    expect(await as(null).companies.responses({ slug })).toHaveLength(0);
+    expect(await as(outsider).companies.responses({ slug })).toHaveLength(0);
   });
 
   it("shows a moderator the text that will actually be published", async () => {

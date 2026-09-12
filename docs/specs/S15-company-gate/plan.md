@@ -142,12 +142,12 @@ Eligibility is per-user and changes the moment someone contributes. The company 
 
 ### Acceptance criteria
 
-- [ ] An ineligible viewer's page response contains no contributed content — asserted on the response body, not observed in a browser — and the ineligible path issues no request that would return it.
-- [ ] The blurred state is synthetic content that never touched the database; the real rows are not fetched for an ineligible viewer.
-- [ ] Each gated procedure refuses an ineligible caller directly, so the gate holds against a hand-made API call, not only through the UI.
-- [ ] Verified email plus one contribution in the last 365 days grants access; 366 days does not; a rejected contribution does not; a pending one does.
-- [ ] Admins, mentors, and a company's own members are not walled out.
-- [ ] The facts tier stays public and indexable, and F2.14 is rewritten to say exactly what is now true.
+- [x] An ineligible viewer's page response contains no contributed content — asserted on the response body, not observed in a browser — and the ineligible path issues no request that would return it.
+- [x] The blurred state is synthetic content that never touched the database; the real rows are not fetched for an ineligible viewer.
+- [x] Each gated procedure refuses an ineligible caller directly, so the gate holds against a hand-made API call, not only through the UI.
+- [x] Verified email plus one contribution in the last 365 days grants access; 366 days does not; a rejected contribution does not; a pending one does.
+- [x] Admins, mentors, and a company's own members are not walled out.
+- [x] The facts tier stays public and indexable, and F2.14 is rewritten to say exactly what is now true.
 - [ ] Sub-scores are withheld below n = 5 and every average prints its n.
 - [ ] The heading outline is one level per level, checked with a screen reader's heading list.
 - [ ] On a 390px viewport the facts reach the reader before the opinions.

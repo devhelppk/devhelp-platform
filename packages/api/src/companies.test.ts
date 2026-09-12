@@ -121,7 +121,9 @@ describe("contributions", () => {
       wouldRecommend: true,
     });
     // Pending: invisible, and not in the aggregates.
-    expect((await as(null).companies.reviews({ slug })).items).toHaveLength(0);
+    expect((await as(learner).companies.reviews({ slug })).items).toHaveLength(
+      0,
+    );
     expect((await as(null).companies.bySlug({ slug })).reviewCount).toBe(0);
 
     const item = await db.query.moderationItems.findFirst({
@@ -134,7 +136,7 @@ describe("contributions", () => {
     expect(item?.track).toBeNull();
 
     await as(admin).moderation.decide({ id: item!.id, action: "approve" });
-    const published = await as(null).companies.reviews({ slug });
+    const published = await as(learner).companies.reviews({ slug });
     expect(published.items).toHaveLength(1);
     const company = await as(null).companies.bySlug({ slug });
     expect(company.reviewCount).toBe(1);
@@ -143,7 +145,8 @@ describe("contributions", () => {
   });
 
   it("never exposes who wrote a review", async () => {
-    const [review] = await as(null)
+    // Read by someone other than the author, which is who anonymity is for.
+    const [review] = await as(other)
       .companies.reviews({ slug })
       .then((r) => r.items);
     expect(review).toBeDefined();
@@ -169,7 +172,9 @@ describe("contributions", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]!.status).toBe("pending");
     // The edit leaves the public page, because it is pending again.
-    expect((await as(null).companies.reviews({ slug })).items).toHaveLength(0);
+    expect((await as(learner).companies.reviews({ slug })).items).toHaveLength(
+      0,
+    );
     const items = await db.query.moderationItems.findMany({
       where: and(
         eq(schema.moderationItems.subjectType, "company_review"),
@@ -219,7 +224,7 @@ describe("contributions", () => {
     });
     expect(after!.status).toBe("rejected");
     expect(
-      (await as(null).companies.reviews({ slug })).items,
+      (await as(learner).companies.reviews({ slug })).items,
     ).not.toContainEqual(expect.objectContaining({ id }));
     await db.delete(schema.users).where(eq(schema.users.id, author.id));
   });
@@ -306,7 +311,7 @@ describe("contributions", () => {
       ),
     });
     await as(admin).moderation.decide({ id: item!.id, action: "approve" });
-    const list = await as(null).companies.interviews({ slug });
+    const list = await as(learner).companies.interviews({ slug });
     expect(list.items).toHaveLength(1);
     expect(list.items[0]!.rounds).toHaveLength(2);
     expect(JSON.stringify(list.items[0])).not.toContain(other.id);
@@ -512,9 +517,9 @@ describe("admin facts", () => {
     });
     expect(aliases).toHaveLength(2);
     // The interview approved earlier is untouched by a facts edit.
-    expect((await as(null).companies.interviews({ slug })).items).toHaveLength(
-      1,
-    );
+    expect(
+      (await as(learner).companies.interviews({ slug })).items,
+    ).toHaveLength(1);
   });
 
   it("keeps the verification record when a company is hidden", async () => {

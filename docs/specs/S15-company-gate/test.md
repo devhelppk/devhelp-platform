@@ -107,3 +107,67 @@ Roughly 8–16 KB for the island. Inside budget with room; the comment in `check
 ## Found while doing it
 
 **Props given to the island are in the RSC payload whether or not their tab renders.** The Overview panel shows a preview, but every review's full text is serialised into the page because the island receives them all. It is harmless today — this is public content — and it is exactly the trap part B has to design around: the gate cannot be "render a different panel", it has to be "do not fetch, and do not pass".
+
+---
+
+# Part B — the gate
+
+## The shape of the fix
+
+The gate is not a component. It is two calls at two levels, and the page-level
+one exists only because of the RSC payload finding recorded above:
+
+- `requireBankAccess` at the top of `companies.reviews`, `interviews`,
+  `salaries` and `responses`, so the boundary holds against `curl` and not only
+  against the UI.
+- `companies.eligibility` asked by the page **before** it fetches anything
+  gated. A page that fetched first and rendered a wall second would still ship
+  every review in its payload, which is the whole trap. The procedure returns a
+  verdict and nothing else, and a verdict is a fact about the viewer that the
+  viewer already knows.
+
+`GateWall` is then free of secrets by construction: every string in it is
+written in `gate-wall.tsx`. The blur is decoration that says "there is
+something here"; what hides the content is that the content was never read.
+
+## Asserted on the response body
+
+Signed out, against the seeded company that has two published reviews:
+
+```
+$ curl -s http://localhost:3001/companies/arbisoft > anon.html   # 78,193 bytes
+"I learned React properly"              → 0 occurrences
+"Real mentorship on the first project"  → 0 occurrences
+"Sign in to read what people say"       → present
+```
+
+So the reviews are absent from the HTML and from the RSC payload embedded in
+it, not merely invisible.
+
+## Tests
+
+`packages/api/src/gate.test.ts`, 20 cases against real Postgres: every gated
+procedure × (signed out → `UNAUTHORIZED`, unverified → `FORBIDDEN`, admin →
+allowed), the member exemption (D4), the facts tier still public (D1), the cold
+bank (D2), a pending contribution counting and a 400-day-old one not (D3), and
+the error carrying a reason a client can branch on.
+
+`WARM_AT` is a parameter with a default rather than a constant read from the
+module, purely so a test can pass `0` and exercise the contribution rule
+without seeding 250 published rows. No caller in the product passes it.
+
+## Found while doing it
+
+- **The gate changed what "public" means for 26 existing tests.** Five suites
+  read `companies.reviews` / `salaries` / `responses` as a signed-out caller,
+  because until now that was the product. Each now reads as a verified reader,
+  and the `bySlug` / `list` reads were deliberately left signed-out — that is
+  the D1 facts tier, and those assertions are now the regression test for it.
+- **`exists(… union all …)` with bound parameters failed** under postgres-js
+  with `ERR_INVALID_ARG_TYPE`, not a SQL error. Rewritten as three
+  `findFirst`s run together — one index seek each against the 0021 indexes, and
+  legible besides.
+- **`Eligibility` as a procedure's return type broke the app's type-check**
+  with TS2883: the LMS infers the whole router through `useTRPC`, and it cannot
+  name a type from a module it has no import path to. The verdict is written
+  structurally in the router for that reason.

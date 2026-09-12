@@ -148,6 +148,13 @@
       "when": 1788764336107,
       "tag": "0020_search_vectors",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789210555270,
+      "tag": "0021_gate_author_indexes",
+      "breakpoints": true
     }
   ]
 }

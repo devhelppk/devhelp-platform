@@ -1,8 +1,10 @@
 # Content policy
 
-Last updated: 6 September 2026. Contact for takedown requests: policy@devhelp.pk.
+Last updated: 12 September 2026. Contact for takedown requests: policy@devhelp.pk.
 
-devhelp.pk publishes reviews, interview experiences, salary information, questions, and answers written by people in Pakistan's software industry. Everything a person submits is read by a moderator before it is public, and anything public can be flagged by readers. Moderators apply the clauses below and quote the clause number when they reject or hide something.
+devhelp.pk publishes reviews, interview experiences, salary information, questions, and answers written by people in Pakistan's software industry. Everything a person submits is read by a moderator before it is published, and anything published can be flagged by readers.
+
+**Who can read what people wrote.** Facts about a company — what it does, its size, its cities, whether it hires juniors — are open to everyone. Reviews, interview experiences, pay and company replies are for people who contribute to them: reading them needs a verified email address and, once the bank is large enough to be worth taking, one contribution of your own in the last year. This is not a paywall and nothing here is for sale; it is what keeps a bank built by learners from being harvested by everyone except them. The devhelp team and the moderators read everything, because they have to, and a company's own representatives can read what is written about them so they can reply to it. Moderators apply the clauses below and quote the clause number when they reject or hide something.
 
 ## c1. Do not name individuals
 

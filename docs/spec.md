@@ -313,11 +313,11 @@ Acceptance criteria
 
 Depends on: everything above.
 
-### S15. Company page: information hierarchy, and a give-to-get gate — `in-progress`
+### S15. Company page: information hierarchy, and a give-to-get gate — `complete`
 
-Plan: [`specs/S15-company-gate/plan.md`](./specs/S15-company-gate/plan.md). Part A records: [`test.md`](./specs/S15-company-gate/test.md)
+Plan: [`specs/S15-company-gate/plan.md`](./specs/S15-company-gate/plan.md). Records for both parts: [`test.md`](./specs/S15-company-gate/test.md)
 
-**Part A (the design pass) is done and verified in the browser.** Part B (the gate) is not started and still blocked on the three decisions below.
+**Both parts are done.** Part A (the design pass) was verified in the browser. Part B (the gate) is enforced in two places: `requireBankAccess` at the top of every procedure that returns a contribution, and `companies.eligibility` asked by the page _before_ it fetches anything gated — because a page that fetched first and walled second would still ship every review in its RSC payload. The wall is synthetic text written in `gate-wall.tsx`; the response body of a signed-out request contains none of the real reviews, checked with `curl` and `grep`, not in a browser. The founder decisions were taken as D1 two-tier, D2 verified-only below 250 published contributions, D3 pending counts / rejected does not, D4 admins, mentors and a company's own members exempt.
 
 Scope: two halves of one page. (a) A design pass on `/companies/[slug]` — orientation facts currently land last on mobile, the recommend-rate sits below the sub-scores that explain it, five sub-scores are printed to one decimal off two reviews, and `h3` does duty at three different levels. (b) A give-to-get gate: company detail is for viewers with a verified email who have contributed to any company in the last 365 days; everyone else sees a synthetic mockup, with the real rows never fetched, never in the RSC payload, and never reachable by a hand-made API call.
 

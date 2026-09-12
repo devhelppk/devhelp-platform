@@ -1,0 +1,3 @@
+CREATE INDEX "company_reviews_author_recent_idx" ON "company_reviews" USING btree ("author_id","created_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "interview_experiences_author_recent_idx" ON "interview_experiences" USING btree ("author_id","created_at" DESC NULLS LAST);--> statement-breakpoint
+CREATE INDEX "salary_points_author_recent_idx" ON "salary_points" USING btree ("author_id","created_at" DESC NULLS LAST);
