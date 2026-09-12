@@ -215,18 +215,24 @@ What we deliberately changed:
 - Ground. Compass is dark-first on near-black navy. devhelp is paper-first,
   because most of our readers are on mid-range Android screens in daylight.
   **Dark mode is neutral** (founder, 2026-09-12): surfaces are chroma 0 —
-  `#0a0a0a` page, `#171717` cards and sidebar, `#262626` raised — the register
-  shadcn, Vercel and Resend use. They were previously chroma 0.04 at the indigo
+  `#0a0a0a` page, `#121212` cards and sidebar, `#1e1e1e` raised — the register
+  shadcn, Vercel and Resend use. The steps are deliberately close together: a
+  card is told apart from the page as much by its 12% white border as by its
+  fill, so the fills do not need to shout. The first pass stepped to `#171717`
+  and `#262626` and those read as panels sitting on the page rather than part
+  of it. They were previously chroma 0.04 at the indigo
   hue, which made every surface navy (`#0f1225`); that read as the brand leaking
   into the paper rather than sitting on it. Hue in dark mode survives only where
   it means something: `--primary`, `--ring`, `--destructive` and the charts.
   `--accent` is neutral too, so a hovered row or the current nav item reads as a
   change in level rather than a wash of brand colour. Light mode is unchanged.
 
-  The dark contrasts are computed rather than judged: foreground 18.9:1 on the
-  page and 17.2:1 on a card; muted-foreground 7.6:1, 6.9:1 and 5.8:1 on page,
-  card and muted; primary 9.8:1 with its own foreground 9.0:1 on it; ring 4.9:1.
-  Re-check with the same arithmetic before moving any of these values.
+  The dark contrasts are computed rather than judged: foreground 19.0:1 on the
+  page and 18.0:1 on a card; muted-foreground 7.6:1, 7.3:1 and 6.4:1 on page,
+  card and raised; primary 9.8:1 with its own foreground 9.0:1 on it; ring
+  4.9:1. Re-check with the same arithmetic before moving any of these values —
+  darkening a surface raises its contrast, so tightening the steps is safe in
+  that direction and needs checking in the other.
 
 - Type. Compass uses a single neutral grotesk. We pair Literata (headings and
   prose) with Geist (interface), which gives lessons a book-like voice and

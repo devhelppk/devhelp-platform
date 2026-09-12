@@ -50,24 +50,30 @@
      at the indigo hue, which tinted every surface navy (#0f1225) — the brand
      leaking into the paper rather than sitting on it. Hue now survives only in
      the roles that mean something: primary, ring, destructive and the charts.
-     Contrast was computed, not eyeballed: foreground 18.9:1 on the page and
-     17.2:1 on a card, muted-foreground 7.6:1 / 6.9:1 / 5.8:1 on page, card and
-     muted, primary 9.8:1, its foreground 9.0:1 on it, ring 4.9:1. */
+     The steps are deliberately close together: #0a0a0a page, #121212 cards
+     and sidebar, #1e1e1e raised. A card is told apart from the page as much by
+     its 12% white border as by its fill, so the fills do not need to shout —
+     the first pass stepped to #171717 and #262626, which read as panels sitting
+     on the page rather than part of it.
+
+     Contrast was computed, not eyeballed: foreground 19.0:1 on the page and
+     18.0:1 on a card, muted-foreground 7.6:1 / 7.3:1 / 6.4:1 on page, card and
+     raised, primary 9.8:1, its foreground 9.0:1 on it, ring 4.9:1. */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.18 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.78 0.1 272);
   --primary-foreground: oklch(0.2 0.05 272);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.235 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.235 0 0);
   --muted-foreground: oklch(0.708 0 0);
   /* Neutral, so a hovered row or the current nav item reads as a change in
      level rather than a wash of brand colour. */
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.235 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.7 0.17 25);
   --border: oklch(1 0 0 / 12%);
@@ -79,11 +85,11 @@
   --chart-3: oklch(0.66 0.13 272);
   --chart-4: oklch(0.68 0.16 25);
   --chart-5: oklch(0.708 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.78 0.1 272);
   --sidebar-primary-foreground: oklch(0.2 0.05 272);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.235 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.6 0.12 272);
