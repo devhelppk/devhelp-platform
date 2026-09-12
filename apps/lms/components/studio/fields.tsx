@@ -3,6 +3,7 @@
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { FormSelect } from "@/components/form-select";
 import { Textarea } from "@repo/ui/components/textarea";
 
 /** The small form pieces the studio reuses. Plain inputs; the forms are short. */
@@ -72,18 +73,13 @@ export function Choice({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={name}>{label}</Label>
-      <select
+      <FormSelect
         id={name}
         name={name}
         defaultValue={defaultValue}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        {options.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </select>
+        options={options}
+        required
+      />
     </div>
   );
 }

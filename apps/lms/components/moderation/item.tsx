@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import type { Route } from "next";
 import { useState, type FormEvent } from "react";
+import { FormSelect } from "@/components/form-select";
 import { useTRPC } from "@/lib/trpc/client";
 import { ago, clauses, statusLabels, subjectLabels } from "./labels";
 
@@ -400,19 +401,14 @@ export function ModerationItem({
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="clause">Policy clause</Label>
-              <select
+              <FormSelect
                 id="clause"
                 name="clause"
-                className="h-9 rounded-md border bg-background px-3 text-sm"
-                defaultValue=""
-              >
-                <option value="">None</option>
-                {clauses.map(([id, title]) => (
-                  <option key={id} value={id}>
-                    {id}. {title}
-                  </option>
-                ))}
-              </select>
+                emptyLabel="None"
+                options={clauses.map(
+                  ([id, title]) => [id, `${id}. ${title}`] as const,
+                )}
+              />
             </div>
             {error ? (
               <p role="alert" className="text-sm text-destructive">

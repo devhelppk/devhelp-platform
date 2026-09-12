@@ -3,6 +3,13 @@
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTRPC } from "@/lib/trpc/client";
@@ -91,15 +98,18 @@ export function Credits({
             <label htmlFor="credit-role" className="text-xs font-medium">
               Credit as
             </label>
-            <select
-              id="credit-role"
+            <Select
               value={role}
-              onChange={(e) => setRole(e.target.value as "author")}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs"
+              onValueChange={(next) => setRole(next as "author")}
             >
-              <option value="author">Author</option>
-              <option value="reviewer">Reviewer</option>
-            </select>
+              <SelectTrigger id="credit-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="author">Author</SelectItem>
+                <SelectItem value="reviewer">Reviewer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex min-w-48 flex-1 flex-col gap-1.5">
             <label htmlFor="credit-search" className="text-xs font-medium">

@@ -6,6 +6,7 @@ import { Label } from "@repo/ui/components/label";
 import { Textarea } from "@repo/ui/components/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
+import { FormSelect } from "@/components/form-select";
 import { useTRPC } from "@/lib/trpc/client";
 
 const SIZES = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"];
@@ -210,20 +211,14 @@ function Choice({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={name}>{label}</Label>
-      <select
+      <FormSelect
         id={name}
         name={name}
         defaultValue={defaultValue}
+        options={options}
         required={required}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        {required ? null : <option value="">Unknown</option>}
-        {options.map(([v, l]) => (
-          <option key={v} value={v}>
-            {l}
-          </option>
-        ))}
-      </select>
+        emptyLabel={required ? undefined : "Unknown"}
+      />
     </div>
   );
 }

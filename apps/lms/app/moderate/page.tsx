@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { ModerationQueue } from "@/components/moderation/queue";
 import { statusLabels } from "@/components/moderation/labels";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { ToolsShell } from "@/components/shell/tools-shell";
 
 export const metadata: Metadata = { title: "Moderation" };
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function ModeratePage({
       ? (q.status as keyof typeof statusLabels)
       : "pending";
   return (
-    <Page wide callbackURL="/moderate">
+    <ToolsShell callbackURL="/moderate">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -45,6 +45,6 @@ export default async function ModeratePage({
           <ModerationQueue status={status} />
         </LearnerProviders>
       </div>
-    </Page>
+    </ToolsShell>
   );
 }

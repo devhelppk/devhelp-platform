@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApplyForm } from "@/components/mentor/apply-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { ToolsShell } from "@/components/shell/tools-shell";
 
 export const metadata: Metadata = { title: "Apply to mentor" };
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function MentorApplyPage() {
   });
   if (!session) redirect("/sign-in?callbackURL=%2Fmentor%2Fapply");
   return (
-    <Page callbackURL="/mentor/apply">
+    <ToolsShell callbackURL="/mentor/apply">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -36,6 +36,6 @@ export default async function MentorApplyPage() {
           />
         </LearnerProviders>
       </div>
-    </Page>
+    </ToolsShell>
   );
 }

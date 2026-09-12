@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AccountForm } from "@/components/account/account-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { ToolsShell } from "@/components/shell/tools-shell";
 
 export const metadata: Metadata = { title: "Account" };
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function AccountPage({
   if (!session) redirect("/sign-in?callbackURL=%2Faccount");
   const q = await searchParams;
   return (
-    <Page callbackURL="/account">
+    <ToolsShell callbackURL="/account">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -38,6 +38,6 @@ export default async function AccountPage({
           <AccountForm lmsUrl={clientEnv.NEXT_PUBLIC_LMS_URL} />
         </LearnerProviders>
       </div>
-    </Page>
+    </ToolsShell>
   );
 }

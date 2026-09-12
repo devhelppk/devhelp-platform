@@ -6,6 +6,7 @@ import { Input } from "@repo/ui/components/input";
 import { Textarea } from "@repo/ui/components/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
+import { FormSelect } from "@/components/form-select";
 import { useTRPC } from "@/lib/trpc/client";
 import { ago } from "@/components/moderation/labels";
 
@@ -70,17 +71,14 @@ export function AdminBadges() {
           </label>
           <label className="flex flex-col gap-1 text-sm">
             Badge
-            <select
+            <FormSelect
               name="badgeSlug"
               required
-              className="h-9 rounded-md border bg-background px-3 text-sm"
-            >
-              {(catalogue.data ?? []).map((b) => (
-                <option key={b.slug} value={b.slug}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+              aria-label="Badge"
+              options={(catalogue.data ?? []).map(
+                (b) => [b.slug, b.name] as const,
+              )}
+            />
           </label>
         </div>
         <label className="flex flex-col gap-1 text-sm">

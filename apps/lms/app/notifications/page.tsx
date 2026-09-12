@@ -8,7 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ago } from "@/components/moderation/labels";
-import { Page } from "@/components/shell/site-header";
+import { ToolsShell } from "@/components/shell/tools-shell";
 import { safePath } from "@/lib/safe-path";
 
 export const metadata: Metadata = { title: "Notifications" };
@@ -38,7 +38,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <Page callbackURL="/notifications">
+    <ToolsShell callbackURL="/notifications">
       <div className="flex flex-col gap-6">
         <header className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -108,6 +108,6 @@ export default async function NotificationsPage() {
           </ul>
         )}
       </div>
-    </Page>
+    </ToolsShell>
   );
 }

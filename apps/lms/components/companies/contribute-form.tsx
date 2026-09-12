@@ -2,12 +2,20 @@
 
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
+import {
+  Select as UiSelect,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/select";
 import { Label } from "@repo/ui/components/label";
 import { Textarea } from "@repo/ui/components/textarea";
 import { useMutation } from "@tanstack/react-query";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { FormSelect } from "@/components/form-select";
 import { ResendVerification } from "@/components/account/resend-verification";
 import { SALARY_LEVELS, type SalaryLevel } from "@repo/api/levels";
 import { useTRPC } from "@/lib/trpc/client";
@@ -339,24 +347,28 @@ export function ContributeForm({
             <legend className="px-1 text-sm font-medium">Rounds</legend>
             {rounds.map((round, i) => (
               <div key={i} className="flex flex-col gap-2 sm:flex-row">
-                <select
-                  aria-label={`Round ${i + 1} type`}
+                <UiSelect
                   value={round.type}
-                  onChange={(e) =>
+                  onValueChange={(next: string) =>
                     setRounds((rs) =>
-                      rs.map((r, n) =>
-                        n === i ? { ...r, type: e.target.value } : r,
-                      ),
+                      rs.map((r, n) => (n === i ? { ...r, type: next } : r)),
                     )
                   }
-                  className="h-9 rounded-md border border-input bg-transparent px-3 text-sm capitalize shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-48"
                 >
-                  {ROUND_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    aria-label={`Round ${i + 1} type`}
+                    className="capitalize sm:w-48"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROUND_TYPES.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">
+                        {t.replace(/_/g, " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </UiSelect>
                 <Input
                   aria-label={`Round ${i + 1} description`}
                   value={round.description}
@@ -646,22 +658,14 @@ function Select({
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
-      <select
+      <FormSelect
         id={name}
         name={name}
         required={required}
         defaultValue={defaultValue}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        <option value="">
-          {required ? "Choose one" : "Prefer not to say"}
-        </option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
+        emptyLabel={required ? "Choose one" : "Prefer not to say"}
+        options={options.map((o) => [o.id, o.name] as const)}
+      />
     </div>
   );
 }

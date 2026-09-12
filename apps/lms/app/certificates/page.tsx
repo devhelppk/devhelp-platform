@@ -6,7 +6,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CertificateCard } from "@/components/certificates/certificate-card";
-import { Page } from "@/components/shell/site-header";
+import { ToolsShell } from "@/components/shell/tools-shell";
 
 export const metadata: Metadata = { title: "Certificates" };
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function CertificatesPage() {
   const caller = await api(await headers());
   const certs = await caller.certificates.mine();
   return (
-    <Page callbackURL="/certificates">
+    <ToolsShell callbackURL="/certificates">
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -47,6 +47,6 @@ export default async function CertificatesPage() {
           </p>
         )}
       </div>
-    </Page>
+    </ToolsShell>
   );
 }
