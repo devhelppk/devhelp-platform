@@ -681,32 +681,29 @@ function About({
   emailVerified: boolean;
 }) {
   return (
-    /* Full width and two columns, like every other panel: the facts are a
-       short list of short values, so a 42rem measure left most of the row
-       empty and pushed the links and the claim sentence into a column of
-       stragglers below them. Facts read down the left, the things you can act
-       on — the company's own links, claiming, provenance — sit beside them. */
-    <div className="grid gap-4 text-sm lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-      <div className="flex min-w-0 flex-col gap-4 rounded-lg border p-4">
-        <h2 className="text-base font-medium">About {company.name}</h2>
-        {company.description ? (
-          <p className="text-muted-foreground">{company.description}</p>
-        ) : null}
-        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
-          {facts.map(([k, v]) => (
-            <div key={k} className="contents">
-              <dt className="text-muted-foreground">{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-4 rounded-lg border p-4">
-        {company.website || company.careersUrl ? (
-          <div className="flex min-w-0 flex-col gap-2">
-            <h2 className="text-base font-medium">Links</h2>
-            {company.website ? (
+    /* One card at the panel's full width, with the facts paired two to a row.
+       Each is a short label and a short value, so one pair per row wasted most
+       of the width and made the card taller than it needs to be. `contents` on
+       each pair lets the `dt`/`dd` land in the four-column track directly, so
+       two pairs share a row and every label still lines up with its own. */
+    <div className="flex flex-col gap-4 rounded-lg border p-4 text-sm">
+      <h2 className="text-base font-medium">About {company.name}</h2>
+      {company.description ? (
+        <p className="max-w-prose text-muted-foreground">
+          {company.description}
+        </p>
+      ) : null}
+      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr_auto_1fr] sm:gap-x-10">
+        {facts.map(([k, v]) => (
+          <div key={k} className="contents">
+            <dt className="text-muted-foreground">{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+        {company.website ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Website</dt>
+            <dd className="min-w-0">
               <a
                 href={company.website}
                 rel="nofollow noopener"
@@ -715,24 +712,30 @@ function About({
               >
                 {company.website.replace(/^https?:\/\//, "")}
               </a>
-            ) : null}
-            {company.careersUrl ? (
+            </dd>
+          </div>
+        ) : null}
+        {company.careersUrl ? (
+          <div className="contents">
+            <dt className="text-muted-foreground">Careers</dt>
+            <dd className="min-w-0">
               <a
                 href={company.careersUrl}
                 rel="nofollow noopener"
                 target="_blank"
                 className="break-all underline underline-offset-4"
               >
-                Careers at {company.name}
+                Jobs at {company.name}
               </a>
-            ) : null}
+            </dd>
           </div>
         ) : null}
-        {/* The claim flow (S13) is for someone who works at the company, which
-            is a tiny fraction of this page's readers. It belongs here, as a
-            sentence, not as a third button beside the one action a learner
-            came to take. */}
-        <p className="text-xs text-muted-foreground">
+      </dl>
+      {/* The claim flow (S13) is for someone who works at the company, which is
+          a tiny fraction of this page's readers. It belongs here, as a sentence,
+          not as a third button beside the one action a learner came to take. */}
+      <div className="flex flex-col gap-2 border-t pt-4 text-xs text-muted-foreground sm:flex-row sm:gap-10">
+        <p className="sm:flex-1">
           Work at {company.name}?{" "}
           <ClaimDialog
             slug={slug}
@@ -742,7 +745,7 @@ function About({
           />{" "}
           to reply to what is written here.
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="sm:flex-1">
           Facts are checked by the devhelp team against public sources. Reviews
           and interviews are contributed by learners and published after review.
           Nothing here identifies its author.
