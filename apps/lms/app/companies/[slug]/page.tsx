@@ -197,28 +197,63 @@ export default async function CompanyPage({
                nothing is gained by hiding it. What people wrote is tier two,
                and below this the page has not read a word of it. */
             <>
-              <section className="flex max-w-2xl flex-col gap-4 rounded-lg border p-4 text-sm">
-                <h2 className="font-medium">About {company.name}</h2>
-                {company.description ? <p>{company.description}</p> : null}
-                <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
-                  {facts.map(([k, v]) => (
-                    <div key={k} className="contents">
-                      <dt className="text-muted-foreground">{k}</dt>
-                      <dd>{v}</dd>
+              {/* The same two-column shape as the About panel, so a reader
+                  who signs in and comes back sees the facts where they left
+                  them rather than in a rearranged card. */}
+              <div className="grid gap-4 text-sm lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+                <section className="flex min-w-0 flex-col gap-4 rounded-lg border p-4">
+                  <h2 className="text-base font-medium">
+                    About {company.name}
+                  </h2>
+                  {company.description ? (
+                    <p className="text-muted-foreground">
+                      {company.description}
+                    </p>
+                  ) : null}
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
+                    {facts.map(([k, v]) => (
+                      <div key={k} className="contents">
+                        <dt className="text-muted-foreground">{k}</dt>
+                        <dd>{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+
+                <section className="flex min-w-0 flex-col gap-4 rounded-lg border p-4">
+                  {company.website || company.careersUrl ? (
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <h2 className="text-base font-medium">Links</h2>
+                      {company.website ? (
+                        <a
+                          href={company.website}
+                          rel="nofollow noopener"
+                          target="_blank"
+                          className="break-all underline underline-offset-4"
+                        >
+                          {company.website.replace(/^https?:\/\//, "")}
+                        </a>
+                      ) : null}
+                      {company.careersUrl ? (
+                        <a
+                          href={company.careersUrl}
+                          rel="nofollow noopener"
+                          target="_blank"
+                          className="break-all underline underline-offset-4"
+                        >
+                          Careers at {company.name}
+                        </a>
+                      ) : null}
                     </div>
-                  ))}
-                </dl>
-                {company.website ? (
-                  <a
-                    href={company.website}
-                    rel="nofollow noopener"
-                    target="_blank"
-                    className="break-all underline underline-offset-4"
-                  >
-                    {company.website.replace(/^https?:\/\//, "")}
-                  </a>
-                ) : null}
-              </section>
+                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    Facts are checked by the devhelp team against public
+                    sources. Reviews and interviews are contributed by learners
+                    and published after review. Nothing here identifies its
+                    author.
+                  </p>
+                </section>
+              </div>
 
               <GateWall
                 kind={gate.reason}
