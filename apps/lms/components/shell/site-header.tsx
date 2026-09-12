@@ -9,7 +9,7 @@ import { AccountMenu } from "./account-menu";
 /** Header for catalogue-style pages (dashboard, catalogue, path, course). Lesson pages use the app shell. */
 export function SiteHeader({ callbackURL = "/" }: { callbackURL?: string }) {
   return (
-    <header className="border-b">
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link
           href="/"
@@ -52,6 +52,13 @@ export function SiteHeader({ callbackURL = "/" }: { callbackURL?: string }) {
   );
 }
 
+/**
+ * `wide` is the data-dense shell (company directory and detail, admin): tables,
+ * side-by-side panels and filter rows, which `max-w-6xl` left cramped. Reading
+ * pages keep the narrow shell, and prose inside a wide page still caps at
+ * `max-w-prose` — widening the measure would make a lesson worse, not better
+ * (see `DESIGN.md`, "keep measures under 70 characters").
+ */
 export function Page({
   children,
   wide = false,
@@ -67,7 +74,7 @@ export function Page({
       <main
         className={
           wide
-            ? "mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
+            ? "mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10"
             : "mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
         }
       >

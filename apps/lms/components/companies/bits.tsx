@@ -101,8 +101,9 @@ export function Month({ value }: { value: string | null }) {
 }
 
 /**
- * The numbers a reader decides on, in one strip above the sections that explain
- * them, doubling as the page's jump navigation.
+ * The numbers a reader decides on, in one strip above the panels that explain
+ * them. Each links to the tab that holds the detail — a real `?tab=` URL, so it
+ * is crawlable and shareable, and the tab bar picks it up from there.
  *
  * Before this, the recommend rate was muted text at the foot of the score-bar
  * card, below five bars that merely break it down, and a long page offered no
@@ -124,23 +125,23 @@ export function AtAGlance({
     stats.push({
       value: `${recommendPct}%`,
       label: "would recommend",
-      href: "#reviews",
+      href: "?tab=reviews",
     });
   if (payRoleCount > 0)
     stats.push({
       value: String(payRoleCount),
       label: payRoleCount === 1 ? "role with pay" : "roles with pay",
-      href: "#pay",
+      href: "?tab=pay",
     });
   stats.push({
     value: String(reviewCount),
     label: reviewCount === 1 ? "review" : "reviews",
-    href: reviewCount > 0 ? "#reviews" : undefined,
+    href: reviewCount > 0 ? "?tab=reviews" : undefined,
   });
   stats.push({
     value: String(interviewCount),
     label: interviewCount === 1 ? "interview" : "interviews",
-    href: interviewCount > 0 ? "#interviews" : undefined,
+    href: interviewCount > 0 ? "?tab=interviews" : undefined,
   });
   if (stats.every((s) => s.value === "0")) return null;
   return (

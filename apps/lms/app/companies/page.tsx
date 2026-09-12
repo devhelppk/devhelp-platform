@@ -1,11 +1,11 @@
 import { api } from "@repo/api/server";
 import { Badge } from "@repo/ui/components/badge";
-import { Button } from "@repo/ui/components/button";
-import { Input } from "@repo/ui/components/input";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import type { Route } from "next";
+import { DirectoryFilters } from "@/components/companies/directory-filters";
+import { loadCompanyList } from "@/lib/search-params";
 import { Page } from "@/components/shell/site-header";
 import { Rating } from "@/components/companies/bits";
 import { CompanyMark } from "@/components/companies/company-mark";
@@ -17,32 +17,34 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-type Search = Record<string, string | string[] | undefined>;
-const one = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
-
 /**
- * The company directory. Filters are a plain GET form rendered on the server:
- * no client JavaScript, which keeps this page inside the bundle budget and
- * makes every filtered view a shareable URL.
+ * The company directory. Parameters are parsed by the shared nuqs loader, so the
+ * page and the client filter row agree on every name, type and default; the list
+ * itself is still a server query, and every filtered view is a shareable URL.
  */
 export default async function CompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<Search>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const sp = await searchParams;
-  const q = one(sp.q);
-  const city = one(sp.city);
-  const industry = one(sp.industry);
-  const sortRaw = one(sp.sort);
-  const sort =
-    sortRaw === "rating" || sortRaw === "reviews" ? sortRaw : ("name" as const);
-  const hiresJuniors = one(sp.juniors) === "1";
+  const {
+    q,
+    city,
+    industry,
+    sort,
+    juniors: hiresJuniors,
+  } = await loadCompanyList(searchParams);
   const caller = await api(new Headers(await headers()));
   const [filters, list] = await Promise.all([
     caller.companies.filters(),
-    caller.companies.list({ q, city, industry, hiresJuniors, sort, limit: 48 }),
+    caller.companies.list({
+      q: q || undefined,
+      city: city || undefined,
+      industry: industry || undefined,
+      hiresJuniors,
+      sort,
+      limit: 48,
+    }),
   ]);
   return (
     <Page wide callbackURL="/companies">
@@ -64,54 +66,10 @@ export default async function CompaniesPage({
           </p>
         </header>
 
-        <form
-          method="get"
-          className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:flex-wrap sm:items-end"
-        >
-          <div className="flex min-w-48 flex-1 flex-col gap-1.5">
-            <label htmlFor="q" className="text-xs font-medium">
-              Search
-            </label>
-            <Input
-              id="q"
-              name="q"
-              defaultValue={q ?? ""}
-              placeholder="Name, technology, industry"
-            />
-          </div>
-          <Field
-            id="city"
-            label="City"
-            value={city}
-            options={filters.cityNames}
-          />
-          <Field
-            id="industry"
-            label="Industry"
-            value={industry}
-            options={filters.industries}
-          />
-          <Field
-            id="sort"
-            label="Sort by"
-            value={sort}
-            options={["name", "rating", "reviews"]}
-            allLabel={null}
-          />
-          <label className="flex items-center gap-2 text-sm sm:pb-2">
-            <input
-              type="checkbox"
-              name="juniors"
-              value="1"
-              defaultChecked={hiresJuniors}
-              className="size-4 rounded border-input accent-brand-600"
-            />
-            Hires juniors
-          </label>
-          <Button type="submit" size="sm">
-            Apply
-          </Button>
-        </form>
+        <DirectoryFilters
+          cityNames={filters.cityNames}
+          industries={filters.industries}
+        />
 
         <p aria-live="polite" className="text-sm text-muted-foreground">
           {list.items.length}{" "}
@@ -176,41 +134,5 @@ export default async function CompaniesPage({
         )}
       </div>
     </Page>
-  );
-}
-
-/** A native select styled like the rest of the form; no client island needed. */
-function Field({
-  id,
-  label,
-  value,
-  options,
-  allLabel = "Any",
-}: {
-  id: string;
-  label: string;
-  value?: string;
-  options: readonly string[];
-  allLabel?: string | null;
-}) {
-  return (
-    <div className="flex min-w-40 flex-col gap-1.5">
-      <label htmlFor={id} className="text-xs font-medium">
-        {label}
-      </label>
-      <select
-        id={id}
-        name={id}
-        defaultValue={value ?? ""}
-        className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm capitalize shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        {allLabel ? <option value="">{allLabel}</option> : null}
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </div>
   );
 }

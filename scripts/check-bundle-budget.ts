@@ -30,8 +30,11 @@ export const budgets: Budget[] = [
     maxKb: CEILING_KB,
   },
   { path: "/courses", maxKb: CEILING_KB },
-  // The company bank is server-rendered: its filters are a plain GET form, so
-  // these pages should stay well under a page that ships a runner.
+  // The company bank pages render on the server and hydrate a small island for
+  // their tabs and filters (nuqs `useQueryState`). That island costs roughly
+  // 8-16 KB gzipped over the plain GET form it replaced: measured at 199.8 KB
+  // for the directory and 206.4 KB for a company page, against a 250 KB target.
+  // Worth re-measuring if the island grows.
   { path: "/companies", maxKb: CEILING_KB },
   { path: "/companies/arbisoft", maxKb: CEILING_KB },
   { path: "/", maxKb: CEILING_KB },
