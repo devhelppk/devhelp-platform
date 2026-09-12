@@ -19,7 +19,11 @@ import {
 } from "@repo/ui/components/dialog";
 import { Input } from "@repo/ui/components/input";
 import { Textarea } from "@repo/ui/components/textarea";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
@@ -33,13 +37,20 @@ export function AdminCertificates() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const list = useQuery(
-    trpc.certificates.adminList.queryOptions({ q: q || undefined, limit: 30 }),
+  // `adminList` has taken a cursor and returned a `nextCursor` since S7; this
+  // asked for one page and rendered it, so an admin could reach thirty
+  // certificates and no more — the same defect the moderation queue had.
+  const list = useInfiniteQuery(
+    trpc.certificates.adminList.infiniteQueryOptions(
+      { q: q || undefined, limit: 30 },
+      { getNextPageParam: (last) => last.nextCursor },
+    ),
   );
+  const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   const refresh = () =>
     qc.invalidateQueries({ queryKey: trpc.certificates.pathKey() });
   /** The row the dialog is about, found in the page already loaded. */
-  const target = list.data?.items.find((c) => c.id === open) ?? null;
+  const target = items.find((c) => c.id === open) ?? null;
   // The public verify page is cached; drop it so a decision shows at once.
   const done = async (id: string) => {
     setOpen(null);
@@ -98,7 +109,7 @@ export function AdminCertificates() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {list.data.items.map((c) => (
+              {items.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="align-top">
                     <Link
@@ -146,7 +157,7 @@ export function AdminCertificates() {
                   </TableCell>
                 </TableRow>
               ))}
-              {list.data.items.length === 0 ? (
+              {items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-muted-foreground">
                     No certificates match.
@@ -157,6 +168,17 @@ export function AdminCertificates() {
           </Table>
         </div>
       )}
+      {list.hasNextPage ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start"
+          disabled={list.isFetchingNextPage}
+          onClick={() => void list.fetchNextPage()}
+        >
+          {list.isFetchingNextPage ? "Loading…" : "Load more"}
+        </Button>
+      ) : null}
 
       {/* Revoking and restoring ask for a reason in a dialog that names the
           certificate, rather than an inline form that expanded inside the

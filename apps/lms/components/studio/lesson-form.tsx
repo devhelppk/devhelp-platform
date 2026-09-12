@@ -6,6 +6,12 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useTRPC } from "@/lib/trpc/client";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
 import { Credits } from "./credits";
 import { Choice, EditTrail, SaveRow, Text, Toggle } from "./fields";
 
@@ -69,62 +75,84 @@ export function LessonForm({ id }: { id: string }) {
         </Link>
       </div>
 
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <p className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-          What this lesson teaches — its body, its quiz, its exercise — lives in
-          the content repo and changes by pull request. Everything below is
-          yours.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Text
-            name="title"
-            label="Title"
-            defaultValue={lesson.title}
-            required
-          />
-          <Text
-            name="durationMinutes"
-            label="Minutes"
-            type="number"
-            defaultValue={
-              lesson.durationMinutes ? String(lesson.durationMinutes) : ""
-            }
-            hint="Roughly how long this takes a learner."
-          />
-          <Choice
-            name="mode"
-            label="Mode"
-            defaultValue={lesson.mode}
-            options={[
-              ["foundation", "Foundation"],
-              ["industry", "Industry"],
-            ]}
-          />
-        </div>
-        <div className="flex flex-wrap gap-4">
-          <Toggle
-            name="isRequired"
-            label="Required for completion"
-            defaultChecked={lesson.isRequired}
-          />
-          <Toggle
-            name="isFree"
-            label="Free to read"
-            defaultChecked={lesson.isFree}
-          />
-        </div>
-        <SaveRow pending={save.isPending} error={error} saved={saved} />
-      </form>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        <Card className="min-w-0">
+          <CardHeader>
+            <CardTitle>Metadata</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={submit} className="flex flex-col gap-4">
+              <p className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                What this lesson teaches — its body, its quiz, its exercise —
+                lives in the content repo and changes by pull request.
+                Everything below is yours.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Text
+                  name="title"
+                  label="Title"
+                  defaultValue={lesson.title}
+                  required
+                />
+                <Text
+                  name="durationMinutes"
+                  label="Minutes"
+                  type="number"
+                  defaultValue={
+                    lesson.durationMinutes ? String(lesson.durationMinutes) : ""
+                  }
+                  hint="Roughly how long this takes a learner."
+                />
+                <Choice
+                  name="mode"
+                  label="Mode"
+                  defaultValue={lesson.mode}
+                  options={[
+                    ["foundation", "Foundation"],
+                    ["industry", "Industry"],
+                  ]}
+                />
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Toggle
+                  name="isRequired"
+                  label="Required for completion"
+                  defaultChecked={lesson.isRequired}
+                />
+                <Toggle
+                  name="isFree"
+                  label="Free to read"
+                  defaultChecked={lesson.isFree}
+                />
+              </div>
+              <SaveRow pending={save.isPending} error={error} saved={saved} />
+            </form>
+          </CardContent>
+        </Card>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold">Credits</h2>
-        <Credits subjectType="lesson" subjectId={lesson.id} credits={credits} />
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold">Recent changes</h2>
-        <EditTrail edits={edits} />
-      </section>
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Credits</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Credits
+                subjectType="lesson"
+                subjectId={lesson.id}
+                credits={credits}
+              />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent changes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EditTrail edits={edits} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

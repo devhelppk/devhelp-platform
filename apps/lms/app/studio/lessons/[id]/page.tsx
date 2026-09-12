@@ -1,4 +1,5 @@
 import { auth } from "@repo/auth";
+import { PageHeader } from "@repo/ui/components/page-header";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -27,19 +28,18 @@ export default async function StudioLessonPage({
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Shell callbackURL={`/studio/lessons/${id}`}>
+    <Shell wide callbackURL={`/studio/lessons/${id}`}>
       <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <Link
-            href="/studio"
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            ← Studio
-          </Link>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Lesson metadata
-          </h1>
-        </header>
+        <Link
+          href="/studio"
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          ← Studio
+        </Link>
+        <PageHeader
+          title="Lesson metadata"
+          description="The title, duration and credits shown around a lesson. What the lesson teaches is a pull request on the content repo."
+        />
         <LearnerProviders>
           <LessonForm id={id} />
         </LearnerProviders>
