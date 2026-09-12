@@ -18,6 +18,7 @@
     "db:reference": "turbo run db:reference",
     "fx:refresh": "turbo run fx:refresh",
     "db:seed": "turbo run db:seed",
+    "dev:admin": "pnpm --filter @repo/auth dev:admin",
     "db:studio": "pnpm --filter @repo/database db:studio",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
