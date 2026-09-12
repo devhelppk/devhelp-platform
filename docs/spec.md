@@ -313,6 +313,22 @@ Acceptance criteria
 
 Depends on: everything above.
 
+### S15. Company page: information hierarchy, and a give-to-get gate — `todo`
+
+Plan (awaiting approval): [`specs/S15-company-gate/plan.md`](./specs/S15-company-gate/plan.md)
+
+Scope: two halves of one page. (a) A design pass on `/companies/[slug]` — orientation facts currently land last on mobile, the recommend-rate sits below the sub-scores that explain it, five sub-scores are printed to one decimal off two reviews, and `h3` does duty at three different levels. (b) A give-to-get gate: company detail is for viewers with a verified email who have contributed to any company in the last 365 days; everyone else sees a synthetic mockup, with the real rows never fetched, never in the RSC payload, and never reachable by a hand-made API call.
+
+**Three founder decisions block planning** (detail and recommendations in the plan):
+
+- **D1.** The gate contradicts F2.14 — _"company pages are public and indexable; they are the main SEO entry point"_. Recommended: a two-tier page, facts public and indexable, contributed content gated; F2.14 rewritten either way.
+- **D2.** Cold start. Taken literally the rule is circular — nobody may read without contributing, nobody contributes to a bank they cannot read, and there are no users. Recommended: verified email alone is the gate until the bank holds 250 published contributions, then the contribution rule switches itself on.
+- **D3.** Recommended: a `pending` contribution counts, a `rejected` or `hidden` one does not.
+
+Acceptance criteria: in the plan. The one that matters most is a test — not a browser observation — that an ineligible viewer's response body carries no contributed content.
+
+Depends on: S10a, S10b, S10c, S13, S14.
+
 ---
 
 ## Follow-ups (open, not tied to a spec)
