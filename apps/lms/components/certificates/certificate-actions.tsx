@@ -1,7 +1,9 @@
 "use client";
 
 import { Button } from "@repo/ui/components/button";
-import { Copy, Download, ExternalLink } from "lucide-react";
+import { Copy, Download, ExternalLink, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
 import { useState } from "react";
 
 /** Verify link copy, PDF download, and the LinkedIn "Add to profile" link. Client-only for the clipboard. */
@@ -29,8 +31,22 @@ export function CertificateActions({
   linkedin.searchParams.set("certId", id);
   return (
     <div className="flex flex-wrap gap-2">
+      {/* The verify page had no button of its own: the only way to it was the
+          course title, which does not read as a link. It is the thing a
+          certificate is *for*, so it gets a control. */}
       <Button size="sm" variant="outline" asChild>
-        <a href={`${lmsUrl}/api/certificates/${id}.pdf`}>
+        <Link href={`/verify/${id}` as Route}>
+          <ShieldCheck aria-hidden="true" /> Verify
+        </Link>
+      </Button>
+      <Button size="sm" variant="outline" asChild>
+        {/* New tab, and the route serves the PDF `inline`, so this opens a
+            viewer rather than silently writing to the Downloads folder. */}
+        <a
+          href={`${lmsUrl}/api/certificates/${id}.pdf`}
+          target="_blank"
+          rel="noopener"
+        >
           <Download aria-hidden="true" /> PDF
         </a>
       </Button>

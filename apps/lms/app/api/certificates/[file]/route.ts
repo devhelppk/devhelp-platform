@@ -61,7 +61,12 @@ export async function GET(
   return new NextResponse(Buffer.from(cached.bytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${safeName}"`,
+      // `inline`, so the certificate opens in the browser's PDF viewer and the
+      // person can see it before deciding to keep it. As an attachment the
+      // click produced no visible response at all — the file landed in
+      // Downloads with nothing on screen to say so, which read as a dead
+      // button. The filename still applies when they save it from the viewer.
+      "Content-Disposition": `inline; filename="${safeName}"`,
       "Cache-Control": "private, max-age=0, must-revalidate",
     },
   });

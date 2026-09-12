@@ -1,3 +1,4 @@
+import { auth } from "@repo/auth";
 import { unreadCount } from "@repo/notify";
 import { BrandLogo } from "@repo/ui/components/brand-logo";
 import { BrandMark } from "@repo/ui/components/brand-mark";
@@ -12,10 +13,12 @@ import {
   SidebarTrigger,
 } from "@repo/ui/components/sidebar";
 import { ThemeToggle } from "@repo/ui/components/theme-toggle";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AccountMenu } from "./account-menu";
 import { shellSession } from "./session";
+import { SidebarUser } from "./sidebar-user";
 import { ToolsNav, type NavGroup } from "./tools-nav";
 
 /**
@@ -97,6 +100,12 @@ export async function ToolsShell({
     items: [{ href: "/account", label: "Account", icon: "account" }],
   });
 
+  async function signOut() {
+    "use server";
+    await auth.api.signOut({ headers: await headers() });
+    redirect("/");
+  }
+
   // The component writes this cookie itself; reading it here is what makes a
   // collapsed rail survive a reload without a flash of the open state.
   const collapsed = (await cookies()).get("sidebar_state")?.value === "false";
@@ -127,16 +136,26 @@ export async function ToolsShell({
           <ToolsNav groups={groups} />
         </SidebarContent>
         <SidebarFooter>
-          <div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:flex-col">
+          {session ? (
+            <SidebarUser
+              name={session.user.name}
+              email={session.user.email}
+              signOut={signOut}
+            />
+          ) : (
             <AccountMenu callbackURL={callbackURL} />
-            <ThemeToggle />
-          </div>
+          )}
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur">
           <SidebarTrigger />
+          {/* The theme toggle moved out of the footer when the user block took
+              that space; it sits with the trigger, as it does in SiteHeader. */}
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
         <main
           className={
