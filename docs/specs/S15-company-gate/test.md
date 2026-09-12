@@ -18,8 +18,11 @@ Changes: description and stack moved above the grid.
 
 Found, and this is the one worth recording:
 
-- **The browser kept rendering the old order while the source was correct.** `pnpm check-types` passed, so the edit looked fine. It was not: an earlier botched block move had left an orphaned `) : null}` in the file, Turbopack was failing to parse the page and silently serving the last good compile, and **turbo had cached the `check-types` result**, so the type error never ran. Two lessons, both already half-written in `AGENTS.md`: read the dev server's own output rather than trusting a 200, and re-run `check-types --force` after an edit that could not have type-checked. Diagnosed by comparing `curl` output against the source, then by reading `dev.log` for `Parsing ecmascript source code failed`.
-- Fixed by repairing the orphaned fragment, stopping the dev server, clearing `apps/lms/.next`, and restarting. `check-types --force` and `lint --force` then ran for real and passed.
+- **The browser kept rendering the old order for several minutes after the source was correct.** An earlier botched block move had briefly left an orphaned `) : null}` in the page. `next dev` failed to parse it and **kept serving the last good compile** — still answering `200`, with no error in the response — and it went on doing that after the file was repaired and type-checking cleanly. Every signal except the dev server's own stdout said the page was fine.
+
+  The tooling behaved correctly at every other point, which is worth stating precisely because the first version of this note blamed the wrong thing: `pnpm check-types` **did** report the break while it existed (`app/companies/[slug]/page.tsx(453,7): error TS1005`), and turbo did not mask it. The only broken link was Turbopack's recovery.
+
+  Diagnosed by comparing `curl` output against the source — the served HTML disagreed with the file — and then by reading the dev log for `Parsing ecmascript source code failed`. Fixed by stopping the server, removing `apps/lms/.next`, and restarting; a plain restart was not enough. Now written up in `AGENTS.md` with a `pnpm dev:lms:clean` script.
 
 ## Final verification
 
