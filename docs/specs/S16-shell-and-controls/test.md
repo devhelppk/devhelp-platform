@@ -66,3 +66,33 @@ The shell routes are not in `check-bundle-budget.ts` — they are behind a sessi
 - **D3 is unresolved.** `AppShell` / `SidebarNav` / `MobileNav` still exist and the lesson reader still uses them, so the package now has two sidebar systems — exactly the rot the plan warned about. Porting the reader is a real piece of work (a module tree, progress ticks, its own mobile behaviour) and doing it at the end of a long session is how the reader gets broken. It needs its own pass, with the reader driven in the browser.
 - **The converted selects were not opened in dark mode.** Every one of them sits behind a mentor or admin role or behind email verification, and the account available here is an unverified learner. This is the exact check the plan called for and it is still outstanding; the unit tests cover what the form posts, not what the popup looks like. The same conversion was verified visually on the company filters in S15, so the styling is not unknown — but these six files have not been seen.
 - **No 390px pass on the shell.** Also outstanding, and the standing follow-up that mobile checks have only ever run at 500px still applies.
+
+---
+
+## Follow-up in the same session: the rail was scoped wrong
+
+Driving it, the founder hit the flaw D2 had built in: the rail's own **"Courses" link made the rail disappear**, because `/courses` is a public page and kept `SiteHeader`. A navigation item that removes the navigation is worse than either side of that trade-off.
+
+Fixed by moving the decision from _which route_ to _who is looking_. `components/shell/shell.tsx` reads the session and picks:
+
+- **signed in** → the sidebar, on every route including `/courses` and `/companies`;
+- **signed out** → `SiteHeader`, no rail.
+
+This keeps what D2 was protecting. Every crawler is anonymous, so the indexable render of a course or company page is still a plain document at full width — verified by fetching `/courses` with no cookie and finding no `data-sidebar` in the HTML. Both branches render the same children, so the crawler and the learner get the same content.
+
+All 30 pages that rendered `Page` or `ToolsShell` now render `Shell`; the lesson reader is untouched. Verified signed in: the rail persists across `/account` → `/courses` → `/companies/arbisoft` with the current item marked, and the lesson reader still shows exactly one sidebar (its module tree) rather than two.
+
+`shellSession()` wraps the session read in React `cache`, so a render is one lookup instead of three — which also closes the standing follow-up about `getSession` being called three times per lesson page.
+
+**Still not layout-level in the Next sense.** `Shell` is rendered per page, so navigating remounts it; the cookie keeps the collapsed state, so this is invisible apart from losing the collapse animation across a navigation. True persistence needs the routes gathered into a route group with a `layout.tsx`, which is a file move across ~30 routes and belongs in its own pass.
+
+## The CLI, properly, once the shadcn skill loaded
+
+The skill would not load from the repo root (`shadcn info` refuses there and names the `-c` flag); it loads from `packages/ui`. Two things came out of that which change the record above:
+
+- `components.json` has `"base": "radix"`, so the project's own config already settles D1 — `add sidebar` resolves to the Radix build.
+- `add sidebar --diff` showed **the file first taken from `/r/styles/new-york/sidebar.json` was a stale revision.** Current upstream has no `forwardRef` at all and already uses Tailwind v4's `w-(--sidebar-width)`. So two of the four deviations recorded earlier — the non-forwardRef separator for TS2883, and the v3→v4 variable conversion — were fixing problems that only existed in the old revision.
+
+`sidebar.tsx` is now the CLI's current output (via `add sidebar --view`), with **two** edits rather than four: `cn` imported from `@repo/ui/lib/utils` instead of the bogus `cn` package, and the menu skeleton's `Math.random()` widths replaced by a fixed cycle (upstream still calls it during render, which is impure and differs between the server and client pass). `use-mobile` keeps the `useSyncExternalStore` rewrite: `--diff` confirms upstream still sets state synchronously in an effect, which this repo's lint rejects.
+
+Lesson for next time, now in `AGENTS.md`: reach for `add --diff` / `add --view` before taking a registry payload by hand. The diff is what caught the stale revision.

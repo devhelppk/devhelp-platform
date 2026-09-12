@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -34,7 +34,7 @@ export default async function SearchPage({
         )
       : null;
   return (
-    <Page callbackURL="/search">
+    <Shell callbackURL="/search">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -133,7 +133,7 @@ export default async function SearchPage({
           </div>
         )}
       </div>
-    </Page>
+    </Shell>
   );
 }
 

@@ -11,7 +11,7 @@ import { CompanyMark } from "@/components/companies/company-mark";
 import { ContributeDialog } from "@/components/companies/contribute-dialog";
 import { CompanyPanels } from "@/components/companies/panels";
 import { QueryState } from "@/components/companies/query-state";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const dynamic = "force-dynamic";
 
@@ -83,7 +83,7 @@ export default async function CompanyPage({
     ],
   ].filter((f): f is [string, string] => Boolean(f[1]));
   return (
-    <Page wide callbackURL={`/companies/${slug}`}>
+    <Shell wide callbackURL={`/companies/${slug}`}>
       {/* One adapter for the page: the header dialog and the panels both read
           the URL, and nesting adapters is not a thing nuqs wants. */}
       <QueryState>
@@ -172,6 +172,6 @@ export default async function CompanyPage({
           />
         </div>
       </QueryState>
-    </Page>
+    </Shell>
   );
 }

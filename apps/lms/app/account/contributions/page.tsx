@@ -6,7 +6,7 @@ import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Your contributions" };
 export const dynamic = "force-dynamic";
@@ -41,7 +41,7 @@ export default async function ContributionsPage() {
     claims.claims.length === 0 &&
     claims.memberships.length === 0;
   return (
-    <Page callbackURL="/account/contributions">
+    <Shell callbackURL="/account/contributions">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -168,7 +168,7 @@ export default async function ContributionsPage() {
           ))}
         </Section>
       </div>
-    </Page>
+    </Shell>
   );
 }
 

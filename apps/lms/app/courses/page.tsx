@@ -4,7 +4,7 @@ import { Button } from "@repo/ui/components/button";
 import { PageHeader } from "@repo/ui/components/page-header";
 import Link from "next/link";
 import { CourseCard } from "@/components/learning/course-card";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 // Reads searchParams and renders the session-aware header: dynamic by nature.
 export const dynamic = "force-dynamic";
@@ -44,7 +44,7 @@ export default async function CataloguePage({
   };
 
   return (
-    <Page wide>
+    <Shell wide>
       <div className="flex flex-col gap-8">
         <PageHeader
           title="Courses"
@@ -174,6 +174,6 @@ export default async function CataloguePage({
           )}
         </section>
       </div>
-    </Page>
+    </Shell>
   );
 }

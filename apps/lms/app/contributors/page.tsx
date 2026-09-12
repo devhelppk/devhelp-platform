@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import type { Route } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = {
   title: "Contributors",
@@ -18,7 +18,7 @@ export default async function ContributorsPage() {
   const caller = await api(new Headers(await headers()));
   const people = await caller.contributors.list();
   return (
-    <Page callbackURL="/contributors">
+    <Shell callbackURL="/contributors">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -90,6 +90,6 @@ export default async function ContributorsPage() {
           </ul>
         )}
       </div>
-    </Page>
+    </Shell>
   );
 }

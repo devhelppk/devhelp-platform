@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { ProposeForm } from "@/components/companies/propose-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Propose a company" };
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function ProposeCompanyPage() {
   });
   if (!session) redirect("/sign-in?callbackURL=%2Fcompanies%2Fpropose");
   return (
-    <Page callbackURL="/companies/propose">
+    <Shell callbackURL="/companies/propose">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -32,6 +32,6 @@ export default async function ProposeCompanyPage() {
           <ProposeForm emailVerified={session.user.emailVerified} />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ClaimForm } from "@/components/companies/claim-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Claim a company" };
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function ClaimPage({
     throw e;
   }
   return (
-    <Page callbackURL={`/companies/${slug}/claim`}>
+    <Shell callbackURL={`/companies/${slug}/claim`}>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -55,6 +55,6 @@ export default async function ClaimPage({
           />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

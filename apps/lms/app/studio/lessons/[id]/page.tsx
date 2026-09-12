@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 import { LessonForm } from "@/components/studio/lesson-form";
 
 export const metadata: Metadata = { title: "Lesson metadata" };
@@ -27,7 +27,7 @@ export default async function StudioLessonPage({
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Page callbackURL={`/studio/lessons/${id}`}>
+    <Shell callbackURL={`/studio/lessons/${id}`}>
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <Link
@@ -44,6 +44,6 @@ export default async function StudioLessonPage({
           <LessonForm id={id} />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

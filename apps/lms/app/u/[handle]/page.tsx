@@ -10,7 +10,7 @@ import { cache } from "react";
 import { ActivityGrid } from "@/components/badges/activity-grid";
 import { BadgeGrid } from "@/components/badges/badge-grid";
 import { StreakLine } from "@/components/badges/streak-line";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +53,7 @@ export default async function ProfilePage({
     year: "numeric",
   });
   return (
-    <Page callbackURL={`/u/${p.handle}`}>
+    <Shell callbackURL={`/u/${p.handle}`}>
       <div className="flex flex-col gap-8">
         <header className="flex items-start gap-4">
           <Avatar className="size-16">
@@ -168,6 +168,6 @@ export default async function ProfilePage({
           {p.streak.activeDays > 1 ? <ActivityGrid days={p.activity} /> : null}
         </section>
       </div>
-    </Page>
+    </Shell>
   );
 }

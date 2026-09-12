@@ -7,7 +7,7 @@ import type { Route } from "next";
 import { DirectoryFilters } from "@/components/companies/directory-filters";
 import { QueryState } from "@/components/companies/query-state";
 import { loadCompanyList } from "@/lib/search-params";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 import { Rating } from "@/components/companies/bits";
 import { CompanyMark } from "@/components/companies/company-mark";
 
@@ -48,7 +48,7 @@ export default async function CompaniesPage({
     }),
   ]);
   return (
-    <Page wide callbackURL="/companies">
+    <Shell wide callbackURL="/companies">
       <QueryState>
         <div className="flex flex-col gap-8">
           <header className="flex flex-col gap-3">
@@ -137,6 +137,6 @@ export default async function CompaniesPage({
           )}
         </div>
       </QueryState>
-    </Page>
+    </Shell>
   );
 }

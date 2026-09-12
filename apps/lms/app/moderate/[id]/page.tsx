@@ -7,7 +7,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ModerationItem } from "@/components/moderation/item";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Moderation item" };
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export default async function ModerateItemPage({
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Page wide callbackURL={`/moderate/${id}`}>
+    <Shell wide callbackURL={`/moderate/${id}`}>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <Button variant="ghost" size="sm" asChild className="self-start">
@@ -46,6 +46,6 @@ export default async function ModerateItemPage({
           />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ContributeForm } from "@/components/companies/contribute-form";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Share your experience" };
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function ContributePage({
   }
   const filters = await caller.companies.filters();
   return (
-    <Page callbackURL={`/companies/${slug}/contribute`}>
+    <Shell callbackURL={`/companies/${slug}/contribute`}>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -60,6 +60,6 @@ export default async function ContributePage({
           />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

@@ -5,7 +5,7 @@ import { PageHeader } from "@repo/ui/components/page-header";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatDuration } from "@/components/learning/course-card";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 // The header reads the session, so this is dynamic; the catalogue queries are cheap.
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function PathPage({
   if (!path) notFound();
 
   return (
-    <Page>
+    <Shell>
       <div className="flex flex-col gap-8">
         <p className="text-sm text-muted-foreground">
           <Link href="/courses" className="hover:text-foreground">
@@ -67,6 +67,6 @@ export default async function PathPage({
           ))}
         </ol>
       </div>
-    </Page>
+    </Shell>
   );
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { api } from "@repo/api/server";
 import { headers } from "next/headers";
 import { BadgeGrid } from "@/components/badges/badge-grid";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Badges" };
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export default async function BadgesPage() {
   const badges = await caller.badges.catalogue();
   const earned = badges.filter((b) => b.earnedAt);
   return (
-    <Page callbackURL="/badges">
+    <Shell callbackURL="/badges">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -25,6 +25,6 @@ export default async function BadgesPage() {
         </header>
         <BadgeGrid items={badges} />
       </div>
-    </Page>
+    </Shell>
   );
 }

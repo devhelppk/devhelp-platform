@@ -8,7 +8,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Manage } from "@/components/companies/manage";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Manage a company" };
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export default async function ManagePage({
     throw e;
   }
   return (
-    <Page wide callbackURL={`/companies/${slug}/manage`}>
+    <Shell wide callbackURL={`/companies/${slug}/manage`}>
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <Link
@@ -63,6 +63,6 @@ export default async function ManagePage({
           <Manage slug={slug} />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

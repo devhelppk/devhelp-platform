@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 import { PathForm } from "@/components/studio/path-form";
 
 export const metadata: Metadata = { title: "Path metadata" };
@@ -27,7 +27,7 @@ export default async function StudioPathPage({
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Page callbackURL={`/studio/paths/${slug}`}>
+    <Shell callbackURL={`/studio/paths/${slug}`}>
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <Link
@@ -44,6 +44,6 @@ export default async function StudioPathPage({
           <PathForm slug={slug} />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

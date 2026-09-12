@@ -1,4 +1,3 @@
-import { auth } from "@repo/auth";
 import { unreadCount } from "@repo/notify";
 import { BrandLogo } from "@repo/ui/components/brand-logo";
 import { BrandMark } from "@repo/ui/components/brand-mark";
@@ -13,9 +12,10 @@ import {
   SidebarTrigger,
 } from "@repo/ui/components/sidebar";
 import { ThemeToggle } from "@repo/ui/components/theme-toggle";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { AccountMenu } from "./account-menu";
+import { shellSession } from "./session";
 import { ToolsNav, type NavGroup } from "./tools-nav";
 
 /**
@@ -33,12 +33,14 @@ import { ToolsNav, type NavGroup } from "./tools-nav";
  */
 export async function ToolsShell({
   children,
-  callbackURL,
+  wide = false,
+  callbackURL = "/",
 }: {
   children: React.ReactNode;
-  callbackURL: string;
+  wide?: boolean;
+  callbackURL?: string;
 }) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await shellSession();
   const role = session?.user.role;
   const unread = session ? await unreadCount(session.user.id) : 0;
 
@@ -136,7 +138,13 @@ export async function ToolsShell({
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur">
           <SidebarTrigger />
         </header>
-        <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <main
+          className={
+            wide
+              ? "mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10"
+              : "mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10"
+          }
+        >
           {children}
         </main>
       </SidebarInset>

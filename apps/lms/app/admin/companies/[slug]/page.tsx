@@ -7,7 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { AdminCompanyForm } from "@/components/companies/admin-company-form";
 import { LogoUpload } from "@/components/companies/logo-upload";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const metadata: Metadata = { title: "Edit company (admin)" };
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function AdminCompanyPage({
   const company = await caller.companies.adminGet({ slug }).catch(() => null);
   if (!company) notFound();
   return (
-    <Page callbackURL={`/admin/companies/${slug}`}>
+    <Shell callbackURL={`/admin/companies/${slug}`}>
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <Link
@@ -59,6 +59,6 @@ export default async function AdminCompanyPage({
           <AdminCompanyForm slug={slug} />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

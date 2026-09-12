@@ -14,7 +14,7 @@ import { CourseReviewForm } from "@/components/feedback/course-review-form";
 import { CourseReviews } from "@/components/feedback/course-reviews";
 import { CertificateCard } from "@/components/certificates/certificate-card";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +45,7 @@ export default async function CoursePage({
   const continueHref = `/courses/${slug}/${progress.continue?.slug ?? course.modules[0]?.lessons[0]?.slug ?? ""}`;
 
   return (
-    <Page>
+    <Shell>
       <div className="flex flex-col gap-8">
         <p className="text-sm text-muted-foreground">
           <Link href="/courses" className="hover:text-foreground">
@@ -136,6 +136,6 @@ export default async function CoursePage({
           />
         </LearnerProviders>
       </div>
-    </Page>
+    </Shell>
   );
 }

@@ -9,7 +9,7 @@ import { BadgeGrid } from "@/components/badges/badge-grid";
 import { StreakLine } from "@/components/badges/streak-line";
 import { ContinueCard } from "@/components/learning/continue-card";
 import { CourseCard } from "@/components/learning/course-card";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
 
   if (enrollments === null) {
     return (
-      <Page>
+      <Shell>
         <section className="flex flex-col gap-6 py-10">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             Learn the job, not just the syllabus.
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
             </Button>
           </div>
         </section>
-      </Page>
+      </Shell>
     );
   }
 
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <Page wide>
+    <Shell wide>
       <div className="flex flex-col gap-10">
         <PageHeader
           title="Your courses"
@@ -161,6 +161,6 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
-    </Page>
+    </Shell>
   );
 }

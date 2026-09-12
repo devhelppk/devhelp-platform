@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { LearnerProviders } from "@/components/shell/learner-providers";
-import { ToolsShell } from "@/components/shell/tools-shell";
+import { Shell } from "@/components/shell/shell";
 import { StudioOverview } from "@/components/studio/overview";
 
 export const metadata: Metadata = { title: "Studio" };
@@ -18,7 +18,7 @@ export default async function StudioPage() {
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <ToolsShell callbackURL="/studio">
+    <Shell callbackURL="/studio">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -34,6 +34,6 @@ export default async function StudioPage() {
           <StudioOverview />
         </LearnerProviders>
       </div>
-    </ToolsShell>
+    </Shell>
   );
 }

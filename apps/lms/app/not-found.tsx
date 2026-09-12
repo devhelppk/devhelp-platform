@@ -1,10 +1,10 @@
 import { Button } from "@repo/ui/components/button";
 import Link from "next/link";
-import { Page } from "@/components/shell/site-header";
+import { Shell } from "@/components/shell/shell";
 
 export default function NotFound() {
   return (
-    <Page>
+    <Shell>
       <section className="flex flex-col gap-4 py-16">
         <p className="text-sm text-muted-foreground">404</p>
         <h1 className="font-display text-4xl font-semibold tracking-tight">
@@ -23,6 +23,6 @@ export default function NotFound() {
           </Button>
         </div>
       </section>
-    </Page>
+    </Shell>
   );
 }
