@@ -17,7 +17,7 @@ export default async function AdminBadgesPage() {
   if (!session) redirect("/sign-in?callbackURL=%2Fadmin%2Fbadges");
   if (session.user.role !== "admin") notFound();
   return (
-    <Shell callbackURL="/admin/badges">
+    <Shell wide callbackURL="/admin/badges">
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">

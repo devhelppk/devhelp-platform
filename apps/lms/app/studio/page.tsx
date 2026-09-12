@@ -18,7 +18,7 @@ export default async function StudioPage() {
   if (session.user.role !== "mentor" && session.user.role !== "admin")
     notFound();
   return (
-    <Shell callbackURL="/studio">
+    <Shell wide callbackURL="/studio">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">

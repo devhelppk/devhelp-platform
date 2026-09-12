@@ -29,7 +29,7 @@ export default async function ModeratePage({
       ? (q.status as keyof typeof statusLabels)
       : "pending";
   return (
-    <Shell callbackURL="/moderate">
+    <Shell wide callbackURL="/moderate">
       <div className="flex flex-col gap-8">
         <header className="flex flex-col gap-2">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
