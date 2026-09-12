@@ -333,9 +333,11 @@ Part B acceptance criteria: in the plan. The one that matters most is a test —
 
 Depends on: S10a, S10b, S10c, S13, S14.
 
-### S16. The signed-in shell, and controls that are actually shadcn — `todo`
+### S16. The signed-in shell, and controls that are actually shadcn — `in-progress`
 
-Plan (awaiting approval): [`specs/S16-shell-and-controls/plan.md`](./specs/S16-shell-and-controls/plan.md)
+Plan: [`specs/S16-shell-and-controls/plan.md`](./specs/S16-shell-and-controls/plan.md). Records: [`test.md`](./specs/S16-shell-and-controls/test.md)
+
+**Both halves are built.** D1, D2 and D4 were taken as recommended. **D3 is deferred** — `AppShell` and the lesson reader's own sidebar still exist, so the package has two sidebar systems until the reader is ported. Two checks are still outstanding: the converted selects have not been opened in dark mode (each sits behind a role or email verification the dev account lacks), and the shell has had no 390px pass.
 
 Scope: (a) shadcn's `Sidebar` as the shell for the signed-in tools — `/account`, `/notifications`, `/badges`, `/certificates`, `/studio`, `/moderate`, `/mentor`, `/admin` — with role-gated groups, the cookie-backed collapsed state and `cmd/ctrl+B`; public pages keep `SiteHeader`. (b) The seven remaining native `<select>` elements become shadcn selects, plus a sweep for other hand-rolled controls. Every component added through `pnpm dlx shadcn@latest add`, never written by hand.
 
