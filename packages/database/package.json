@@ -18,7 +18,8 @@
     "fx:refresh": "tsx src/fx.ts",
     "lint": "eslint src --max-warnings 0",
     "check-types": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "db:clean-fixtures": "tsx src/clean-fixtures.ts"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

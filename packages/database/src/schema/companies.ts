@@ -21,7 +21,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { organizations, users } from "./auth";
-import type { InterviewRounds } from "./json";
+import type { InterviewRounds, MergeCounts } from "./json";
 
 /**
  * Postgres `tsvector`. Drizzle has no built-in for it, and the column is
@@ -49,6 +49,13 @@ export const companyStatus = pgEnum("company_status", [
   "pending",
   "published",
   "hidden",
+  /**
+   * A duplicate that was merged into another company (F2.9). The row stays:
+   * its slug still resolves, so an old link redirects instead of 404ing, and
+   * any contribution that could not move (one review per author per company)
+   * stays attached to it rather than being deleted or rewritten.
+   */
+  "merged",
 ]);
 /** Every user contribution moves through the same states. */
 export const contributionStatus = pgEnum("contribution_status", [
@@ -117,6 +124,15 @@ export const companyProfiles = pgTable(
     linkedin: text(),
     sources: jsonb().$type<string[]>().notNull().default([]),
     status: companyStatus().notNull().default("pending"),
+    /**
+     * Where this company went when it was merged away (F2.9). The one lookup
+     * the company page needs to redirect an old slug, which is why it lives
+     * here rather than being derived from `company_merges`. A later merge of
+     * the winner re-points this too, so the chain is never longer than one hop.
+     */
+    mergedIntoId: uuid().references(() => organizations.id, {
+      onDelete: "set null",
+    }),
     /** Set when an admin has checked the facts against a source. */
     verifiedAt: timestamp({ withTimezone: true }),
     verifiedBy: uuid().references(() => users.id, { onDelete: "set null" }),
@@ -331,6 +347,35 @@ export const salaryPoints = pgTable(
     // the organisation.
     index("salary_points_author_recent_idx").on(t.authorId, t.createdAt.desc()),
     index("salary_points_agg_idx").on(t.organizationId, t.status, t.roleId),
+  ],
+);
+
+/**
+ * One row per company merge (F2.9), so the decision is re-readable.
+ *
+ * Company fact edits record only `verifiedAt`/`verifiedBy`, which is enough for
+ * an edit and not for this: a merge moves every review, interview and salary
+ * point someone wrote about one employer onto another. `moved` says what went
+ * and what stayed. The rows themselves are never deleted, so this table plus
+ * the two organisation ids is enough to explain any later surprise.
+ */
+export const companyMerges = pgTable(
+  "company_merges",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    fromOrganizationId: uuid()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    intoOrganizationId: uuid()
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    actorId: uuid().references(() => users.id, { onDelete: "set null" }),
+    moved: jsonb().$type<MergeCounts>().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("company_merges_into_idx").on(t.intoOrganizationId, t.createdAt),
+    index("company_merges_from_idx").on(t.fromOrganizationId),
   ],
 );
 

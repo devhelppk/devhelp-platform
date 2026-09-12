@@ -11,6 +11,15 @@ export const serverSchema = {
     .default("development"),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  /**
+   * How many published contributions the company bank needs before the
+   * give-to-get gate asks a reader for one of their own (S15 D2). Below it a
+   * verified email is the whole gate, because the rule taken literally cannot
+   * bootstrap itself. A knob rather than a constant so the gate can be turned
+   * on, off, or up without a code change — and so the walls are reachable in
+   * development, where the bank is always cold.
+   */
+  COMPANY_BANK_WARM_AT: z.coerce.number().int().min(0).default(250),
   BETTER_AUTH_SECRET: z
     .string()
     .min(

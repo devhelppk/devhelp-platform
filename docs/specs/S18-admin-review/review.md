@@ -67,5 +67,5 @@ On the certificate card, `Add to LinkedIn` was the fourth in a row of four ident
 
 - ~~`/studio/paths/[slug]` and `/studio/lessons/[id]` were left alone.~~ Done in `6d2c204`: `PageHeader`, the wide shell, two-column cards, `Checkbox`.
 - ~~`/admin/certificates` still loads 30 rows with no pagination.~~ Done in `6d2c204` with `useInfiniteQuery` over the existing cursor.
-- ~~No 390px pass on the studio or admin pages.~~ A static audit ran in `6d2c204` (4/4 tables in `overflow-x-auto`, 6/6 grids `lg:`-gated). **A live 390px pass in the browser is still outstanding.**
+- ~~No 390px pass on the studio or admin pages.~~ A static audit ran in `6d2c204` (4/4 tables in `overflow-x-auto`, 6/6 grids `lg:`-gated), and the **live pass ran in S20** at 390×900: `/admin/companies`, `/admin/certificates`, `/moderate`, `/studio`, `/account`. Every table scrolls inside its own container and no page scrolls horizontally. One defect found and fixed: the handle field on `/account` clipped its own prefix to "s:3001/u/", because the prefix span and the input shared a non-wrapping row with nothing to shrink into.
 - The queue has no bulk action (see above); unchanged.

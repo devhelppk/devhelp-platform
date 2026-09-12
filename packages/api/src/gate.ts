@@ -1,5 +1,6 @@
 import { and, eq, gte, inArray, schema, sql } from "@repo/database";
 import type { Database } from "@repo/database";
+import { env } from "@repo/env";
 import { TRPCError } from "@trpc/server";
 
 /**
@@ -13,9 +14,11 @@ import { TRPCError } from "@trpc/server";
  *
  * - **D2.** Taken literally the rule is circular at launch: nobody may read
  *   without contributing, nobody contributes to a bank they cannot read, and
- *   there are no users. So below `WARM_AT` published contributions the whole
- *   bank a verified email is enough, and the contribution rule switches itself
- *   on once the bank is warm. One number, no migration to flip.
+ *   there are no users. So below `WARM_AT` published contributions a verified
+ *   email is enough, and the contribution rule switches itself on once the bank
+ *   is warm. One number, no migration to flip — `COMPANY_BANK_WARM_AT`, which
+ *   defaults to 250 and is the only way to see the `needs_contribution` wall in
+ *   development, where the bank is always cold.
  * - **D3.** A `pending` contribution counts and a `rejected` or `hidden` one
  *   does not. Counting only approved work would lock someone out for as long as
  *   moderation takes, which punishes them for our latency. The cost accepted is
@@ -25,7 +28,7 @@ import { TRPCError } from "@trpc/server";
  *   on that company (S13 gave representatives a reason to be there, and a
  *   company that cannot read its own reviews cannot reply to them).
  */
-export const WARM_AT = 250;
+export const WARM_AT = env.COMPANY_BANK_WARM_AT;
 
 export type Eligibility =
   | { allowed: true; reason: "role" | "member" | "contributor" | "bank_cold" }
@@ -91,9 +94,9 @@ export async function checkEligibility(
   /** The company being read, when the question is about one. */
   organizationId?: string,
   /**
-   * The cold-start threshold. A parameter only so a test can set it to 0 and
-   * exercise the contribution rule without seeding 250 published rows; every
-   * caller in the product leaves it alone.
+   * The cold-start threshold, defaulting to the configured one. A parameter
+   * only so a test can set it to 0 and exercise the contribution rule without
+   * seeding 250 published rows; every caller in the product leaves it alone.
    */
   warmAt: number = WARM_AT,
 ): Promise<Eligibility> {

@@ -15,6 +15,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_POOL_MAX: process.env.DATABASE_POOL_MAX,
+    COMPANY_BANK_WARM_AT: process.env.COMPANY_BANK_WARM_AT,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
     GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,

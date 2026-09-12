@@ -333,11 +333,11 @@ Part B acceptance criteria: in the plan. The one that matters most is a test —
 
 Depends on: S10a, S10b, S10c, S13, S14.
 
-### S16. The signed-in shell, and controls that are actually shadcn — `in-progress`
+### S16. The signed-in shell, and controls that are actually shadcn — `done`
 
 Plan: [`specs/S16-shell-and-controls/plan.md`](./specs/S16-shell-and-controls/plan.md). Records: [`test.md`](./specs/S16-shell-and-controls/test.md)
 
-**Both halves are built.** D1 and D4 were taken as recommended; **D2 was revised while testing** — the rail is chosen by session rather than by route, because scoping it to the signed-in tools meant the rail's own "Courses" link made the rail disappear. Signed-out visitors, including every crawler, still get the indexable header with no rail. **D3 is deferred** — `AppShell` and the lesson reader's own sidebar still exist, so the package has two sidebar systems until the reader is ported. One check is closed and one is open: the converted selects **have** now been opened in dark mode as an admin (the `/admin/badges` badge picker's listbox renders readable text on a themed popup, verified 2026-09-12); the shell itself still has had no dedicated 390px pass, though the company pages and the About panel have.
+**Both halves are built.** D1 and D4 were taken as recommended; **D2 was revised while testing** — the rail is chosen by session rather than by route, because scoping it to the signed-in tools meant the rail's own "Courses" link made the rail disappear. Signed-out visitors, including every crawler, still get the indexable header with no rail. **D3 was resolved in S20**: the reader is on shadcn's `Sidebar` and `AppShell` / `SidebarNav` / `MobileNav` are deleted, so the package has one sidebar system. It cost the reader 29.7 KB gz of first-load JS (230.0 → 259.7, ceiling 300), measured rather than assumed. Both checks are closed. The converted selects **have** been opened in dark mode as an admin (the `/admin/badges` badge picker's listbox renders readable text on a themed popup, verified 2026-09-12), and the shell had its live 390px pass in S20 across the admin, moderation, studio and account pages.
 
 Scope: (a) shadcn's `Sidebar` as the shell for the signed-in tools — `/account`, `/notifications`, `/badges`, `/certificates`, `/studio`, `/moderate`, `/mentor`, `/admin` — with role-gated groups, the cookie-backed collapsed state and `cmd/ctrl+B`; public pages keep `SiteHeader`. (b) The seven remaining native `<select>` elements become shadcn selects, plus a sweep for other hand-rolled controls. Every component added through `pnpm dlx shadcn@latest add`, never written by hand.
 
@@ -352,7 +352,7 @@ Good news found while planning: the `--sidebar-*` CSS variables already exist in
 
 Depends on: S15 part A2.
 
-### S17. Density: vertical space and two-column organisation — `in-progress`
+### S17. Density: vertical space and two-column organisation — `done`
 
 Review and records: [`specs/S17-density/review.md`](./specs/S17-density/review.md)
 
@@ -400,6 +400,34 @@ estimated hours, all 61 lessons no duration, `content_credits` empty), so the
 catalogue reads "0 min · written by nobody". The second is the only thing in the
 review that would embarrass a launch.
 
+### S20. Company merge, one sidebar, and the review's loose ends — `done`
+
+Plan and records: [`specs/S20-merge-and-loose-ends/plan.md`](./specs/S20-merge-and-loose-ends/plan.md)
+
+Everything S19 left open, in one pass. **F2.9's company merge** is built — the last
+unbuilt functional requirement: migration `0022_company_merge` (a `merged` company
+status, a `merged_into_id` pointer, and a `company_merges` audit row carrying what
+moved and what stayed), `companies.merge` as an admin procedure, a row action and
+dialog on a rewritten `/admin/companies` table, and a 308 redirect for the merged
+slug. The losing company is never deleted, because deleting an organisation
+cascades away everything written about it; a contribution that cannot move (one
+review per author per company) stays on the merged record rather than being
+deleted or given a moderation status nobody chose.
+
+**S16 D3 is resolved**: the lesson reader moved onto shadcn's `Sidebar` and the
+hand-rolled `AppShell` / `SidebarNav` / `MobileNav` trio is deleted. Measured
+cost: the reader's first-load JS went 230.0 → 259.7 KB gz (ceiling 300).
+
+Also: the catalogue stopped printing "0 min" for courses whose durations are not
+entered; `sync.test.ts` stopped leaking a course per run; `pnpm db:clean-fixtures`
+cleans up after a killed run (39 rows were sitting in the dev catalogue);
+`COMPANY_BANK_WARM_AT` makes S15 D2's threshold configurable, which is also what
+made the third gate wall reachable in development; X8's ISR wording now matches
+what we actually do; and a 390px pass found the handle field clipping its own
+prefix.
+
+Depends on: S15, S16, S18, S19.
+
 ---
 
 ## Follow-ups (open, not tied to a spec)
@@ -416,6 +444,8 @@ Founder actions
 
 Technical
 
+- **The lesson reader carries 259.7 KB gz of first-load JS** after the S20 sidebar port, up from 230.0 and over the 250 KB target (the 300 KB ceiling is intact). It is the one page read by signed-out visitors and crawlers. If it needs winning back, render the rail without the client provider when there is no session.
+- **`pnpm check-budget` only measures signed-out renders**, so the sidebar shell on every signed-in page is unmeasured. Teaching the script to sign in with `dev:admin` would close that blind spot.
 - ~~**An intermittent test failure under parallel runs, seen in S8, S10b, and S11.**~~ **Fixed 2026-09-12.** Cause: `issueCertificate`'s fallback for a pruned `content_revisions` row. The insert names the revision as a foreign key; when a concurrent `content:sync` (only `sync.test.ts` deletes those rows, which is why it needed parallel runs) removed it between the snapshot read and the write, the insert raised `23503` — and a foreign key violation aborts the entire Postgres transaction, so the fallback insert in the `catch` failed with `current transaction is aborted, commands ignored until end of transaction block` and took the whole course-completion transaction with it. That is why it was always a different test and always one ending in a certificate insert. The first insert now runs in a savepoint (a nested drizzle transaction), so the violation rolls back to the savepoint and the fallback proceeds. `insertCertificateRow` was split out to make the race testable without timing tricks, and `certificates.test.ts` covers it: the test fails with the exact production error when the savepoint is removed.
 - **Exercise verification (decided at the end of S4, founder to confirm):** exercise pass/fail stays browser-reported. Every submission stores the files and per-test results and the server rejects a pass claim that contradicts them, so any submission can be replayed later. Server-side execution (a sandboxed runner replaying stored files against the tests) is scheduled for S7, where certificates make it a trust requirement; until then the `verified` flag on exercise submissions does not exist and certificates must not be issued from exercise passes alone.
 - **Video lessons had no way to complete without YouTube (found and fixed 2026-09-12, outside a spec).** `completionRule` is `view` for video just as for articles, but the lesson page hid the mark-done control for `type === "video"`, leaving the player's `ENDED` event as the only completion signal. If YouTube is blocked, the video is unavailable, the `iframe_api` script fails, or the learner watched it elsewhere, the lesson could never be completed — and because course completion requires every required lesson, that learner could never finish the course or earn its certificate. For an audience in Pakistan that is a plausible everyday state, not an edge case. The manual control now renders for every `view` lesson; both paths send the same idempotent `lessonCompleted`, so completing twice still records one event. Worth a browser-loop pass signed in before launch.

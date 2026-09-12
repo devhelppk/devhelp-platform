@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   ilike,
+  inArray,
   isNotNull,
   isNull,
   or,
@@ -759,7 +760,11 @@ export const companiesRouter = router({
           industry: companyProfiles.industry,
           verifiedAt: companyProfiles.verifiedAt,
           createdAt: companyProfiles.createdAt,
+          // Enough to act on without opening the row (S18): how much is
+          // written about this company, and where it went if it was merged.
           reviewCount: companyStats.reviewCount,
+          interviewCount: companyStats.interviewCount,
+          mergedIntoId: companyProfiles.mergedIntoId,
         })
         .from(organizations)
         .innerJoin(
@@ -812,6 +817,250 @@ export const companiesRouter = router({
         columns: { alias: true },
       });
       return { ...row, aliases: aliases.map((a) => a.alias) };
+    }),
+
+  /**
+   * Where a merged company went, for the page's redirect (F2.9).
+   *
+   * Public, and it says nothing a merged company's own slug did not already
+   * say: this employer is now filed under that name.
+   */
+  mergedTarget: publicProcedure
+    .input(z.object({ slug: z.string().min(1) }))
+    .query(async ({ ctx, input }): Promise<{ slug: string } | null> => {
+      const [row] = await ctx.db
+        .select({ slug: sql<string>`winner.slug` })
+        .from(organizations)
+        .innerJoin(
+          companyProfiles,
+          eq(companyProfiles.organizationId, organizations.id),
+        )
+        .innerJoin(
+          sql`${organizations} as winner`,
+          sql`winner.id = ${companyProfiles.mergedIntoId}`,
+        )
+        .where(
+          and(
+            eq(organizations.slug, input.slug),
+            eq(organizations.kind, "company"),
+            eq(companyProfiles.status, "merged"),
+          ),
+        )
+        .limit(1);
+      return row ? { slug: row.slug } : null;
+    }),
+
+  /**
+   * Merge a duplicate company into another (F2.9).
+   *
+   * Duplicates exist because `propose` dedupes on an exact name or alias, so
+   * "X Systems Ltd" and "X Systems Limited" are two companies until a person
+   * notices. By then both may carry reviews, interviews and pay.
+   *
+   * The losing company is **not deleted**. Deleting an organisation cascades
+   * away every review, interview and salary point about it (the same reason
+   * S13 refuses to grant `owner` on a claim), and a merge is a filing decision,
+   * not a reason to destroy what people wrote. It becomes `status = 'merged'`
+   * with a pointer to the winner, which keeps its slug resolving as a redirect
+   * and holds anything that could not move.
+   *
+   * What cannot move: one person gets one review per company, and one salary
+   * point, and one membership. If the same author wrote about both companies,
+   * moving the row would violate that unique index. Founder decision: those
+   * rows stay on the merged company, unreachable, rather than being deleted or
+   * having a moderation status applied to them by a decision no moderator made.
+   * `company_merges.moved` records how many stayed, per table.
+   */
+  merge: adminProcedure
+    .input(
+      z.object({
+        from: z.string().min(1),
+        into: z.string().min(1),
+        /** Typed by the admin to confirm; checked against the real name. */
+        confirmName: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.from === input.into)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "A company cannot be merged into itself.",
+        });
+      return ctx.db.transaction(async (tx) => {
+        const ends = await tx
+          .select({
+            id: organizations.id,
+            slug: organizations.slug,
+            name: organizations.name,
+            status: companyProfiles.status,
+          })
+          .from(organizations)
+          .innerJoin(
+            companyProfiles,
+            eq(companyProfiles.organizationId, organizations.id),
+          )
+          .where(
+            and(
+              eq(organizations.kind, "company"),
+              inArray(organizations.slug, [input.from, input.into]),
+            ),
+          );
+        const loser = ends.find((e) => e.slug === input.from);
+        const winner = ends.find((e) => e.slug === input.into);
+        if (!loser || !winner)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "One of those companies does not exist.",
+          });
+        if (loser.status === "merged" || winner.status === "merged")
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "One of those companies has already been merged away.",
+          });
+        // The typed name is the guard against merging the wrong way round,
+        // which is not undoable through this API.
+        if (input.confirmName.trim().toLowerCase() !== loser.name.toLowerCase())
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Type "${loser.name}" to confirm the merge.`,
+          });
+
+        /**
+         * Each table moves the same way: re-point every row that will not
+         * collide, then count what is left behind. The `not exists` restates
+         * the unique index on purpose — Postgres would raise 23505 for those
+         * rows, and a raised 23505 aborts the whole transaction, leaving
+         * nothing to report to the admin who asked for the merge.
+         *
+         * Written out per table rather than through one generic helper: the
+         * three tables have different row types, and a helper wide enough to
+         * take all of them is wide enough to take the wrong column with it.
+         */
+        const movedReviews = await tx
+          .update(companyReviews)
+          .set({ organizationId: winner.id })
+          .where(
+            and(
+              eq(companyReviews.organizationId, loser.id),
+              sql`not exists (select 1 from ${companyReviews} other where other.organization_id = ${winner.id} and other.author_id = ${companyReviews.authorId})`,
+            ),
+          )
+          .returning({ id: companyReviews.id });
+        const [leftReviews] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(companyReviews)
+          .where(eq(companyReviews.organizationId, loser.id));
+
+        const movedInterviews = await tx
+          .update(interviewExperiences)
+          .set({ organizationId: winner.id })
+          .where(
+            and(
+              eq(interviewExperiences.organizationId, loser.id),
+              sql`not exists (select 1 from ${interviewExperiences} other where other.organization_id = ${winner.id} and other.author_id = ${interviewExperiences.authorId})`,
+            ),
+          )
+          .returning({ id: interviewExperiences.id });
+        const [leftInterviews] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(interviewExperiences)
+          .where(eq(interviewExperiences.organizationId, loser.id));
+
+        const movedSalaries = await tx
+          .update(schema.salaryPoints)
+          .set({ organizationId: winner.id })
+          .where(
+            and(
+              eq(schema.salaryPoints.organizationId, loser.id),
+              sql`not exists (select 1 from ${schema.salaryPoints} other where other.organization_id = ${winner.id} and other.author_id = ${schema.salaryPoints.authorId})`,
+            ),
+          )
+          .returning({ id: schema.salaryPoints.id });
+        const [leftSalaries] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(schema.salaryPoints)
+          .where(eq(schema.salaryPoints.organizationId, loser.id));
+
+        // Responses and claims carry no one-per-author rule, so everything
+        // moves: a reply belongs to the post it answers, and the posts moved.
+        const movedResponses = await tx
+          .update(schema.companyResponses)
+          .set({ organizationId: winner.id })
+          .where(eq(schema.companyResponses.organizationId, loser.id))
+          .returning({ id: schema.companyResponses.id });
+        const movedClaims = await tx
+          .update(schema.companyClaims)
+          .set({ organizationId: winner.id })
+          .where(eq(schema.companyClaims.organizationId, loser.id))
+          .returning({ id: schema.companyClaims.id });
+
+        // Membership is what representation means (S13), so it moves — unless
+        // the person already represents the winner.
+        const movedMembers = await tx
+          .update(schema.members)
+          .set({ organizationId: winner.id })
+          .where(
+            and(
+              eq(schema.members.organizationId, loser.id),
+              sql`not exists (select 1 from ${schema.members} other where other.organization_id = ${winner.id} and other.user_id = ${schema.members.userId})`,
+            ),
+          )
+          .returning({ id: schema.members.id });
+        const [leftMembers] = await tx
+          .select({ n: sql<number>`count(*)::int` })
+          .from(schema.members)
+          .where(eq(schema.members.organizationId, loser.id));
+
+        // Aliases are unique on `lower(alias)` alone, so re-pointing them can
+        // never collide; and the loser's own name becomes an alias of the
+        // winner, so the name people know still finds the company in search
+        // and still trips `propose`'s dedupe.
+        const movedAliases = await tx
+          .update(companyAliases)
+          .set({ organizationId: winner.id })
+          .where(eq(companyAliases.organizationId, loser.id))
+          .returning({ id: companyAliases.id });
+        await tx
+          .insert(companyAliases)
+          .values({ organizationId: winner.id, alias: loser.name })
+          .onConflictDoNothing();
+
+        await tx
+          .update(companyProfiles)
+          .set({
+            status: "merged",
+            mergedIntoId: winner.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(companyProfiles.organizationId, loser.id));
+        // A chain stays one hop: anything that pointed at the loser now points
+        // at the winner, so the page never follows a pointer twice.
+        await tx
+          .update(companyProfiles)
+          .set({ mergedIntoId: winner.id })
+          .where(eq(companyProfiles.mergedIntoId, loser.id));
+
+        const moved = {
+          reviews: { moved: movedReviews.length, left: leftReviews?.n ?? 0 },
+          interviews: {
+            moved: movedInterviews.length,
+            left: leftInterviews?.n ?? 0,
+          },
+          salaries: { moved: movedSalaries.length, left: leftSalaries?.n ?? 0 },
+          responses: { moved: movedResponses.length, left: 0 },
+          claims: { moved: movedClaims.length, left: 0 },
+          members: { moved: movedMembers.length, left: leftMembers?.n ?? 0 },
+          aliases: { moved: movedAliases.length, left: 0 },
+        };
+        schema.mergeCountsSchema.parse(moved);
+        await tx.insert(schema.companyMerges).values({
+          fromOrganizationId: loser.id,
+          intoOrganizationId: winner.id,
+          actorId: ctx.user.id,
+          moved,
+        });
+        return { into: winner.slug, moved };
+      });
     }),
 });
 

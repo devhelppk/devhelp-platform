@@ -311,6 +311,11 @@ describe("syncContent", () => {
     // The placeholder is the slug, so nothing renders as an empty title.
     expect(row!.title).toBe(fresh);
     rmSync(join(dir, "courses", fresh), { recursive: true });
+    // And delete the row. Removing the directory only stops a later sync in
+    // this test from seeing it; the course stays in Postgres, which is how the
+    // dev database collected twenty `sync-*-fresh` courses between 2026-09-07
+    // and the day this was found.
+    await db.delete(schema.courses).where(eq(schema.courses.slug, fresh));
   });
 
   it("never archives content that belongs to another repo", async () => {

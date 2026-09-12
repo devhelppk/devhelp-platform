@@ -59,11 +59,17 @@ export function CourseCard(c: CourseCardProps) {
                 </dd>
               </div>
             ) : null}
-            <div className="flex items-center gap-1.5">
-              <Clock className="size-4" aria-hidden="true" />
-              <dt className="sr-only">Duration</dt>
-              <dd>{formatDuration(c.durationMinutes)}</dd>
-            </div>
+            {/* Guarded like the lesson count above it: a course whose lesson
+                durations have not been entered in the studio yet has a sum of
+                0, and "0 min" on a card reads as broken rather than as
+                unknown. The lesson page has always done this. */}
+            {c.durationMinutes > 0 ? (
+              <div className="flex items-center gap-1.5">
+                <Clock className="size-4" aria-hidden="true" />
+                <dt className="sr-only">Duration</dt>
+                <dd>{formatDuration(c.durationMinutes)}</dd>
+              </div>
+            ) : null}
           </dl>
           {typeof c.progressPercent === "number" && c.status ? (
             <ProgressBar

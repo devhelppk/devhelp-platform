@@ -18,11 +18,19 @@ const outcomeText = {
   no_response: "No response",
 } as const;
 
+/**
+ * Covers both vocabularies this page prints: a contribution's status and, for
+ * the companies someone proposed, a company's — which since S20 can also be
+ * `merged`, when the company turned out to be a duplicate of one already in
+ * the bank. Saying so is the point: the proposer did not waste their time,
+ * their employer is just filed under another name.
+ */
 const statusText = {
   pending: "Waiting for review",
   published: "Published",
   hidden: "Hidden by a moderator",
   rejected: "Not published",
+  merged: "Merged into an existing company",
 } as const;
 
 /** Where each thing the learner submitted to the company bank stands. */

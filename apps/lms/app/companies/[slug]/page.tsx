@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { headers } from "next/headers";
 import { cache } from "react";
 import { api } from "@repo/api/server";
@@ -53,7 +53,16 @@ const load = cache(async (slug: string) => {
     ]);
     return { company, gate, reviews, interviews, salaries, responses };
   } catch (e) {
-    if (e instanceof TRPCError && e.code === "NOT_FOUND") notFound();
+    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
+      // A merged duplicate (F2.9) keeps its slug: an old link, a bookmark or an
+      // indexed page has to land on the company the contributions moved to
+      // rather than on a 404. `mergedTarget` is null for everything else, so
+      // this costs one indexed lookup on the way to the same `notFound()`.
+      const caller = await api(new Headers(await headers()));
+      const merged = await caller.companies.mergedTarget({ slug });
+      if (merged) permanentRedirect(`/companies/${merged.slug}` as Route);
+      notFound();
+    }
     throw e;
   }
 });

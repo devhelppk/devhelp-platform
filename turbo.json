@@ -4,6 +4,7 @@
   "globalEnv": [
     "DATABASE_URL",
     "DATABASE_POOL_MAX",
+    "COMPANY_BANK_WARM_AT",
     "NODE_ENV",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",

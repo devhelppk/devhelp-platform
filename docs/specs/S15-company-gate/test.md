@@ -171,3 +171,36 @@ without seeding 250 published rows. No caller in the product passes it.
   with TS2883: the LMS infers the whole router through `useTRPC`, and it cannot
   name a type from a module it has no import path to. The verdict is written
   structurally in the router for that reason.
+
+## The viewer states, live (S20)
+
+Part B's records asserted the signed-out wall on the response body but from a
+static snapshot, and the other states had never been seen on a running server.
+Verified over HTTP against the dev server, with real sessions created through
+Better Auth's own endpoint, so it never touched the founder's browser session:
+
+```
+POST /api/auth/sign-up/email        → session cookie for a fresh, unverified user
+GET  /companies/arbisoft  (cookie)  → "Verify your email to read the rest"  ×2
+                                       no review text
+UPDATE users SET email_verified     → the gate reads the table, not the cookie
+GET  /companies/arbisoft  (cookie)  → the real reviews (bank is cold, D2)
+COMPANY_BANK_WARM_AT=0, restart
+GET  /companies/arbisoft  (cookie)  → "Share one experience to read the rest"
+                                       synthetic mockup present, no review text
+GET  /companies/arbisoft  (no cookie) → "Sign in to read what people say"
+```
+
+The verified-email step is the interesting one: the session cookie still said
+`emailVerified: false` when the page rendered the real reviews, because
+`checkEligibility` reads the users table rather than the cookie. That is the
+`freshUser` rule paying off — a reader who clicks the verify link does not have to
+wait five minutes for the cookie cache to catch up.
+
+`COMPANY_BANK_WARM_AT` (S20) is what made the `needs_contribution` state reachable
+at all: in development the bank is always cold, so before this the third wall
+could only be exercised in a unit test.
+
+Still only unit-tested: the contributor path (D3, a pending contribution buying
+access). `packages/api/src/gate.test.ts` covers it against real Postgres; nobody
+has watched it happen in a browser.

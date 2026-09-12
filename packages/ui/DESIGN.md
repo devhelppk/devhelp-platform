@@ -166,13 +166,15 @@ devhelp composites (generic; product-specific components come later):
 - `page-header.tsx` — `PageHeader`: title (Literata h1), description, actions.
 - `theme-provider.tsx`, `theme-toggle.tsx` — next-themes; the toggle cycles
   light → dark → system and its accessible name says what pressing it does.
-- `app-shell.tsx` — `AppShell`, `AppShellHeader`, `AppShellContent`: the
-  reading layout (sidebar, top bar, content column, optional aside).
-- `sidebar-nav.tsx` — `SidebarNav`, `SidebarNavGroup`, `SidebarNavItem`:
-  grouped page links; the active item has a 2px primary rail and
-  `aria-current="page"`.
-- `mobile-nav.tsx` — `MobileNav`: the same navigation behind a button in a
-  sheet below `lg`.
+- `sidebar.tsx` — shadcn's `Sidebar` and its parts (`SidebarProvider`,
+  `SidebarContent`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuButton`,
+  `SidebarInset`, `SidebarTrigger`, `SidebarRail`): **the one shell**. Every
+  signed-in page uses it through `ToolsShell` (`collapsible="icon"`), and the
+  lesson reader uses it for its module rail (`collapsible="offcanvas"`, because
+  a rail of lesson titles has no icon form). Collapsed state is a cookie, so it
+  survives a reload; `ctrl/cmd+B` toggles it. It positions its rail `fixed
+inset-y-0 h-svh`, so it cannot be nested inside a boxed frame — which is why
+  `/design` shows the vocabulary rather than mounting the shell.
 - `sonner.tsx` re-exports `toast` so apps do not need a direct dependency.
 
 Conventions:
@@ -212,7 +214,10 @@ What we took:
   underneath, a 2px rail on the current lesson, a slim breadcrumb bar across
   the top, a bounded content column, and an "On this page" outline on wide
   screens. Below the laptop breakpoint the sidebar folds behind a single
-  panel button. This is `AppShell` + `SidebarNav` + `MobileNav`.
+  panel button. This is shadcn's `Sidebar` plus the reader's own `LessonList`;
+  the hand-rolled `AppShell` / `SidebarNav` / `MobileNav` trio that first
+  implemented it was deleted in S20 when the reader moved onto `Sidebar` (S16
+  D3), so the package has one sidebar system instead of two.
 - Reading rhythm. Body text in a ~65ch column with roomy leading (we use 1.7),
   block spacing of about one line, figures and code in a bordered box, and
   section headings that carry a lot of space above and little below. This is

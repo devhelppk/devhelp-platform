@@ -79,11 +79,15 @@ export function ProfileForm({
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="handle">Handle</Label>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
+        {/* Wraps rather than squeezing: at 390px the prefix and the input on
+            one row cut the start of the prefix off ("s:3001/u/"), because the
+            span had nothing to shrink into. */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="shrink-0 text-sm text-muted-foreground">
             {lmsUrl.replace(/^https?:\/\//, "")}/u/
           </span>
           <Input
+            className="min-w-40 flex-1"
             id="handle"
             name="handle"
             value={handle}

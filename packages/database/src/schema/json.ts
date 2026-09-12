@@ -327,6 +327,27 @@ export const claimEvidenceSchema = z
   .strict();
 export type ClaimEvidence = z.infer<typeof claimEvidenceSchema>;
 
+/**
+ * What a company merge moved, and what it could not (F2.9).
+ *
+ * `left` is the honest half: one person gets one review per company, so if the
+ * same author wrote about both companies the row cannot move without violating
+ * that. Those stay on the merged company, and this records how many did, so a
+ * merge can be read back later without re-deriving it from the rows.
+ */
+export const mergeCountsSchema = z
+  .object({
+    reviews: z.object({ moved: z.number().int(), left: z.number().int() }),
+    interviews: z.object({ moved: z.number().int(), left: z.number().int() }),
+    salaries: z.object({ moved: z.number().int(), left: z.number().int() }),
+    responses: z.object({ moved: z.number().int(), left: z.number().int() }),
+    claims: z.object({ moved: z.number().int(), left: z.number().int() }),
+    members: z.object({ moved: z.number().int(), left: z.number().int() }),
+    aliases: z.object({ moved: z.number().int(), left: z.number().int() }),
+  })
+  .strict();
+export type MergeCounts = z.infer<typeof mergeCountsSchema>;
+
 /** A claim in the queue. */
 export const claimSnapshotSchema = z
   .object({
