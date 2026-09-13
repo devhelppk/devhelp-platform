@@ -29,6 +29,9 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+# Production values, local only: the source the GitHub production secrets
+# were set from. Never committed.
+.env.production
 
 # turbo
 .turbo
@@ -43,3 +46,4 @@ dist/
 
 # Local fs storage driver (unit tests)
 .storage/
+.neon
