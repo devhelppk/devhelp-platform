@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Literata } from "next/font/google";
+import { clientEnv } from "@repo/env/client";
 import { ThemeProvider } from "@repo/ui/components/theme-provider";
 import { DeferredToaster } from "@/components/shell/deferred-toaster";
 
@@ -14,9 +15,15 @@ const literata = Literata({
 });
 
 export const metadata: Metadata = {
+  // Company pages are the platform's main SEO entry point (F2.14) and are
+  // shared as links; without a base their Open Graph images have no absolute
+  // URL and every card comes out blank.
+  metadataBase: new URL(clientEnv.NEXT_PUBLIC_LMS_URL),
   title: { default: "devhelp Learn", template: "%s · devhelp" },
   description:
     "The devhelp learning platform: courses, lessons, and progress tracking.",
+  openGraph: { type: "website", siteName: "devhelp Learn", locale: "en_PK" },
+  twitter: { card: "summary_large_image" },
 };
 
 /**

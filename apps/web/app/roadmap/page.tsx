@@ -1,0 +1,23 @@
+import type { Metadata } from "next";
+import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { MarkdownDoc, parseMarkdownDoc, readDoc } from "@/lib/markdown-doc";
+
+export const metadata: Metadata = {
+  title: "Roadmap",
+  description:
+    "What works on devhelp today, what is being built next, and what has been deliberately deferred.",
+  alternates: { canonical: "/roadmap" },
+};
+
+/** Rendered from a Markdown file in the public repository, so every edit is a diff. */
+export default function Page() {
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
+        <MarkdownDoc blocks={parseMarkdownDoc(readDoc("roadmap.md"))} />
+      </main>
+      <SiteFooter />
+    </>
+  );
+}

@@ -14,6 +14,7 @@ import { CourseReviewForm } from "@/components/feedback/course-review-form";
 import { CourseReviews } from "@/components/feedback/course-reviews";
 import { CertificateCard } from "@/components/certificates/certificate-card";
 import { LearnerProviders } from "@/components/shell/learner-providers";
+import { CourseStructuredData } from "@/components/course-structured-data";
 import { Shell } from "@/components/shell/shell";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,12 @@ export default async function CoursePage({
 
   return (
     <Shell>
+      <CourseStructuredData
+        slug={slug}
+        title={course.title}
+        description={course.description ?? course.summary}
+        level={course.level}
+      />
       <div className="flex flex-col gap-8">
         <p className="text-sm text-muted-foreground">
           <Link href="/courses" className="hover:text-foreground">
