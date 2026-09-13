@@ -70,6 +70,10 @@ Tailwind scales (in `packages/tailwind-config/shared-styles.css`):
 
 Madder is an accent, not a second brand colour. It appears in the wordmark
 block and on destructive actions. Never use it for emphasis in running text.
+Amended in S23: the landing's trace figure marks the failing line with madder
+(`border-madder-600` / `bg-madder-50/60`, dark `madder-300` / `madder-950/40`),
+one deliberate use because the figure is about a fault and madder is the fault
+colour, and it is the only madder on the page.
 Product areas may later assign the two colours to categories; that mapping is
 not part of the base system.
 

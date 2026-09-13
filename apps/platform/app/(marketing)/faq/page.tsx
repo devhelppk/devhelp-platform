@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type * as React from "react";
 import Link from "next/link";
 import {
   Accordion,
@@ -6,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@repo/ui/components/accordion";
+import { PageHeader } from "@repo/ui/components/page-header";
 
 export const metadata: Metadata = {
   title: "FAQ",
@@ -14,13 +16,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-/**
- * The questions people actually ask, answered without hedging.
- *
- * Answers are JSX rather than strings because several of them need a link; the
- * page is one server component plus the accordion's own client behaviour.
- */
-const FAQS: { q: string; a: React.ReactNode }[] = [
+type Faq = { q: string; a: React.ReactNode };
+
+const LEARNING_FAQS: Faq[] = [
   {
     q: "Is it really free? What is the catch?",
     a: (
@@ -97,6 +95,51 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
+    q: "What is this about AI in the lessons?",
+    a: (
+      <p>
+        Every lesson states its mode. <strong>Foundation mode</strong> means no
+        AI assistance: you are building the mental model, and a generated answer
+        skips the part that makes you employable. <strong>Industry mode</strong>{" "}
+        means use whatever you like, and you own whether the result is correct —
+        which is the actual job now.
+      </p>
+    ),
+  },
+  {
+    q: "Which languages and stacks does it teach?",
+    a: (
+      <p>
+        Exercises run in the browser in JavaScript and TypeScript, deliberately
+        — one runner done well rather than five done badly. The engineering
+        ideas (tracing data, failure modes, trade-offs, testing, writing
+        clearly) are not language-specific, and the career track is not
+        technical at all.
+      </p>
+    ),
+  },
+  {
+    q: "I found something wrong in a lesson. What do I do?",
+    a: (
+      <>
+        <p>
+          Open an issue or a pull request on the content repository — there is a
+          link at the bottom of every lesson — or leave a question on the lesson
+          itself, which mentors read. Corrections are the most welcome kind of
+          contribution.
+        </p>
+        <p>
+          <Link href="/contribute" className="underline underline-offset-4">
+            How to contribute
+          </Link>
+        </p>
+      </>
+    ),
+  },
+];
+
+const BANK_FAQS: Faq[] = [
+  {
     q: "What is the company bank, and why do I have to contribute to read it?",
     a: (
       <>
@@ -155,6 +198,9 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
       </>
     ),
   },
+];
+
+const PROJECT_FAQS: Faq[] = [
   {
     q: "Can my university or society teach from this?",
     a: (
@@ -173,103 +219,72 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "What is this about AI in the lessons?",
-    a: (
-      <>
-        <p>
-          Every lesson states its mode. <strong>Foundation mode</strong> means
-          no AI assistance: you are building the mental model, and a generated
-          answer skips the part that makes you employable.{" "}
-          <strong>Industry mode</strong> means use whatever you like, and you
-          own whether the result is correct — which is the actual job now.
-        </p>
-      </>
-    ),
-  },
-  {
-    q: "Which languages and stacks does it teach?",
-    a: (
-      <>
-        <p>
-          Exercises run in the browser in JavaScript and TypeScript,
-          deliberately — one runner done well rather than five done badly. The
-          engineering ideas (tracing data, failure modes, trade-offs, testing,
-          writing clearly) are not language-specific, and the career track is
-          not technical at all.
-        </p>
-      </>
-    ),
-  },
-  {
-    q: "I found something wrong in a lesson. What do I do?",
-    a: (
-      <>
-        <p>
-          Open an issue or a pull request on the content repository — there is a
-          link at the bottom of every lesson — or leave a question on the lesson
-          itself, which mentors read. Corrections are the most welcome kind of
-          contribution.
-        </p>
-        <p>
-          <Link href="/contribute" className="underline underline-offset-4">
-            How to contribute
-          </Link>
-        </p>
-      </>
-    ),
-  },
-  {
     q: "How do I delete my account?",
     a: (
-      <>
-        <p>
-          Write to{" "}
-          <a
-            href="mailto:policy@devhelp.pk"
-            className="underline underline-offset-4"
-          >
-            policy@devhelp.pk
-          </a>{" "}
-          and we will delete it, or export your data first if you want it. Your
-          published contributions stay up and detached from you, which is the
-          state they were already in from every reader&apos;s point of view.
-        </p>
-      </>
-    ),
-  },
-];
-
-export default function FaqPage() {
-  return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <h1 className="font-display text-4xl font-semibold tracking-tight text-balance">
-        Questions
-      </h1>
-      <p className="mt-6 text-lg text-muted-foreground">
-        If yours is not here, write to{" "}
+      <p>
+        Write to{" "}
         <a
           href="mailto:policy@devhelp.pk"
           className="underline underline-offset-4"
         >
           policy@devhelp.pk
-        </a>
-        .
+        </a>{" "}
+        and we will delete it, or export your data first if you want it. Your
+        published contributions stay up and detached from you, which is the
+        state they were already in from every reader&apos;s point of view.
       </p>
+    ),
+  },
+];
 
-      <Accordion type="multiple" className="mt-10">
-        {FAQS.map((f) => (
-          <AccordionItem key={f.q} value={f.q}>
-            <AccordionTrigger className="text-left font-display text-lg">
-              {f.q}
-            </AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-3 text-muted-foreground">
-              {f.a}
-            </AccordionContent>
-          </AccordionItem>
+const GROUPS: { title: string; faqs: Faq[] }[] = [
+  { title: "Learning", faqs: LEARNING_FAQS },
+  { title: "The company bank", faqs: BANK_FAQS },
+  { title: "The project", faqs: PROJECT_FAQS },
+];
+
+export default function FaqPage() {
+  return (
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <PageHeader
+        title="Questions people ask"
+        description={
+          <>
+            If yours is not here, write to{" "}
+            <a
+              href="mailto:policy@devhelp.pk"
+              className="underline underline-offset-4"
+            >
+              policy@devhelp.pk
+            </a>
+            .
+          </>
+        }
+      />
+
+      <div className="mt-12 flex flex-col gap-12">
+        {GROUPS.map((group) => (
+          <section key={group.title} className="flex flex-col gap-6">
+            <h2 className="font-display text-2xl font-semibold tracking-tight">
+              {group.title}
+            </h2>
+            <Accordion type="multiple">
+              {group.faqs.map((f) => (
+                <AccordionItem key={f.q} value={f.q}>
+                  <AccordionTrigger className="text-left font-display text-lg">
+                    {f.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="flex flex-col gap-3 text-muted-foreground">
+                    {f.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </section>
         ))}
-      </Accordion>
+      </div>
 
-      <p className="mt-12 text-sm text-muted-foreground">
+      <p className="mt-12 border-t pt-8 text-sm text-muted-foreground">
         Ready instead of reading?{" "}
         <Link
           href="/courses"

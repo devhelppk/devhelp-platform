@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import type * as React from "react";
 import Link from "next/link";
 import { Button } from "@repo/ui/components/button";
+import { PageHeader } from "@repo/ui/components/page-header";
 
 export const metadata: Metadata = {
   title: "Contribute",
@@ -15,11 +17,17 @@ const PLATFORM_REPO = "https://github.com/devhelppk/devhelp-platform";
 export default function ContributePage() {
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
-      <h1 className="font-display text-4xl font-semibold tracking-tight text-balance">
-        Contribute
-      </h1>
-      <p className="mt-6 max-w-prose text-lg text-muted-foreground">
-        Everything here is built in the open by people who wanted it to exist.
+      <PageHeader
+        title="Contribute"
+        description="Everything here is built in the open by people who wanted it to exist."
+        actions={
+          <Button size="lg" asChild>
+            <a href={CONTENT_REPO}>Open the content repo</a>
+          </Button>
+        }
+      />
+
+      <p className="mt-8 max-w-prose text-lg text-pretty text-muted-foreground">
         There are three doors, and you do not need to be an expert to walk
         through any of them — a fixed typo in a lesson is a real contribution.
       </p>
@@ -70,24 +78,49 @@ export default function ContributePage() {
         </Door>
       </div>
 
-      <section className="mt-12 flex flex-col gap-4 rounded-lg border p-6">
-        <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Mentor
-        </h2>
-        <p className="max-w-prose text-muted-foreground">
-          Mentors review what learners submit, write and edit lessons, and keep
-          the company bank honest. It is an application, and an admin reads it:
-          we are looking for people who have shipped software professionally and
-          can explain why something is wrong without making anyone feel small.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/mentor/apply">Apply to mentor</Link>
-          </Button>
-        </div>
-      </section>
+      <div className="mt-12 grid gap-6 border-t py-12 lg:grid-cols-2">
+        <section className="flex flex-col gap-4 rounded-lg border p-6">
+          <h2 className="font-display text-2xl font-semibold tracking-tight">
+            Mentor
+          </h2>
+          <p className="max-w-prose text-muted-foreground">
+            Mentors review what learners submit, write and edit lessons, and
+            keep the company bank honest. It is an application, and an admin
+            reads it: we are looking for people who have shipped software
+            professionally and can explain why something is wrong without making
+            anyone feel small.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild>
+              <Link href="/mentor/apply">Apply to mentor</Link>
+            </Button>
+          </div>
+        </section>
 
-      <section className="mt-12 flex flex-col gap-4">
+        <section className="flex flex-col gap-4 rounded-lg border p-6">
+          <h2 className="font-display text-2xl font-semibold tracking-tight">
+            Contributing to the company bank
+          </h2>
+          <p className="max-w-prose text-muted-foreground">
+            You do not need a pull request for this one. Sign in, verify your
+            email, and write about a company you have worked at or interviewed
+            with. It publishes anonymously after a moderator reads it against
+            the{" "}
+            <Link href="/policy" className="underline underline-offset-4">
+              content policy
+            </Link>
+            . One experience is also what opens the rest of the bank for you for
+            a year.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" asChild>
+              <Link href="/companies">Find a company</Link>
+            </Button>
+          </div>
+        </section>
+      </div>
+
+      <section className="flex flex-col gap-4 border-t py-12">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
           One thing that surprises people
         </h2>
@@ -103,28 +136,7 @@ export default function ContributePage() {
         </p>
       </section>
 
-      <section className="mt-12 flex flex-col gap-4">
-        <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Contributing to the company bank
-        </h2>
-        <p className="max-w-prose text-muted-foreground">
-          You do not need a pull request for this one. Sign in, verify your
-          email, and write about a company you have worked at or interviewed
-          with. It publishes anonymously after a moderator reads it against the{" "}
-          <Link href="/policy" className="underline underline-offset-4">
-            content policy
-          </Link>
-          . One experience is also what opens the rest of the bank for you for a
-          year.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/companies">Find a company</Link>
-          </Button>
-        </div>
-      </section>
-
-      <section className="mt-12 flex flex-col gap-4">
+      <section className="flex flex-col gap-4 border-t py-12">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
           How we work
         </h2>
