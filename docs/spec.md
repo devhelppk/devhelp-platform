@@ -528,8 +528,9 @@ deploys for one product). Three commits: **A** merges the apps and deletes
 `apps/web`; **B** redesigns the public pages (`/`, `/about`, `/contribute`,
 `/faq`) now that they share a codebase with the product they are selling; **C**
 rewrites `sst.config.ts` for one function and one Worker and ships the first
-real production deployment, with the `devhelp.pk` → `learn.devhelp.pk`
-redirect as a founder-gated cutover step.
+real production deployment. (The planned `devhelp.pk` → `learn.devhelp.pk`
+redirect was dropped by the founder on 2026-09-13: `devhelp.pk` stays a
+separate site, and devhelp Learn is one product under that brand.)
 
 Progress: phase A (merge) `2928e71`; phase B (redesign, browser loop in
 `specs/S23-one-app/test.md`) `db4a1fd`; phase C (one deployment; runbook in

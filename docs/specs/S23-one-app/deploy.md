@@ -283,17 +283,14 @@ was written.
    email through Resend, work through a lesson, download a certificate PDF
    (confirms R2 bucket `devhelp`), open a company page, fetch `/sitemap.xml`.
 
-### D1 redirect: apex and `www` → `learn.devhelp.pk`
+### D1: `devhelp.pk` stays separate (founder, 2026-09-13)
 
-Only after the above is verified. Cloudflare Single Redirect rule on the
-zone, for `devhelp.pk` and `www.devhelp.pk`:
-
-- **When incoming requests match:** `(http.host eq "devhelp.pk") or (http.host eq "www.devhelp.pk")`
-- **Then:** Dynamic redirect to `concat("https://learn.devhelp.pk", http.request.uri.path, http.request.uri.query != "" ? concat("?", http.request.uri.query) : "")`, status 301, preserve query string.
-
-Every other record on the zone — `start`, `storage`, the Zoho mail records,
-`ledgery` — is untouched by this rule; it matches only the apex and `www`
-hosts.
+There is no redirect from the apex or `www` to `learn.devhelp.pk`.
+`devhelp.pk` will get its own website later; devhelp Learn is one product
+under the devhelp.pk brand, on its own hostname. The apex and `www` `A`
+records, `start`, `storage`, the mail records and `ledgery` are untouched by
+this deployment, and the only zone changes S23 made are the two CAA records
+(§2.3) and the Workers Custom Domains for `dev.learn` and `learn`.
 
 ### Two-level-hostname fallback
 
@@ -304,9 +301,6 @@ is the one-level `dev-learn.devhelp.pk`, changed in exactly one place: the
 
 ### Rollback
 
-- **Redirect rule misbehaving:** disable it in the Cloudflare dashboard; the
-  apex and `www` immediately stop redirecting and fall back to whatever they
-  served before (the existing `A` records to the Hetzner box).
 - **Bad release:** redeploy the previous commit —
   `git checkout <previous-sha>` (or a tag), rebuild, `gh workflow run
 deploy.yml -f stage=production` — SST diffs against its existing state, so
