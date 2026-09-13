@@ -1,0 +1,57 @@
+name: Migrate
+
+# Dispatch-only, same reasoning as deploy.yml: migrations run when someone
+# decides to run them, never on a push.
+#
+# Runs against the unpooled Neon connection (`DATABASE_URL_UNPOOLED`, a
+# GitHub environment secret, not the pooled `DatabaseUrl` SST secret the app
+# runs on): Neon's pooler multiplexes connections across sessions, so it
+# cannot hold `drizzle-kit migrate`'s advisory lock or a long DDL statement
+# for the length of one session the way a direct connection can.
+#
+# Content sync is optional (`sync_content`): most migrations are schema-only
+# and do not need a content re-sync in the same run.
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Stage to migrate
+        type: choice
+        options:
+          - dev
+          - production
+        required: true
+      sync_content:
+        description: Also run content:pull + content:sync after migrating
+        type: boolean
+        default: false
+
+jobs:
+  migrate:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    environment: ${{ inputs.stage }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: db:migrate
+        run: pnpm db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
+
+      - name: content:pull
+        if: ${{ inputs.sync_content }}
+        run: pnpm content:pull
+
+      - name: content:sync
+        if: ${{ inputs.sync_content }}
+        run: pnpm content:sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}

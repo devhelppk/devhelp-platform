@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
   // PDF rendering runs in Node with vendored fonts; keep it out of the bundler.
   serverExternalPackages: ["@react-pdf/renderer"],
   // The PDF renderer reads vendored TTFs at runtime; tracing cannot see them.
+  // `lib/markdown-doc.tsx` reads `docs/` at build, which makes the tracer
+  // copy the whole directory into the server bundle — 22 MB of spec
+  // screenshots that no page ever reads at runtime.
+  outputFileTracingExcludes: {
+    "*": ["../../docs/specs/**"],
+  },
   outputFileTracingIncludes: {
     "/api/certificates/[file]": ["../../packages/certificates/fonts/**"],
   },

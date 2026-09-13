@@ -1,0 +1,117 @@
+name: Deploy
+
+# Dispatch-only, deliberately: the founder deploys when they decide to, not on
+# every push to main. There is no `push` trigger and there will not be one
+# until the platform has users and a reason to automate releases.
+#
+# Two stages only (S23 D8): `dev` (https://dev.learn.devhelp.pk) and
+# `production` (https://learn.devhelp.pk). Before this workflow can run for a
+# stage, all of the following must already exist (see
+# docs/specs/S23-one-app/deploy.md for the full runbook):
+#   - the `devhelp-github-deploy` AWS IAM role (OIDC trust for this repo's
+#     `environment:dev` / `environment:production`) and the repo variable
+#     `AWS_DEPLOY_ROLE_ARN` pointing at it
+#   - the GitHub environment named after the stage
+#   - every `sst secret` for that stage (DatabaseUrl, BetterAuthSecret,
+#     ContentSyncSecret, S3AccessKeyId, S3SecretAccessKey, ResendApiKey,
+#     EdgeKey)
+#   - the repo secret CLOUDFLARE_API_TOKEN and the repo variable
+#     CLOUDFLARE_ACCOUNT_ID
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Stage to deploy
+        type: choice
+        options:
+          - dev
+          - production
+        required: true
+
+jobs:
+  deploy:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    environment: ${{ inputs.stage }}
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: deploy-${{ inputs.stage }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm content:pull
+
+      - name: Resolve NEXT_PUBLIC_SITE_URL for the stage
+        run: |
+          case "${{ inputs.stage }}" in
+            production) echo "NEXT_PUBLIC_SITE_URL=https://learn.devhelp.pk" >> "$GITHUB_ENV" ;;
+            dev) echo "NEXT_PUBLIC_SITE_URL=https://dev.learn.devhelp.pk" >> "$GITHUB_ENV" ;;
+            *) echo "unknown stage: ${{ inputs.stage }}" >&2; exit 1 ;;
+          esac
+
+      # Only NEXT_PUBLIC_SITE_URL needs to be real here: it is the one value
+      # inlined into the client bundle, and sst.config.ts refuses to deploy a
+      # bundle built for a different host. Every other @repo/env value the
+      # build needs gets a placeholder from the script itself; the real
+      # secrets reach the function at runtime through its Lambda environment,
+      # never through this build.
+      - name: Build with OpenNext
+        run: node scripts/build-opennext.mjs
+        env:
+          NODE_ENV: production
+
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-southeast-1
+
+      # SST reads GITHUB_ACTIONS itself to skip the local `devhelp` AWS
+      # profile and use these OIDC credentials instead.
+      - name: sst deploy
+        run: pnpm exec sst deploy --stage ${{ inputs.stage }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Never print anything from .sst/outputs.json beyond the site URL: it
+      # never carries the function URL, but the habit of not catting it stays
+      # regardless.
+      - name: Smoke test
+        run: |
+          site="$NEXT_PUBLIC_SITE_URL"
+
+          check() {
+            local path="$1"
+            local url="${site}${path}"
+            local code
+            code="$(curl -fsS --retry 12 --retry-delay 5 --retry-all-errors \
+              -o /dev/null -w '%{http_code}' "$url")"
+            echo "$code $url"
+            case "$code" in
+              2??) ;;
+              *) echo "non-2xx for $url" >&2; exit 1 ;;
+            esac
+          }
+
+          check "/"
+          check "/sitemap.xml"
+          check "/robots.txt"
+          check "/courses/ai-engineering-foundations/welcome"
+
+          asset_path="$(curl -fsS --retry 12 --retry-delay 5 --retry-all-errors "$site/" \
+            | grep -oE '/_next/static/[^"]+\.js' | head -n1)"
+          if [ -z "$asset_path" ]; then
+            echo "could not find a /_next/static/*.js asset in /" >&2
+            exit 1
+          fi
+          check "$asset_path"

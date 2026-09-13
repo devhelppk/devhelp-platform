@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 /**
- * Build the platform app with OpenNext for AWS (S22).
+ * Build the one app (`apps/platform`) with OpenNext for AWS (S22, S23).
  *
  *   NEXT_PUBLIC_SITE_URL=… node scripts/build-opennext.mjs
  *
  * Produces `apps/platform/.open-next/`. `sst.config.ts` deploys its
- * `server-functions/default` bundle as a Lambda function behind a function URL;
- * `assets/` holds the static files, which that function does not serve.
+ * `server-functions/default` bundle as one Lambda function behind a function
+ * URL, and `assets/` as the Cloudflare Worker's static assets (the function
+ * does not serve them). This script also writes `assets/_headers`, which
+ * Workers Static Assets reads to cache `_next/static` for a year.
  *
  * Build-time environment: only `NEXT_PUBLIC_*` values are inlined into the
- * bundle, so those must be the real public URLs for the stage. Every other
- * value `@repo/env` validates at build gets a placeholder here if unset; the
- * real secrets reach the function at runtime through its Lambda environment,
- * never through the build.
+ * bundle, so `NEXT_PUBLIC_SITE_URL` must be the stage's real public URL
+ * (`sst.config.ts` refuses to deploy a bundle built for another host). Every
+ * other value `@repo/env` validates at build gets a placeholder here if unset;
+ * the real secrets reach the function at runtime through its Lambda
+ * environment, never through the build.
  */
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";

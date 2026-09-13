@@ -531,6 +531,12 @@ rewrites `sst.config.ts` for one function and one Worker and ships the first
 real production deployment, with the `devhelp.pk` → `learn.devhelp.pk`
 redirect as a founder-gated cutover step.
 
+Progress: phase A (merge) `2928e71`; phase B (redesign, browser loop in
+`specs/S23-one-app/test.md`) `db4a1fd`; phase C (one deployment; runbook in
+`specs/S23-one-app/deploy.md`) is the commit after those, deployed to the
+`dev` stage only. The production deploy, its migration, and the D1 redirect
+wait for the founder's go-ahead, so the spec stays `in-progress` until then.
+
 Acceptance (drawn from the plan's verification section, §6):
 
 - [ ] A grep for `NEXT_PUBLIC_WEB_URL|NEXT_PUBLIC_LMS_URL|apps/web|apps/lms|dev:lms|dev:web|3001`

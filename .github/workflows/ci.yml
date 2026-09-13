@@ -66,6 +66,9 @@ jobs:
             minio/mc:RELEASE.2025-08-13T08-35-41Z \
             -c "mc alias set ci http://localhost:9000 devhelp devhelp-minio && mc mb --ignore-existing ci/devhelp"
       - run: pnpm install --frozen-lockfile
+      # The bracketed last letter keeps this line from matching itself.
+      - name: No raw origin hosts in the repo
+        run: '! grep -rnE "lambda-ur[l]|workers\.de[v]" apps packages infra scripts .github sst.config.ts AGENTS.md README.md'
       - run: pnpm format:check
       - run: pnpm content:pull
       - run: pnpm content:check
