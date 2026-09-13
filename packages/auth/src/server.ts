@@ -27,9 +27,15 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: { generateId: "uuid" },
-    // Sessions on devhelp.pk and learn.devhelp.pk share one cookie in production.
+    // Sessions on devhelp.pk and learn.devhelp.pk share one cookie — but only
+    // when the app actually runs under devhelp.pk. Keyed on the auth URL, not on
+    // NODE_ENV: a non-production AWS stage also runs with NODE_ENV=production,
+    // on a workers.dev host, where a `Domain=.devhelp.pk` cookie is silently
+    // dropped by the browser and nobody can stay signed in (found in S22).
     crossSubDomainCookies: {
-      enabled: env.NODE_ENV === "production",
+      enabled:
+        env.NODE_ENV === "production" &&
+        new URL(env.BETTER_AUTH_URL).hostname.endsWith("devhelp.pk"),
       domain: ".devhelp.pk",
     },
   },

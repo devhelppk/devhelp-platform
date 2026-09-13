@@ -15,6 +15,7 @@
  * never through the build.
  */
 import { execSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -58,4 +59,13 @@ execSync("pnpm exec open-next build", {
     NPM_CONFIG_USERCONFIG: "/dev/null",
   },
 });
+// Cloudflare Workers Static Assets reads `_headers` from the assets root. Next's
+// `_next/static` files are content-hashed, so a browser can keep them for a
+// year; without this they are served `max-age=0, must-revalidate` and
+// re-checked on every visit.
+writeFileSync(
+  join(root, "apps", app, ".open-next", "assets", "_headers"),
+  "/_next/static/*\n  Cache-Control: public, max-age=31536000, immutable\n",
+);
+
 console.log(`[build-opennext] apps/${app}/.open-next ready`);

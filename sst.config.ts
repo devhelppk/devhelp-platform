@@ -40,6 +40,10 @@ export default $config({
           region: "ap-southeast-1",
           ...(process.env.GITHUB_ACTIONS ? {} : { profile: "devhelp" }),
         },
+        // Reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_DEFAULT_ACCOUNT_ID from the
+        // environment (GitHub secrets in CI; exported from .env.production
+        // locally, never committed).
+        cloudflare: "6.15.0",
       },
     };
   },
@@ -113,6 +117,51 @@ export default $config({
     const lms = app("Lms", "lms", "1536 MB");
     const web = app("Web", "web", "1024 MB");
 
-    return { lms: lms.url, web: web.url };
+    /**
+     * The Cloudflare front door for each app (infra/proxy.ts): OpenNext's
+     * `assets/` served as Workers Static Assets straight from the edge, and
+     * everything else forwarded to the Lambda function URL.
+     *
+     * `assets` is marked @internal in SST's Worker types but is implemented —
+     * it is what SST's own Cloudflare site components use — so it is used
+     * here deliberately; re-check it when upgrading SST.
+     *
+     * Static asset requests are free and do not count against the Workers
+     * free plan's 100,000 requests a day; only page and API requests do.
+     */
+    const front = (
+      name: string,
+      dir: "lms" | "web",
+      origin: $util.Output<string>,
+      domain?: string,
+    ) =>
+      new sst.cloudflare.Worker(name, {
+        handler: "infra/proxy.ts",
+        environment: { ORIGIN_URL: origin },
+        assets: { directory: `apps/${dir}/.open-next/assets` },
+        // A stage without a domain is reached on workers.dev.
+        url: !domain,
+        ...(domain ? { domain } : {}),
+      });
+
+    const lmsFront = front(
+      "LmsFront",
+      "lms",
+      lms.url,
+      production ? "learn.devhelp.pk" : undefined,
+    );
+    const webFront = front(
+      "WebFront",
+      "web",
+      web.url,
+      production ? "devhelp.pk" : undefined,
+    );
+
+    return {
+      lms: lmsFront.url,
+      web: webFront.url,
+      lmsOrigin: lms.url,
+      webOrigin: web.url,
+    };
   },
 });
