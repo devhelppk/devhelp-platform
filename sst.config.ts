@@ -3,7 +3,7 @@
 /**
  * devhelp on AWS (S22).
  *
- * Each Next.js app is one Lambda function running OpenNext's server bundle,
+ * The one Next.js app is one Lambda function running OpenNext's server bundle,
  * reached through a Lambda function URL, in `ap-southeast-1` — the same AWS
  * region as the Neon database, so a query never crosses clouds. Cloudflare sits
  * in front for DNS, TLS and caching, and R2 stays the object store (reached
@@ -15,7 +15,7 @@
  * for the MVP is minimum cost, and a function URL behind Cloudflare costs
  * nothing extra. Revisit CloudFront (and `sst.aws.Nextjs`) post-launch.
  *
- * Build first, then deploy: `node scripts/build-opennext.mjs <app>` runs
+ * Build first, then deploy: `node scripts/build-opennext.mjs` runs
  * OpenNext for AWS, and its `server-functions/default` bundle is uploaded as-is
  * (`bundle`). OpenNext rather than Next's standalone output: standalone keeps
  * pnpm's node_modules as symlinks, which a Lambda zip cannot carry, while
@@ -63,15 +63,12 @@ export default $config({
       resendApiKey: new sst.Secret("ResendApiKey", "unused-outside-production"),
     };
 
-    // Public URLs are inlined into the client bundle at build, so the build
-    // and the runtime must agree. Production uses the real domains; another
-    // stage passes the URLs it was built with.
-    const lmsUrl = production
+    // The public URL is inlined into the client bundle at build, so the build
+    // and the runtime must agree. Production uses the real domain; another
+    // stage passes the URL it was built with.
+    const siteUrl = production
       ? "https://learn.devhelp.pk"
-      : (process.env.NEXT_PUBLIC_LMS_URL ?? "https://example.invalid");
-    const webUrl = production
-      ? "https://devhelp.pk"
-      : (process.env.NEXT_PUBLIC_WEB_URL ?? "https://example.invalid");
+      : (process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.invalid");
 
     const appEnvironment = {
       NODE_ENV: "production",
@@ -80,10 +77,9 @@ export default $config({
       // per-instance pool small and let Neon's pooler absorb the fan-out.
       DATABASE_POOL_MAX: "2",
       BETTER_AUTH_SECRET: secret.betterAuthSecret.value,
-      BETTER_AUTH_URL: lmsUrl,
+      BETTER_AUTH_URL: siteUrl,
       CONTENT_SYNC_SECRET: secret.contentSyncSecret.value,
-      NEXT_PUBLIC_LMS_URL: lmsUrl,
-      NEXT_PUBLIC_WEB_URL: webUrl,
+      NEXT_PUBLIC_SITE_URL: siteUrl,
       EMAIL_PROVIDER: production ? "resend" : "log",
       EMAIL_FROM: "devhelp <no-reply@devhelp.pk>",
       RESEND_API_KEY: secret.resendApiKey.value,
@@ -98,7 +94,7 @@ export default $config({
       COMPANY_BANK_WARM_AT: "250",
     };
 
-    const app = (name: string, dir: "lms" | "web", memory: `${number} MB`) =>
+    const app = (name: string, dir: "platform", memory: `${number} MB`) =>
       new sst.aws.Function(name, {
         bundle: `apps/${dir}/.open-next/server-functions/default`,
         handler: "index.handler",
@@ -114,13 +110,12 @@ export default $config({
         environment: appEnvironment,
       });
 
-    const lms = app("Lms", "lms", "1536 MB");
-    const web = app("Web", "web", "1024 MB");
+    const platform = app("Platform", "platform", "1536 MB");
 
     /**
-     * The Cloudflare front door for each app (infra/proxy.ts): OpenNext's
-     * `assets/` served as Workers Static Assets straight from the edge, and
-     * everything else forwarded to the Lambda function URL.
+     * The Cloudflare front door (infra/proxy.ts): OpenNext's `assets/` served
+     * as Workers Static Assets straight from the edge, and everything else
+     * forwarded to the Lambda function URL.
      *
      * `assets` is marked @internal in SST's Worker types but is implemented —
      * it is what SST's own Cloudflare site components use — so it is used
@@ -131,7 +126,7 @@ export default $config({
      */
     const front = (
       name: string,
-      dir: "lms" | "web",
+      dir: "platform",
       origin: $util.Output<string>,
       domain?: string,
     ) =>
@@ -144,24 +139,16 @@ export default $config({
         ...(domain ? { domain } : {}),
       });
 
-    const lmsFront = front(
-      "LmsFront",
-      "lms",
-      lms.url,
+    const platformFront = front(
+      "PlatformFront",
+      "platform",
+      platform.url,
       production ? "learn.devhelp.pk" : undefined,
-    );
-    const webFront = front(
-      "WebFront",
-      "web",
-      web.url,
-      production ? "devhelp.pk" : undefined,
     );
 
     return {
-      lms: lmsFront.url,
-      web: webFront.url,
-      lmsOrigin: lms.url,
-      webOrigin: web.url,
+      site: platformFront.url,
+      origin: platform.url,
     };
   },
 });

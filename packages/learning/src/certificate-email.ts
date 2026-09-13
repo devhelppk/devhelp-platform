@@ -13,8 +13,8 @@ export async function sendEmailTemplate(
   },
 ) {
   const { CertificateIssued, CertificateRevoked } = await import("@repo/email");
-  const verifyUrl = `${env.NEXT_PUBLIC_LMS_URL}/verify/${input.certificateId}`;
-  const pdfUrl = `${env.NEXT_PUBLIC_LMS_URL}/api/certificates/${input.certificateId}.pdf`;
+  const verifyUrl = `${env.NEXT_PUBLIC_SITE_URL}/verify/${input.certificateId}`;
+  const pdfUrl = `${env.NEXT_PUBLIC_SITE_URL}/api/certificates/${input.certificateId}.pdf`;
   return kind === "issued"
     ? {
         to: input.to,

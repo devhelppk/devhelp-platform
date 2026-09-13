@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Build one app with OpenNext for AWS (S22).
+ * Build the platform app with OpenNext for AWS (S22).
  *
- *   NEXT_PUBLIC_LMS_URL=… NEXT_PUBLIC_WEB_URL=… node scripts/build-opennext.mjs lms
+ *   NEXT_PUBLIC_SITE_URL=… node scripts/build-opennext.mjs
  *
- * Produces `apps/<app>/.open-next/`. `sst.config.ts` deploys its
+ * Produces `apps/platform/.open-next/`. `sst.config.ts` deploys its
  * `server-functions/default` bundle as a Lambda function behind a function URL;
  * `assets/` holds the static files, which that function does not serve.
  *
@@ -19,12 +19,8 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const app = process.argv[2];
-if (app !== "web" && app !== "lms") {
-  console.error("usage: node scripts/build-opennext.mjs <web|lms>");
-  process.exit(1);
-}
-for (const name of ["NEXT_PUBLIC_LMS_URL", "NEXT_PUBLIC_WEB_URL"]) {
+const app = "platform";
+for (const name of ["NEXT_PUBLIC_SITE_URL"]) {
   if (!process.env[name]) {
     console.error(`${name} must be set: it is inlined into the client bundle.`);
     process.exit(1);
@@ -36,7 +32,7 @@ const placeholders = {
   NODE_ENV: "production",
   DATABASE_URL: "postgresql://build:build@localhost:5432/build",
   BETTER_AUTH_SECRET: "build-time-placeholder-never-used-at-runtime-0000",
-  BETTER_AUTH_URL: process.env.NEXT_PUBLIC_LMS_URL,
+  BETTER_AUTH_URL: process.env.NEXT_PUBLIC_SITE_URL,
   EMAIL_PROVIDER: "log",
   STORAGE_DRIVER: "s3",
   S3_ENDPOINT: "https://build.invalid",

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   checkPairs,
@@ -10,7 +10,7 @@ import {
 const base = {
   DATABASE_URL: "postgresql://u:p@localhost:5432/db",
   BETTER_AUTH_SECRET: "x".repeat(32),
-  BETTER_AUTH_URL: "http://localhost:3001",
+  BETTER_AUTH_URL: "http://localhost:3000",
 };
 const schema = z.object(serverSchema);
 
@@ -43,9 +43,27 @@ describe("server env schema", () => {
 });
 
 describe("client and database env", () => {
-  it("defaults public URLs outside production (this test runs with NODE_ENV=test)", () => {
+  it("defaults the public site URL outside production (this test runs with NODE_ENV=test)", () => {
     const parsed = z.object(clientSchema).parse({});
-    expect(parsed.NEXT_PUBLIC_LMS_URL).toBe("http://localhost:3001");
+    expect(parsed.NEXT_PUBLIC_SITE_URL).toBe("http://localhost:3000");
+  });
+  it("requires the public site URL in production", async () => {
+    const original = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    vi.resetModules();
+    try {
+      const mod = await import("./schema");
+      expect(z.object(mod.clientSchema).safeParse({}).success).toBe(false);
+      expect(
+        z
+          .object(mod.clientSchema)
+          .safeParse({ NEXT_PUBLIC_SITE_URL: "https://learn.devhelp.pk" })
+          .success,
+      ).toBe(true);
+    } finally {
+      process.env.NODE_ENV = original;
+      vi.resetModules();
+    }
   });
   it("database slice needs only DATABASE_URL", () => {
     expect(

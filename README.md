@@ -1,6 +1,6 @@
 # devhelp-platform
 
-Monorepo for [devhelp.pk](https://devhelp.pk): a free, open-source learning platform for software engineers and students in Pakistan, closing the gap between academia and industry with both technical and non-technical skills for the AI-engineering era.
+Monorepo for [learn.devhelp.pk](https://learn.devhelp.pk): a free, open-source learning platform for software engineers and students in Pakistan, closing the gap between academia and industry with both technical and non-technical skills for the AI-engineering era.
 
 ## Stack
 
@@ -13,16 +13,15 @@ Monorepo for [devhelp.pk](https://devhelp.pk): a free, open-source learning plat
 
 ## Apps and packages
 
-| Path                         | Package                   | Purpose                                    |
-| ---------------------------- | ------------------------- | ------------------------------------------ |
-| `apps/web`                   | `web`                     | Marketing site, port 3000                  |
-| `apps/lms`                   | `lms`                     | Learning platform, port 3001               |
-| `packages/ui`                | `@repo/ui`                | shadcn/ui components, consumed from source |
-| `packages/database`          | `@repo/database`          | Drizzle schema, client, migrations, seed   |
-| `packages/tailwind-config`   | `@repo/tailwind-config`   | Shared theme tokens and PostCSS config     |
-| `packages/eslint-config`     | `@repo/eslint-config`     | Flat ESLint configs                        |
-| `packages/typescript-config` | `@repo/typescript-config` | Shared tsconfigs                           |
-| `packages/vitest-config`     | `@repo/vitest-config`     | Shared Vitest configs (node + jsdom)       |
+| Path                         | Package                   | Purpose                                                           |
+| ---------------------------- | ------------------------- | ----------------------------------------------------------------- |
+| `apps/platform`              | `platform`                | The one app: marketing pages and the learning platform, port 3000 |
+| `packages/ui`                | `@repo/ui`                | shadcn/ui components, consumed from source                        |
+| `packages/database`          | `@repo/database`          | Drizzle schema, client, migrations, seed                          |
+| `packages/tailwind-config`   | `@repo/tailwind-config`   | Shared theme tokens and PostCSS config                            |
+| `packages/eslint-config`     | `@repo/eslint-config`     | Flat ESLint configs                                               |
+| `packages/typescript-config` | `@repo/typescript-config` | Shared tsconfigs                                                  |
+| `packages/vitest-config`     | `@repo/vitest-config`     | Shared Vitest configs (node + jsdom)                              |
 
 ## Quick start
 
@@ -36,7 +35,7 @@ pnpm db:up             # Postgres, Mailpit (:8025), MinIO (:9000)
 pnpm db:migrate
 pnpm content:refresh   # curriculum from github.com/devhelppk/devhelp-content
 pnpm db:seed           # an admin, reference data, a company, readable titles
-pnpm dev               # web :3000, lms :3001
+pnpm dev               # web :3000, platform :3000
 ```
 
 `content:refresh` comes **before** `db:seed`: the seed describes whatever
@@ -48,16 +47,15 @@ at [localhost:8025](http://localhost:8025), so nothing leaves your machine.
 
 ## Scripts
 
-| Command            | Description                            |
-| ------------------ | -------------------------------------- |
-| `pnpm dev`         | Run every app in dev mode              |
-| `pnpm dev:web`     | Only the marketing site (and its deps) |
-| `pnpm dev:lms`     | Only the LMS (and its deps)            |
-| `pnpm build`       | Build everything                       |
-| `pnpm lint`        | ESLint across the repo                 |
-| `pnpm check-types` | TypeScript across the repo             |
-| `pnpm test`        | Vitest across the repo                 |
-| `pnpm db:*`        | See `packages/database/README.md`      |
+| Command            | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| `pnpm dev`         | Run every app in dev mode                       |
+| `pnpm dev:clean`   | `pnpm dev` after clearing `apps/platform/.next` |
+| `pnpm build`       | Build everything                                |
+| `pnpm lint`        | ESLint across the repo                          |
+| `pnpm check-types` | TypeScript across the repo                      |
+| `pnpm test`        | Vitest across the repo                          |
+| `pnpm db:*`        | See `packages/database/README.md`               |
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow.
 

@@ -10,7 +10,7 @@ Each spec gets its own directory under `docs/specs/<id>-<slug>/` holding `plan.m
 
 Automated tests are not enough for UI. Before a UI spec can be marked complete:
 
-1. Start the dev server (`pnpm dev:lms` or `pnpm dev:web`) against the local Postgres with real synced content.
+1. Start the dev server (`pnpm dev`) against the local Postgres with real synced content.
 2. Drive the new screens in Chrome with the browser tools: every route the spec adds or changes, every state (signed out, signed in, empty, error), light and dark, desktop and a 390px viewport.
 3. Critique against the design system (`packages/ui/DESIGN.md`) and the acceptance criteria; fix; reload; repeat until nothing is left to fix. At least two iterations are expected; record what each round found and changed.
 4. Check the console is clean on every load and that no page scrolls horizontally on mobile.
@@ -427,6 +427,129 @@ what we actually do; and a 390px pass found the handle field clipping its own
 prefix.
 
 Depends on: S15, S16, S18, S19.
+
+### S21. Marketing site and SEO infrastructure — `done` (`076316d`)
+
+`apps/web` was one 72-line page with a hand-rolled header. It became a real
+marketing site — a landing page that sells the method rather than the size of
+the catalogue, `/about`, `/contribute`, `/faq`, `/roadmap`, `/privacy` and
+`/terms` — all on a shared `SiteHeader` and a real footer, and `/design`, the
+living style guide. `/policy`, `/roadmap`, `/privacy` and `/terms` render
+Markdown files from `docs/` through one extracted renderer (`markdown-doc.tsx`,
+with `apps/web`'s first tests); this also fixed a bug the policy page's private
+parser had carried since S20, missing bold support that left literal asterisks
+on the public page. There was no SEO infrastructure anywhere before this:
+`metadataBase` on both apps, sitemaps and robots on both hosts (the LMS
+sitemap is what finally announces the company pages F2.14 calls the SEO entry
+point), JSON-LD for the organisation and for courses, and Open Graph cards for
+the site, courses and companies, rendered with static Geist because the
+vendored Literata is a variable font and satori cannot read it. Better Auth's
+`trustedOrigins` covers both hosts.
+
+Deliverables:
+
+- `apps/web`: landing page, `/about`, `/contribute`, `/faq`, `/roadmap`,
+  `/privacy`, `/terms`, `/design`; `lib/curriculum.ts`, `lib/markdown-doc.tsx`
+  (+ tests), `lib/og.tsx`.
+- `sitemap.ts` and `robots.ts` on both apps; `structured-data.tsx`
+  (Organization + WebSite, plus a second-host `EducationalOrganization`);
+  `course-structured-data.tsx`; Open Graph images for the site, courses and
+  companies.
+- `docs/policy/privacy.md`, `docs/policy/terms.md`, `docs/roadmap.md` (drafts,
+  not legal advice, each ending with the decisions launch needs).
+
+Acceptance:
+
+- [x] The marketing pages and the LMS share one header and design language.
+- [x] Every indexable page on both hosts has a sitemap entry, a robots rule,
+      and an Open Graph card.
+- [x] The policy page renders Markdown bold correctly (S20 regression fixed).
+- [x] `markdown-doc.tsx` has tests.
+
+### S22. Run both apps on AWS Lambda via OpenNext and SST, without CloudFront — `done` (`c0a87fe`, follow-up checkpoint `4b5bc35`)
+
+Production hosting was decided in stages. Cloudflare Workers was tried first
+and ruled out by a spike: lesson MDX is evaluated with `new Function`, which
+Workers forbid, and the certificate PDF's font data never reached the bundle.
+AWS Lambda runs Node, so both work there. `sst.aws.Nextjs` was the next step,
+but it always creates a CloudFront distribution, and this AWS account cannot
+create one until AWS Support verifies it. The MVP constraint is minimum cost,
+so each app instead deploys as OpenNext's `server-functions/default` bundle
+behind a Lambda function URL, streaming, in `ap-southeast-1` next to Neon.
+Both apps build with `scripts/build-opennext.mjs`, which supplies build-time
+placeholders for server-only env; real secrets reach the function at runtime
+from SST secrets. Verified on the dev stage against a Neon branch: `/courses`,
+a lesson page, a company page, a real certificate PDF, the sitemap and eight
+concurrent requests all returned 200.
+
+The follow-up checkpoint (`4b5bc35`) put a Cloudflare Worker in front of each
+function URL (`infra/proxy.ts`, `assets` serving OpenNext's static output from
+the edge, `_headers` for a year-long cache on `_next/static`) and added the
+`crossSubDomainCookies` guard in `packages/auth/src/server.ts` so a session
+cookie set on one host's Lambda function is readable on the other's Worker
+domain — needed only because the two apps lived on two hosts, and removed by
+S23 when they become one.
+
+Deliverables:
+
+- `sst.config.ts`: two `sst.aws.Function`s (OpenNext bundles, streaming,
+  function URLs) and two `sst.cloudflare.Worker`s (`infra/proxy.ts`, static
+  assets, custom domains).
+- `scripts/build-opennext.mjs`; `open-next.config.ts` per app; dummy
+  incremental cache, tag cache and queue (no S3, DynamoDB or SQS).
+- Supporting fixes found along the way: Next 16.3.1 → 16.3.5 (OpenNext's
+  minimum for Next 16); `@react-email/render`'s module-level Prettier import
+  stubbed out of the server bundle (−4.76 MB); `nodemailer` imported on first
+  SMTP send, not at load; a fallback path for the certificate fonts under
+  Lambda's file tracing; the four Markdown doc pages made `force-static`;
+  Open Graph cards switched to `next/og`'s bundled font.
+
+Acceptance:
+
+- [x] Both apps deploy to AWS Lambda through OpenNext and SST with no
+      CloudFront distribution.
+- [x] A Cloudflare Worker in front of each function URL serves static assets
+      from the edge and forwards everything else.
+- [x] A lesson page, a company page, certificate PDF generation and the
+      sitemap all verified working on the dev stage.
+
+### S23. One app, a real front door, one deployment — `in-progress`
+
+Plan: [`specs/S23-one-app/plan.md`](./specs/S23-one-app/plan.md)
+
+Two apps sharing one design system collapse into one: `apps/lms` becomes
+`apps/platform` (port 3000) with a `(marketing)` route group for the landing
+page and the Markdown documents and a `(platform)` route group for everything
+signed-in or DB-backed, `/home` the dashboard, one shared `SiteHeader` /
+`SiteFooter`, one `NEXT_PUBLIC_SITE_URL`, one sitemap and robots file, and one
+Cloudflare Worker front door in front of one Lambda function — closing the gap
+S22's checkpoint left (`crossSubDomainCookies`, two custom domains, two
+deploys for one product). Three commits: **A** merges the apps and deletes
+`apps/web`; **B** redesigns the public pages (`/`, `/about`, `/contribute`,
+`/faq`) now that they share a codebase with the product they are selling; **C**
+rewrites `sst.config.ts` for one function and one Worker and ships the first
+real production deployment, with the `devhelp.pk` → `learn.devhelp.pk`
+redirect as a founder-gated cutover step.
+
+Acceptance (drawn from the plan's verification section, §6):
+
+- [ ] A grep for `NEXT_PUBLIC_WEB_URL|NEXT_PUBLIC_LMS_URL|apps/web|apps/lms|dev:lms|dev:web|3001`
+      outside `node_modules`, `.next`, `.sst`, `docs/specs` and the lockfile
+      turns up only historical text.
+- [ ] `pnpm check-budget` passes against `:3000`; signed-out `/` is 200,
+      signed-in `/` redirects (307) to `/home`; the sitemap includes `/about`
+      and a lesson URL; robots disallows `/home` and `/design`.
+- [ ] The Phase B browser loop (`/`, `/about`, `/contribute`, `/faq`, plus the
+      document pages) passes at 1440 and 390, light and dark, console clean,
+      two rounds.
+- [ ] `https://dev.learn.devhelp.pk/` returns 200 with no `Domain=` on
+      `Set-Cookie`; a second request for a `_next/static` asset shows
+      `cf-cache-status: HIT`; the direct Lambda function URL returns 403; a
+      grep for `lambda-url|workers\.dev` across the repo is empty.
+- [ ] Production: certificate PDF, sign-up email, and `/api/content/sync`
+      with the bearer token all verified on `https://learn.devhelp.pk`.
+
+Depends on: S21, S22.
 
 ---
 

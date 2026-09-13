@@ -31,7 +31,7 @@ pnpm db:up          # Postgres, Mailpit (mail at :8025), MinIO (storage)
 pnpm db:migrate
 pnpm content:refresh   # pull the pinned curriculum, check it, load it
 pnpm db:seed        # an admin, reference data, a company, and readable titles
-pnpm dev            # web on :3000, lms on :3001
+pnpm dev            # web on :3000, platform on :3000
 ```
 
 Sign in as `team@devhelp.pk` — email goes to Mailpit at

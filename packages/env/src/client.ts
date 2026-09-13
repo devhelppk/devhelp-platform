@@ -5,8 +5,7 @@ import { clientSchema } from "./schema";
 export const clientEnv = createEnv({
   client: clientSchema,
   runtimeEnv: {
-    NEXT_PUBLIC_LMS_URL: process.env.NEXT_PUBLIC_LMS_URL,
-    NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,
 });

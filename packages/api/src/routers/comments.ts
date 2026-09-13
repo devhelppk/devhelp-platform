@@ -762,7 +762,7 @@ export const commentsRouter = router({
                   react: createElement(CommentAccepted, {
                     name: author.name,
                     subject: lesson?.title ?? s?.title ?? "a lesson",
-                    url: `${env.NEXT_PUBLIC_LMS_URL}${href}`,
+                    url: `${env.NEXT_PUBLIC_SITE_URL}${href}`,
                   }),
                 }
               : undefined,

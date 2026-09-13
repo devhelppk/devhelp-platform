@@ -50,16 +50,21 @@ export const serverSchema = {
     .string()
     .optional()
     .transform((v) => v === "1" || v === "true"),
+  /**
+   * The shared secret the Cloudflare front door sends in the
+   * `x-devhelp-edge-key` header. When set, the Next `proxy.ts` (added in
+   * Phase C) answers 403 to any request without it, so the origin cannot be
+   * reached by skipping Cloudflare.
+   */
+  EDGE_KEY: optionalString,
 };
 
 const isProduction = process.env.NODE_ENV === "production";
 
-/** Localhost defaults are a development convenience only; production must set both. */
+/** The localhost default is a development convenience only; production must set it. */
 export const clientSchema = {
-  NEXT_PUBLIC_LMS_URL: isProduction
-    ? z.url()
-    : z.url().default("http://localhost:3001"),
-  NEXT_PUBLIC_WEB_URL: isProduction
+  /** The one public origin of the site: absolute links, auth trusted origin, sitemap, OG images. */
+  NEXT_PUBLIC_SITE_URL: isProduction
     ? z.url()
     : z.url().default("http://localhost:3000"),
 };

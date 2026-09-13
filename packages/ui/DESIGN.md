@@ -5,7 +5,7 @@ engineers and students. The audience reads on mid-range Android phones and
 laptops, often on slow connections, often at night. The tone is serious,
 generous, modern, and Pakistani without being a tourist poster. This document
 is the source of truth for tokens, type, layout and component conventions in
-`@repo/ui`; the living style guide is `/design` in `apps/web`.
+`@repo/ui`; the living style guide is `/design` in `apps/platform`.
 
 ## Direction in one paragraph
 

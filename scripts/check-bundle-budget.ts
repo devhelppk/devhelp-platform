@@ -4,7 +4,7 @@
  * Measures what the browser actually loads: fetches the rendered HTML from a
  * running production server, collects every `<script src="/_next/…">`, and
  * sums the gzipped transfer sizes. Usage:
- *   BUDGET_URL=http://localhost:3001 tsx scripts/check-bundle-budget.ts [--json]
+ *   BUDGET_URL=http://localhost:3000 tsx scripts/check-bundle-budget.ts [--json]
  */
 import { gzipSync } from "node:zlib";
 import { resolve } from "node:path";
@@ -39,7 +39,11 @@ export const budgets: Budget[] = [
   // company page to support a control most readers never open.
   { path: "/companies", maxKb: CEILING_KB },
   { path: "/companies/arbisoft", maxKb: CEILING_KB },
+  // "/" is the marketing landing page now: server-rendered, no tRPC provider,
+  // no client island beyond the theme toggle — it should sit near the floor,
+  // not the ceiling.
   { path: "/", maxKb: CEILING_KB },
+  { path: "/about", maxKb: CEILING_KB },
 ];
 
 export async function measure(baseUrl: string, list: Budget[] = budgets) {
@@ -69,7 +73,7 @@ export async function measure(baseUrl: string, list: Budget[] = budgets) {
 }
 
 async function main() {
-  const baseUrl = process.env.BUDGET_URL ?? "http://localhost:3001";
+  const baseUrl = process.env.BUDGET_URL ?? "http://localhost:3000";
   const results = await measure(baseUrl);
   if (process.argv.includes("--json"))
     console.log(JSON.stringify(results, null, 2));

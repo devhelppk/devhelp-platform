@@ -36,4 +36,4 @@ developer machine or a stolen session cookie.
 
 Open items are tracked in `docs/spec.md`. The known residual risk in the logo
 fetcher — DNS rebinding between the address check and the connection — is
-documented in `apps/lms/app/api/company-logos/[file]/route.ts`.
+documented in `apps/platform/app/api/company-logos/[file]/route.ts`.

@@ -236,7 +236,7 @@ async function decidedNotification(
   const { MentorApplicationDecided, ModerationDecided } =
     await import("@repo/email");
   const policyUrl = clause
-    ? `${env.NEXT_PUBLIC_WEB_URL}/policy#${clause}`
+    ? `${env.NEXT_PUBLIC_SITE_URL}/policy#${clause}`
     : undefined;
   if (item.subjectType === "mentor_application") {
     const href = approved ? "/moderate" : "/mentor/apply";
@@ -265,7 +265,7 @@ async function decidedNotification(
           approved,
           reason,
           policyUrl,
-          url: `${env.NEXT_PUBLIC_LMS_URL}${href}`,
+          url: `${env.NEXT_PUBLIC_SITE_URL}${href}`,
         }),
       },
     });
@@ -337,7 +337,7 @@ async function decidedNotification(
         approved,
         reason,
         policyUrl,
-        url: `${env.NEXT_PUBLIC_LMS_URL}${href}`,
+        url: `${env.NEXT_PUBLIC_SITE_URL}${href}`,
       }),
     },
   });

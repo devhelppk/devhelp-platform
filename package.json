@@ -5,10 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:web": "turbo run dev --filter=web...",
-    "dev:web:clean": "rm -rf apps/web/.next && turbo run dev --filter=web...",
-    "dev:lms": "turbo run dev --filter=lms...",
-    "dev:lms:clean": "rm -rf apps/lms/.next && turbo run dev --filter=lms...",
+    "dev:clean": "rm -rf apps/platform/.next && turbo run dev",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
     "test": "turbo run test",

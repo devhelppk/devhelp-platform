@@ -19,7 +19,7 @@ export const auth = betterAuth({
   appName: "devhelp",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.NEXT_PUBLIC_WEB_URL, env.NEXT_PUBLIC_LMS_URL],
+  trustedOrigins: [env.NEXT_PUBLIC_SITE_URL],
   database: drizzleAdapter(db, {
     provider: "pg",
     usePlural: true,
@@ -27,17 +27,6 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: { generateId: "uuid" },
-    // Sessions on devhelp.pk and learn.devhelp.pk share one cookie — but only
-    // when the app actually runs under devhelp.pk. Keyed on the auth URL, not on
-    // NODE_ENV: a non-production AWS stage also runs with NODE_ENV=production,
-    // on a workers.dev host, where a `Domain=.devhelp.pk` cookie is silently
-    // dropped by the browser and nobody can stay signed in (found in S22).
-    crossSubDomainCookies: {
-      enabled:
-        env.NODE_ENV === "production" &&
-        new URL(env.BETTER_AUTH_URL).hostname.endsWith("devhelp.pk"),
-      domain: ".devhelp.pk",
-    },
   },
   emailAndPassword: {
     enabled: true,
@@ -128,7 +117,7 @@ export const auth = betterAuth({
       invitationExpiresIn: 60 * 60 * 48,
       sendInvitationEmail: async (data) => {
         const { sendEmail, OrganizationInvitation } = await email();
-        const url = `${env.NEXT_PUBLIC_LMS_URL}/accept-invitation/${data.id}`;
+        const url = `${env.NEXT_PUBLIC_SITE_URL}/accept-invitation/${data.id}`;
         await sendEmail({
           to: data.email,
           subject: `${data.inviter.user.name} invited you to ${data.organization.name} on devhelp`,

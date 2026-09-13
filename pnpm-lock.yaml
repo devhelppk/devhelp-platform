@@ -33,7 +33,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@26.2.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.16.9)(tsx@4.23.13)(yaml@2.9.0))
 
-  apps/lms:
+  apps/platform:
     dependencies:
       '@codemirror/lang-javascript':
         specifier: ^6.2.5
@@ -204,97 +204,6 @@ importers:
       vitest:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@26.2.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.16.9)(tsx@4.23.13)(yaml@2.9.0))
-
-  apps/web:
-    dependencies:
-      '@repo/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      '@repo/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@repo/env':
-        specifier: workspace:*
-        version: link:../../packages/env
-      '@repo/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      better-auth:
-        specifier: ^1.7.2
-        version: 1.7.2(@prisma/client@5.22.0)(better-sqlite3@12.11.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@prisma/client@5.22.0)(@types/pg@8.23.1)(better-sqlite3@12.11.1)(kysely@0.29.5)(pg@8.23.0)(postgres@3.4.9))(next@16.3.5(@babel/core@7.29.7(supports-color@10.2.2))(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.23.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11(@types/node@26.2.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.16.9)(tsx@4.23.13)(yaml@2.9.0)))
-      geist:
-        specifier: 1.7.2
-        version: 1.7.2(next@16.3.5(@babel/core@7.29.7(supports-color@10.2.2))(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
-      lucide-react:
-        specifier: ^1.41.0
-        version: 1.41.0(react@19.2.8)
-      next:
-        specifier: 16.3.5
-        version: 16.3.5(@babel/core@7.29.7(supports-color@10.2.2))(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react:
-        specifier: 19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: 19.2.8
-        version: 19.2.8(react@19.2.8)
-    devDependencies:
-      '@next/eslint-plugin-next':
-        specifier: 16.3.5
-        version: 16.3.5(eslint@10.8.1(jiti@2.7.0)(supports-color@10.2.2))
-      '@opennextjs/aws':
-        specifier: 4.1.5
-        version: 4.1.5(next@16.3.5(@babel/core@7.29.7(supports-color@10.2.2))(@types/node@26.2.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@10.2.2)
-      '@repo/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@repo/tailwind-config':
-        specifier: workspace:*
-        version: link:../../packages/tailwind-config
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@repo/vitest-config':
-        specifier: workspace:*
-        version: link:../../packages/vitest-config
-      '@tailwindcss/postcss':
-        specifier: 4.3.3
-        version: 4.3.3
-      '@testing-library/dom':
-        specifier: ^10.4.1
-        version: 10.4.1
-      '@testing-library/jest-dom':
-        specifier: ^7.0.1
-        version: 7.0.1(@testing-library/dom@10.4.1)(vitest@4.1.11(@types/node@26.2.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.16.9)(tsx@4.23.13)(yaml@2.9.0)))
-      '@testing-library/react':
-        specifier: ^16.3.3
-        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@types/node':
-        specifier: 26.2.0
-        version: 26.2.0
-      '@types/react':
-        specifier: 19.2.18
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: 19.2.4
-        version: 19.2.4(@types/react@19.2.18)
-      eslint:
-        specifier: 10.8.1
-        version: 10.8.1(jiti@2.7.0)(supports-color@10.2.2)
-      jsdom:
-        specifier: ^26.1.0
-        version: 26.1.0(supports-color@10.2.2)
-      postcss:
-        specifier: 8.5.26
-        version: 8.5.26
-      tailwindcss:
-        specifier: 4.3.3
-        version: 4.3.3
-      typescript:
-        specifier: 7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: ^4.1.11
-        version: 4.1.11(@types/node@26.2.0)(jsdom@26.1.0(supports-color@10.2.2))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.16.9)(tsx@4.23.13)(yaml@2.9.0))
 
   packages/api:
     dependencies:
@@ -7958,7 +7867,7 @@ snapshots:
       '@aws-sdk/middleware-location-constraint': 3.972.42
       '@aws-sdk/middleware-logger': 3.972.45
       '@aws-sdk/middleware-recursion-detection': 3.972.47
-      '@aws-sdk/middleware-sdk-s3': 3.972.75
+      '@aws-sdk/middleware-sdk-s3': 3.972.76
       '@aws-sdk/middleware-ssec': 3.972.42
       '@aws-sdk/middleware-user-agent': 3.972.75
       '@aws-sdk/region-config-resolver': 3.972.49
@@ -8260,7 +8169,7 @@ snapshots:
 
   '@aws-sdk/signature-v4-multi-region@3.984.0':
     dependencies:
-      '@aws-sdk/middleware-sdk-s3': 3.972.75
+      '@aws-sdk/middleware-sdk-s3': 3.972.76
       '@aws-sdk/types': 3.974.5
       '@smithy/protocol-http': 5.6.2
       '@smithy/signature-v4': 5.7.3
