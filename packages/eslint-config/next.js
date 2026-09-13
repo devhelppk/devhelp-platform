@@ -19,6 +19,8 @@ export const nextJsConfig = [
     "next-env.d.ts",
     // Content Collections build cache.
     ".content-collections/**",
+    // OpenNext build output (S22): bundled, minified, not ours.
+    ".open-next/**",
   ]),
   {
     languageOptions: {

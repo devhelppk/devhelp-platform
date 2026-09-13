@@ -30,7 +30,8 @@
     "BUDGET_URL",
     "NEXT_PUBLIC_LMS_URL",
     "NEXT_PUBLIC_WEB_URL",
-    "SKIP_ENV_VALIDATION"
+    "SKIP_ENV_VALIDATION",
+    "CERTIFICATE_FONTS_DIR"
   ],
   "tasks": {
     "build": {

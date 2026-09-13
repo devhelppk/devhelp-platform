@@ -9,6 +9,7 @@ import {
   renderToBuffer,
 } from "@react-pdf/renderer";
 import { toDataURL } from "qrcode";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,10 +29,31 @@ export type CertificateInput = {
   revoked?: { at: Date; reason: string } | null;
 };
 
-const fonts = join(dirname(fileURLToPath(import.meta.url)), "..", "fonts");
+/**
+ * Where the vendored TTFs are.
+ *
+ * Relative to this file when the package runs from source (tests, scripts,
+ * `next dev`). Once Next bundles the package into a server chunk,
+ * `import.meta.url` points inside `.next/` and that path no longer exists — so
+ * the deployed Lambda bundle carries the fonts at `packages/certificates/fonts`
+ * under its root (scripts/build-lambda.mjs), found from the server's working
+ * directory, `apps/<app>` (S22). `CERTIFICATE_FONTS_DIR` overrides both.
+ */
+function fontsDir() {
+  const candidates = [
+    process.env.CERTIFICATE_FONTS_DIR,
+    join(dirname(fileURLToPath(import.meta.url)), "..", "fonts"),
+    join(process.cwd(), "..", "..", "packages", "certificates", "fonts"),
+  ].filter((d): d is string => Boolean(d));
+  return (
+    candidates.find((d) => existsSync(join(d, "Literata.ttf"))) ??
+    candidates[1]!
+  );
+}
 let registered = false;
 function registerFonts() {
   if (registered) return;
+  const fonts = fontsDir();
   Font.register({ family: "Literata", src: join(fonts, "Literata.ttf") });
   Font.register({
     family: "Geist",

@@ -1,5 +1,4 @@
 import { env } from "@repo/env";
-import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
 export type OutgoingEmail = {
@@ -36,12 +35,20 @@ function logTransport(): Transport {
   };
 }
 
-/** Exported for the Mailpit round-trip test; app code uses `getTransport()`. */
+/**
+ * Exported for the Mailpit round-trip test; app code uses `getTransport()`.
+ *
+ * `nodemailer` is imported on first send, not at module load. SMTP is the
+ * local-development transport (Mailpit); production sends through Resend, and a
+ * top-level import put nodemailer and its `net`/`tls`/`dns` dependencies into
+ * the production Worker bundle for a code path that never runs there (S22).
+ */
 export function smtpTransport(url: string): Transport {
-  const mailer = nodemailer.createTransport(url);
+  let mailer: import("nodemailer").Transporter | undefined;
   return {
     name: "smtp",
     async send(mail) {
+      mailer ??= (await import("nodemailer")).default.createTransport(url);
       const info = await mailer.sendMail({
         from: mail.from,
         to: mail.to,

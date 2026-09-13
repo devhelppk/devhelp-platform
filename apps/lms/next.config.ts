@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
     "@repo/content",
   ],
   typedRoutes: true,
+  turbopack: {
+    resolveAlias: {
+      // `@react-email/render` imports Prettier at module level for a `pretty`
+      // option we never use; aliasing it away took 4.76 MB out of the Worker.
+      // See lib/stubs/prettier.ts.
+      "prettier/standalone": "./lib/stubs/prettier.ts",
+      "prettier/plugins/html": "./lib/stubs/prettier.ts",
+    },
+  },
 };
 
 export default withContentCollections(nextConfig);

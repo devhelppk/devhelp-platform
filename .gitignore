@@ -47,3 +47,9 @@ dist/
 # Local fs storage driver (unit tests)
 .storage/
 .neon
+
+# AWS via SST (S22): SST's local state, OpenNext build output, and the
+# `sst-env.d.ts` SST writes into every package (we do not use its Resource SDK).
+.sst
+.open-next
+sst-env.d.ts

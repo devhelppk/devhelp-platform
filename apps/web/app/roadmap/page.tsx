@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { MarkdownDoc, parseMarkdownDoc, readDoc } from "@/lib/markdown-doc";
 
+/**
+ * Rendered once, at build. The document is read from `docs/` with `node:fs`,
+ * and a Cloudflare Worker has no filesystem at request time (S22) — so this
+ * page must never be dynamic, or it would fail on the first visitor.
+ */
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Roadmap",
   description:
