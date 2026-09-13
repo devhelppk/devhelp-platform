@@ -513,7 +513,7 @@ Acceptance:
 - [x] A lesson page, a company page, certificate PDF generation and the
       sitemap all verified working on the dev stage.
 
-### S23. One app, a real front door, one deployment — `in-progress`
+### S23. One app, a real front door, one deployment — `done` (`2928e71`, `db4a1fd`, `aab7ad8`; production live 2026-09-13)
 
 Plan: [`specs/S23-one-app/plan.md`](./specs/S23-one-app/plan.md)
 
@@ -536,20 +536,24 @@ Progress: phase A (merge) `2928e71`; phase B (redesign, browser loop in
 `specs/S23-one-app/test.md`) `db4a1fd`; phase C (one deployment; runbook in
 `specs/S23-one-app/deploy.md`) is the commit after those, deployed to the
 `dev` stage only. The production deploy, its migration, and the D1 redirect
-wait for the founder's go-ahead, so the spec stays `in-progress` until then.
+were then landed on 2026-09-13 with the founder's go-ahead through
+`migrate.yml` and `deploy.yml` (`specs/S23-one-app/deploy.md`, "Production
+record"); the D1 redirect was dropped. Left for the studio, not the code:
+production's synced courses are unpublished `needs_metadata` rows, and there
+is no admin account yet.
 
 Acceptance (drawn from the plan's verification section, §6):
 
-- [ ] A grep for `NEXT_PUBLIC_WEB_URL|NEXT_PUBLIC_LMS_URL|apps/web|apps/lms|dev:lms|dev:web|3001`
+- [x] A grep for `NEXT_PUBLIC_WEB_URL|NEXT_PUBLIC_LMS_URL|apps/web|apps/lms|dev:lms|dev:web|3001`
       outside `node_modules`, `.next`, `.sst`, `docs/specs` and the lockfile
       turns up only historical text.
-- [ ] `pnpm check-budget` passes against `:3000`; signed-out `/` is 200,
+- [x] `pnpm check-budget` passes against `:3000`; signed-out `/` is 200,
       signed-in `/` redirects (307) to `/home`; the sitemap includes `/about`
       and a lesson URL; robots disallows `/home` and `/design`.
-- [ ] The Phase B browser loop (`/`, `/about`, `/contribute`, `/faq`, plus the
+- [x] The Phase B browser loop (`/`, `/about`, `/contribute`, `/faq`, plus the
       document pages) passes at 1440 and 390, light and dark, console clean,
       two rounds.
-- [ ] `https://dev.learn.devhelp.pk/` returns 200 with no `Domain=` on
+- [x] `https://dev.learn.devhelp.pk/` returns 200 with no `Domain=` on
       `Set-Cookie`; a second request for a `_next/static` asset shows
       `cf-cache-status: HIT`; the direct Lambda function URL returns 403; a
       grep for `lambda-url|workers\.dev` across the repo is empty.

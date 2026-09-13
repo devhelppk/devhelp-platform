@@ -106,7 +106,11 @@ jobs:
           check "/"
           check "/sitemap.xml"
           check "/robots.txt"
-          check "/courses/ai-engineering-foundations/welcome"
+          check "/about"
+          # The catalogue rather than one lesson: a lesson URL only answers
+          # once the studio has described and published its course, which a
+          # fresh production database has not done yet (S23, 2026-09-13).
+          check "/courses"
 
           asset_path="$(curl -fsS --retry 12 --retry-delay 5 --retry-all-errors "$site/" \
             | grep -oE '/_next/static/[^"]+\.js' | head -n1)"

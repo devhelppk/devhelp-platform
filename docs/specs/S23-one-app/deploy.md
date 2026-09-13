@@ -55,14 +55,21 @@ without a stored AWS key already exists:
 arn:aws:iam::099957718323:oidc-provider/token.actions.githubusercontent.com
 ```
 
-### 2.2 AWS deploy role — founder to do
+### 2.2 AWS deploy role — done, 2026-09-13
 
 Create the role GitHub Actions assumes, trusted only for this repo's `dev`
 and `production` environments (not arbitrary branches or PRs — the trust
 condition is scoped to `environment:<stage>`, which GitHub only stamps into
 the OIDC token when the job declares `environment:`).
 
-Trust policy (`trust.json`):
+Trust policy (`trust.json`). The repository has GitHub's **immutable
+subject claim** switched on (`gh api repos/devhelppk/devhelp-platform/actions/oidc/customization/sub`
+→ `use_immutable_subject: true`), so the `sub` GitHub sends is
+`repo:devhelppk@216174090/devhelp-platform@1358689704:environment:<stage>`,
+with the organisation and repository ids appended; the first production
+`deploy.yml` run failed with `Not authorized to perform
+sts:AssumeRoleWithWebIdentity` until those forms were added beside the plain
+ones:
 
 ```json
 {
@@ -81,7 +88,9 @@ Trust policy (`trust.json`):
         "StringLike": {
           "token.actions.githubusercontent.com:sub": [
             "repo:devhelppk/devhelp-platform:environment:dev",
-            "repo:devhelppk/devhelp-platform:environment:production"
+            "repo:devhelppk/devhelp-platform:environment:production",
+            "repo:devhelppk@216174090/devhelp-platform@1358689704:environment:dev",
+            "repo:devhelppk@216174090/devhelp-platform@1358689704:environment:production"
           ]
         }
       }
@@ -184,8 +193,8 @@ export NPM_CONFIG_USERCONFIG=/dev/null
 R2 bucket per stage: `dev` → `devhelp-dev`; `production` → `devhelp` (see
 `S3_BUCKET` in `sst.config.ts`).
 
-Status: `dev` — all seven set. `production` — **none set. Founder only**;
-nobody else sets or has set a production secret for this stage.
+Status (2026-09-13): `dev` and `production` — all seven set, production's
+from `.env.production` over stdin.
 
 ## 4. Deploying
 
@@ -309,10 +318,49 @@ deploy.yml -f stage=production` — SST diffs against its existing state, so
   for `learn.devhelp.pk`; the hostname falls back to the zone's `*.devhelp.pk`
   wildcard record, which still points at the Hetzner box.
 
+### Production record, 2026-09-13
+
+Landed through the workflows, with the founder's go-ahead: `migrate.yml
+production` (`sync_content=true`, run 34761442287) laid the schema down on
+the empty Neon `production` branch and synced the content; `pnpm
+db:reference` was run locally against the unpooled URL for the 13 cities and
+14 job roles; `deploy.yml production` (run 34762335684) built, assumed the
+OIDC role and deployed — after two fixes on the way: the build script now
+builds the app's workspace dependencies first, and the role trusts GitHub's
+immutable subject claim. Verified: `/`, `/about`, `/faq`, `/courses`,
+`/companies`, `/sitemap.xml`, `/robots.txt`, `/design` → 200; `/home` → 307;
+the certificate is the zone's `*.devhelp.pk` one; a `_next/static` chunk goes
+`MISS` → `HIT`; sign-up sets `__Secure-better-auth.session_token` with no
+`Domain=`; the production function URL answers 403 without the key.
+
+Open, and not a deploy matter: both synced courses are `needs_metadata` and
+unpublished, so no lesson URL answers until the studio describes and
+publishes them — the smoke test checks `/courses` rather than a lesson for
+that reason — and production has no admin account yet (`pnpm dev:admin`
+refuses `NODE_ENV=production`; the first admin needs a sign-up plus a manual
+`role = 'admin'` update on the `users` row).
+
 ## 6. Pruning
 
-The `production` GitHub environment's secrets and variables predate S22/S23
-(an abandoned Workers-based plan) and are not used by `deploy.yml` or
-`migrate.yml`. They are left in place until the first production deploy
-under this plan is verified end to end (§5), at which point pruning which of
-them to delete is a founder decision, not something automated here.
+Decided 2026-09-13 after the production deploy was verified (founder: keep
+only what the workflows use), **not yet executed** — the lead's tooling
+refuses secret-store deletions, so the founder runs these. Keep: repo secret
+`CLOUDFLARE_API_TOKEN`; repo variables `AWS_DEPLOY_ROLE_ARN`,
+`CLOUDFLARE_ACCOUNT_ID`; environment secret `DATABASE_URL_UNPOOLED` on `dev`
+and `production`. Delete (everything below now lives in SST secrets or
+`sst.config.ts`, or is unused by any workflow):
+
+```sh
+for s in BETTER_AUTH_SECRET CONTENT_SYNC_SECRET DATABASE_URL RESEND_API_KEY \
+         S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
+  gh secret delete "$s" --env production
+done
+for v in BETTER_AUTH_URL COMPANY_BANK_WARM_AT DATABASE_POOL_MAX EMAIL_FROM \
+         EMAIL_PROVIDER NEXT_PUBLIC_LMS_URL NEXT_PUBLIC_WEB_URL S3_BUCKET \
+         S3_ENDPOINT S3_FORCE_PATH_STYLE S3_REGION STORAGE_DRIVER; do
+  gh variable delete "$v" --env production
+done
+gh secret delete NEON_API_KEY
+gh variable delete CLOUDFLARE_ZONE_ID
+gh variable delete NEON_PROJECT_ID
+```
