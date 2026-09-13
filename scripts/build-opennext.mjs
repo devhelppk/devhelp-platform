@@ -45,6 +45,16 @@ const placeholders = {
   S3_SECRET_ACCESS_KEY: "build",
 };
 
+// OpenNext runs `next build` inside apps/platform directly, not through
+// Turbo, so the workspace packages the app's build depends on (the compiled
+// `@repo/vitest-config`, which `vitest.config.ts` type-checks against) are
+// missing on a fresh runner. Build the app's dependencies first, app excluded.
+execSync("pnpm exec turbo run build --filter='platform^...'", {
+  cwd: root,
+  stdio: "inherit",
+  env: process.env,
+});
+
 execSync("pnpm exec open-next build", {
   cwd: join(root, "apps", app),
   stdio: "inherit",
